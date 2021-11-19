@@ -1,0 +1,71 @@
+applicationName: "helloworld" #auto
+environment: "dev"  #auto
+project: "test" #auto
+
+deploy:
+  replicaCount: 1
+  strategy: RollingUpdate
+  maxUnavail: 1
+  maxSurge: 1
+  terminationGracePeriodSeconds: 30
+  healthCheck:
+    liveFailThreshold: "2"
+    liveSuccThreshold: "1"
+    readFailThreshold: "2"
+    readSuccThreshold: "1"
+    delay: "10"
+    period: "4"
+    timeout: "2"
+
+ports:
+  - name: server
+    containerPort: 8080
+    protocol: TCP
+    healthcheck: /helloworld
+
+image: #auto
+  repository: "roshanpatil/helloworld"
+  pullPolicy: Always
+  tag: "latest"
+  registryCredentials: 
+    registry: ""
+    username: ""
+    password: ""
+
+service:
+  type: nodeport
+  private: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+resourcequota:
+  quotaRequestsCpu: 100
+  quotaRequestsMem: 0.2
+  quotaLimitsCpu: 200
+  quotaLimitsMem: 0.3
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+lifecycle:
+  prestop:
+    command: '["/bin/sh", "-c", "sleep 30"]'
+
+artifacts:
+  # - files: ["b.yaml"]
+  #   mountPath: /tmp/2
+  # - files: ["a.yaml"]
+  #   mountPath: /tmp/1
+
+envs:
+  key: value
+  key1: value1

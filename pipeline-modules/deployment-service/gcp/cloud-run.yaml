@@ -1,0 +1,114 @@
+provisioner: gcp
+name: cloud-run
+version: 1
+revision: 1
+displayName: Cloud Run Deployment
+description: Deploy cloud run on GCP
+target: ""
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - container
+inputs:
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: ""
+      minlength: 1
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    allowUnauthenticated:
+      title: Allow Unauthenticated
+      description: Boolean to allow Unauthenticated traffic
+      type: boolean
+      default: true
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required:
+    - region
+    - allowUnauthenticated
+  internal:
+    - app_env
+    - applicationName
+    - environment
+    - project
+    - repository
+    - tag
+    - job_type
+template: |
+  steps:
+  {% if job_type == 'deploy' %}
+  - id: 'Enable Cloud Run API'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud services enable run.googleapis.com;
+  - id: 'Create cloud run application'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud run deploy {{applicationName|lower}} --image {{repository}}:{{tag}} --region {{region}} \
+      --platform managed \
+      --labels codepipes-project={{project}} \
+      --labels codepipes-enviroment={{environment}} \
+      {% if allowUnauthenticated == true %} --allow-unauthenticated {% else %}  {% endif %}
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      summary=`gcloud run services describe {{applicationName|lower}} --platform managed --region {{region}} --format 'value(status.url)'`
+      echo "Service URL="$summary >> summary.txt
+      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      cat summary.txt;
+  {% else %}
+  - id: 'Remove cloud run application'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud beta run services delete {{applicationName}} --region {{region}} --platform managed --quiet;
+  {% endif %}
+

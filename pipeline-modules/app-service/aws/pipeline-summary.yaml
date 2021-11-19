@@ -1,0 +1,36 @@
+provisioner: aws
+name: pipeline-summary
+version: 1
+revision: 1
+displayName: Pipeline summary
+description: Configure Pipeline summary
+target: internal
+keywords:
+  - summary
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+template: |
+  version: 0.2
+  phases:
+    post_build:
+      commands:
+      - echo "###pipeline-summary-start###" >> summary.txt 2>&1
+      - {% for summary in pipeline_summary_var %} {{ summary.command }} | xargs -0 printf "{{ summary.name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+      - cat summary.txt
+      - echo "###pipeline-summary-end###"

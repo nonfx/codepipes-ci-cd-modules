@@ -1,0 +1,136 @@
+provisioner: aws
+name: app-runner
+version: 1
+revision: 1
+displayName: "App runner deployment"
+description: "AWS App Runner Deployment template"
+target: ""
+keywords: ["bash", "linux"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - "container"
+inputs:
+  type: object
+  properties:
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: ""
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    ecr_role:
+      title: ECR IAM Role
+      description: Role to pull image from private ECR
+      type: string
+      default: ""
+    instance_role:
+      title: Instance IAM Role
+      description: Role to be used by app runnner to interact with other AWS services
+      type: string
+      default: ""
+    memory:
+      title: Memory
+      description: Role to be used by app runnner to interact with other AWS services
+      type: string
+      default: "2 GB"
+    cpu:
+      title: CPU
+      description: Role to be used by app runnner to interact with other AWS services
+      type: string
+      default: "1 vCPU"
+    port:
+      title: Container port
+      type: integer
+      maximum: 65535
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required: ["region","port","ecr_role","instance_role"]
+  internal:
+    - app_env
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - job_type
+template: |
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - aws configure set region {{region}}
+    build:
+      commands:
+        {% if job_type == 'deploy' %}
+        - |
+          cat > app.json <<EOF
+          {
+              "ImageRepository": {
+                  "ImageIdentifier": "{{repository}}:{{tag}}",
+                  "ImageConfiguration": {
+                      "RuntimeEnvironmentVariables": {
+                        {% for env_key, env_value in app_env %}
+                        "{{ env_key }}":"{{ env_value }}"{% if forloop.Last %}{% else %},{% endif %}
+                        {% endfor %}
+                        },
+                      "Port": "{{port}}"
+                  },
+                  "ImageRepositoryType": "ECR"
+              },
+              "AutoDeploymentsEnabled": false,
+              "AuthenticationConfiguration": {
+                "AccessRoleArn": "{{ecr_role}}"
+              }
+          }
+          EOF
+        - |
+          cat > instance.json <<EOF
+          {
+            "Cpu": "{{cpu}}",
+            "Memory": "{{memory}}",
+            "InstanceRoleArn": "{{instance_role}}"
+          }
+          EOF
+        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json  --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+    post_build:
+      commands:
+        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+        - echo "Service URL=http://"$serviceUrl | tr -d '"' >> summary.txt;
+        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+        - cat summary.txt
+      {% else %}
+        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
+      {% endif %}

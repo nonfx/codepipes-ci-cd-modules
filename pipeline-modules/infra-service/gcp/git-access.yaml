@@ -1,0 +1,51 @@
+provisioner: gcp
+name: git-access
+version: 1
+revision: 1
+displayName: Git access
+description: Configure access to a remote Git repository.
+target: ""
+keywords:
+  - git
+  - access
+  - credentials
+  - auth
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_login:
+      title: Login
+      description: Git login.
+      type: string
+    git_remote_path:
+      title: Repository URL
+      description: The repository to configure access to.
+      type: string
+    pipeline_secret_env_key:
+      title: Encryption Key
+      description: Name of a KMS key used to encrypt secret values.
+      type: string
+  required:
+    - pipeline_secret_env_key
+    - git_remote_path
+    - git_login
+  internal:
+    - pipeline_secret_env_key
+    - git_remote_path
+    - git_login
+template: |
+  {% set git_creds_path = '$$HOME/.git-credentials' %}
+  {% set git_config_path = '$$HOME/.gitconfig' %}
+  steps:
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'  && \
+      git config --file {{ git_config_path }} credential.useHttpPath true && \
+      git config --file {{ git_config_path }} credential.interactive never && \
+      git config --global url."https://{{ git_login }}:$$GIT_PASSWORD@github.com/".insteadOf "https://github.com/"
+      git config --global url."https://{{ git_login }}:$$GIT_PASSWORD@gitlab.com/".insteadOf "https://gitlab.com/"
+      echo "https://{{ git_login }}:$$GIT_PASSWORD@{{ git_remote_path }}" >> {{ git_creds_path }}

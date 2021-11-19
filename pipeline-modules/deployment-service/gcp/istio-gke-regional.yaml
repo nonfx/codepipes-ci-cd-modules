@@ -1,0 +1,528 @@
+provisioner: gcp
+name: istio-gke-regional
+version: 1
+revision: 1
+displayName: GKE Istio Based Deployment
+description: The template is used for Istio Based deployments and also provision Virtual Service for application
+target: ""
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - container
+
+inputs:
+  properties:
+    istioInjection:
+      title: Istio Injection Enabled
+      description: Enable Istio Injection in namespace
+      type: boolean
+      default: false
+    serviceAccountEnabled:
+      title: GCP Service Account Enabled
+      description: Use GCP Service Account
+      type: boolean
+      default: false
+    manageCertificate:
+      title: Managed Certificate from Google
+      description: Use GCP to procure Certificates
+      type: boolean
+      default: false
+    negEnabled:
+      title: GCP Network Endpoint Group Enabled
+      description: Expose GCP Network Endpoint Group
+      type: boolean
+      default: false
+    projectName: # TODO: should be internal
+      title: Codepipes Project Name
+      description: Codepipes Project Name
+      type: string
+      default: "codepipes"
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+    virtualService:
+      title: Virtual Service
+      description: Istio Virtual Service
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          rewriteEnabled:
+            title: Virtual Service Rewrite Enabled
+            type: string
+          rewriteValue:
+            title: Value of Virtual Service Rewrite Path
+            type: string
+          prefix:
+            title: Virtual Service Prefix
+            type: string
+    helm_chart:
+      title: Helm Chart
+      description: This is the type of Helm Chart to use (only for testing)
+      type: string
+      default: "basic-gke"
+    deployment:
+      title: Create Deployment
+      description: This is to create deployment
+      type: boolean
+      default: true
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+      default: ""
+      minlength: 1
+    customer_bucket:
+      title: Customer Bucket Name
+      description: This is a vanguard Customer  bucket name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    files:
+      title: Files
+      description: Files mounted in container
+      type: object
+      default: {}
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    service_port:
+      title: Service port
+      description: Service port
+      type: string
+      default: NodePort
+    ingressIP:
+      title: GKE Ingress IP
+      description: Ingress IP for GKE Ingress
+      type: string
+      default: ""
+    ingressIPName:
+      title: GKE Ingress IP Name
+      description: Ingress IP Name for GKE Ingress
+      type: string
+      default: ""
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    ports:
+      title: Ports
+      description: Port used in services
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          containerPort:
+            title: Container port
+            type: integer
+            maximum: 65535
+          healthCheck:
+            title: Health check path
+            type: string
+          name:
+            title: Service name
+            type: string
+            minlength: 1
+          protocol:
+            title: Protocol
+            type: string
+            default: TCP
+            enum:
+              - TCP
+              - UDP
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: ""
+      minlength: 1
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    deployment_templates_bucket:
+      title: Deployment templates bucket name
+      description: bucket name where all the deployment templates are hosted
+      type: string
+      default: vg-deployment-templates
+    deployment_timeout:
+      title: Deployment Timeout
+      description: Time to wait for pods to be ready before terming deployment as unsuccessful
+      type: string
+      default: 300s
+    autoscalingEnabled:
+      title: Enable Autoscaling
+      description: Whether to enable autoscaling
+      type: boolean
+      default: false
+    minReplicas:
+      title: Minimum Replicas
+      description: Minimum number of Replicas (if autoscaling is enabled)
+      type: integer
+      default: 1
+    maxReplicas:
+      title: Maximum Replicas
+      description: maximum number of Replicas (if autoscaling is enabled)
+      type: integer
+      default: 5
+    targetCPUUtilizationPercentage:
+      title: CPU Utilization to scale
+      description: Target CPU Utilization to scale replicase
+      type: integer
+      default: 80
+    cpuLimit:
+      title: CPU Limit
+      description: CPU Limit for the pods
+      type: string
+      default: 200m
+    memoryLimit:
+      title: Memory Limit
+      description: Memory Limit for the pods
+      type: string
+      default: 256Mi
+    cpuRequest:
+      title: CPU Request
+      description: CPU Request for the pods
+      type: string
+      default: 200m
+    memoryRequest:
+      title: Memory Request
+      description: Memory Request for the pods
+      type: string
+      default: 256Mi
+    replicaCount:
+      title: Replica Count
+      description: Replica Count 
+      type: integer
+      default: 1
+    maxUnavail:
+      title: Maximum Unavailaible Percentage or absolute value for Pods
+      description: Maximum Unavailaible 
+      type: string
+      default: 50%
+    maxSurge:
+      title: Maximum Surege Percentage or absolute value for Pods
+      description: Maximum Surege
+      type: string
+      default: 2
+    terminationGracePeriodSeconds:
+      title: Grace Period before terminating pod in seconds
+      description: Grace Period
+      type: integer
+      default: 30
+    liveFailThreshold:
+      title: Liveniness Probe Fail Threshold
+      description: Successive Fail Threshold for Liveniness Probe 
+      type: integer
+      default: 2
+    liveSuccThreshold:
+      title: Liveniness Probe Success Threshold
+      description: Successive Success Threshold for Liveniness Probe 
+      type: integer
+      default: 1
+    readFailThreshold:
+      title: Readiness Probe Fail Threshold
+      description: Successive Fail Threshold for Readiness Probe 
+      type: integer
+      default: 2
+    readSuccThreshold:
+      title: Readiness Probe Success Threshold
+      description: Successive Success Threshold for Readiness Probe 
+      type: integer
+      default: 1
+    probeDelay:
+      title: Probe Delay
+      description: Delay in seconds between probes
+      type: integer
+      default: 10
+    probePeriod:
+      title: Probe Period
+      description: Probe Period in seconds
+      type: integer
+      default: 4
+    probeTimeout:
+      title: Probe Timeout
+      description: Probe Timeout in seconds
+      type: integer
+      default: 2
+
+  required:
+    - cluster
+    - region
+  internal:
+    - app_env
+    - files
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - customer_bucket
+    - job_type
+    - pipeline_summary_var
+    - deployment_templates_bucket
+
+template: |
+  steps:
+  - id: 'Run Bash script'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      set -x && \
+      cd /workspace ;
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+      gsutil cp -r gs://{{deployment_templates_bucket}}/{{helm_chart}} . ;
+  - id: 'Install helm'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
+      cd cloud-builders-community/helm;
+      docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
+  {% if job_type == 'deploy' %}
+  - id: 'Setup environment variables'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/{{helm_chart}} ;
+      touch .helmignore;
+      gsutil cp gs://{{deployment_templates_bucket}}/aes . ;
+      chmod 777 aes;
+      echo 'aes' >> .helmignore;
+      {% if files %}
+      {% for mounthPath, fs in files %}
+      {% if fs %}
+      {% for file in fs %}
+      gsutil cp gs://{{customer_bucket}}/{{file}} . ;
+      ./aes -in={{file}} -out={{file}} -key=$$vg_pipeline_artifact_aes_key ;
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      gsutil rm -r gs://{{customer_bucket}} ;
+      {% endif %}
+      rm values.yaml;
+      echo "projectName: {{projectName}}
+      applicationName: {{applicationName}} #auto
+      environment:  {{environment}} #auto
+      project: {{project}} #auto
+      istioInjection: {{ istioInjection | lower }}
+      serviceAccount: {{ serviceAccountEnabled | lower }}
+      manageCertificate: {{ manageCertificate | lower }}
+      cloudProject: $PROJECT_ID
+
+      {% if deployment %}
+      deploy:
+        replicaCount: {{replicaCount}}
+        strategy: RollingUpdate
+        maxUnavail: {{maxUnavail}}
+        maxSurge: {{maxSurge}}
+        terminationGracePeriodSeconds: {{terminationGracePeriodSeconds}}
+        healthCheck:
+          liveFailThreshold: '{{liveFailThreshold}}'
+          liveSuccThreshold: '{{liveSuccThreshold}}'
+          readFailThreshold: '{{readFailThreshold}}'
+          readSuccThreshold: '{{readSuccThreshold}}'
+          delay: '{{probeDelay}}'
+          period: '{{probePeriod}}'
+          timeout: '{{probeTimeout}}'
+
+      image: #auto
+        repository: {{ repository }}
+        pullPolicy: Always
+        tag:  {{ tag }}
+        registryCredentials:
+          registry: $$docker_registry
+          username: $$docker_username
+          password: $$docker_password
+      {% endif %}
+      {% if ports %}
+      ports:
+      {% for port in ports%}
+        - name: {{port.name}}
+          containerPort: {{port.containerPort}}
+          protocol: {{port.protocol}}
+          {% if port.healthCheck %}
+          healthcheck: {{port.healthCheck}}
+          {% endif %}
+      {% endfor %}
+      {% endif %}
+
+      {% if ports %}
+      service:
+        type: {{ service_port }}
+        private: false
+        neg: {{ serviceAccountEnabled | lower }}
+      {% endif %}
+
+      {% if domains %}
+      domains:
+      {% for domain in domains %}
+      - name: {{domain.name}}
+      {% endfor %}
+      {% endif %}
+
+      {% if virtualService %}
+      virtualService:
+      {% for vs in virtualService %}
+        prefix: {{vs.prefix}}
+        rewrite:
+          enabled: {{vs.rewriteEnabled | lower }}
+          value: {{vs.rewriteValue}}
+      {% endfor %}
+      {% endif %}
+
+      {% if ingressIP %}
+      ingress:
+        {% if ingressIPName %}
+        staticIPName: {{ingressIPName}}
+        {% endif %}
+        staticIP: {{ingressIP}}
+      {% endif %}
+
+
+      autoscaling:
+        enabled: {{autoscalingEnabled}}
+        minReplicas: {{minReplicas}}
+        maxReplicas: {{maxReplicas}}
+        targetCPUUtilizationPercentage: {{targetCPUUtilizationPercentage}}
+
+      resourcequota:
+        quotaRequestsCpu: 100
+        quotaRequestsMem: 0.2
+        quotaLimitsCpu: 200
+        quotaLimitsMem: 0.3
+
+      resources:
+        limits:
+          cpu: {{cpuLimit}}
+          memory: {{memoryLimit}}
+        requests:
+          cpu: {{cpuRequest}}
+          memory: {{memoryRequest}}
+
+      lifecycle:
+        prestop:
+          command: ['/bin/sh', '-c', 'sleep 30']
+
+      artifacts:
+      {% for mountPath, fs in files %}
+        - mountPath: {{mountPath}}
+          files:
+          {% for file in fs %}
+            - '{{file}}'
+          {% endfor %}
+      {% endfor %}
+      envs:
+      " >> values.yaml;
+      env | while IFS= read -r line; do
+      value=${line#*=}
+      name=${line%%=*}
+      printf '  %s: "%s"\n' $name "$value" >> values.yaml
+      done;
+      cat values.yaml;
+
+  - id: 'Install Aplication'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      env;
+      cd /workspace/{{helm_chart}} ;
+      helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      {% if pipeline_summary_var %}
+      {% for summary in pipeline_summary_var %}
+      {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+      {% endif %}
+      {% if ports %}
+        summary=""
+        count=30
+        while [ true ]
+        do
+          sleep 2
+          summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}`
+          if [ ! -z "$summary" ]; then
+            echo "Service URL=http://"$summary >> summary.txt
+            break
+          fi
+          if [ $count -eq 0 ]; then
+            break
+          fi
+          count=`expr $count - 1`
+        done
+      {% endif %}
+      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      cat summary.txt;
+  {% else %}
+  - id: 'Uninstall application'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/{{helm_chart}} ;
+      helm list;
+      helm uninstall {{applicationName}}-{{environment}};
+  {% endif %}
