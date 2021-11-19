@@ -1,0 +1,58 @@
+provisioner: gcp
+name: test_module
+version: 1
+revision: 1
+displayName: Test Module
+description: Module for the integration test
+target: ""
+keywords:
+  - test
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    echo_float:
+      title: Echo Float value
+      description: The float to echo to the log.
+      type: number
+    echo_int:
+      title: Echo Integer value
+      description: The integer to echo to the log.
+      type: number
+    echo_list:
+      title: Echo List value
+      description: The List to echo to the log.
+      type: array
+      items:
+        type: string
+    echo_map:
+      title: Echo Map value
+      description: The Map to echo to the log.
+      type: object
+    echo_string:
+      title: Echo String value
+      description: The string to echo to the log.
+      type: string
+  required:
+    - echo_string
+    - echo_int
+    - echo_float
+    - echo_map
+    - echo_list
+template: |
+  steps:
+  - name: 'bash'
+    args:
+    - '-c'
+    - |-
+      echo "stringVal={{ echo_string }}"
+      echo "intVal={{ echo_int }}"
+      echo "floatVal={{ echo_float }}"
+      echo "mapVal:"
+      {% for map_key, map_value in echo_map %}
+      echo "    {{ map_key }}={{ map_value }}"
+      {% endfor %}
+      echo "listVal:"
+      {% for list_value in echo_list %}
+      echo "    {{ list_value }}"
+      {% endfor %}

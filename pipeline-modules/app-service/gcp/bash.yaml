@@ -1,0 +1,36 @@
+provisioner: gcp
+name: bash
+version: 1
+revision: 1
+displayName: Bash script
+description: The bash script to run
+target: ""
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    bash_script:
+      title: Bash script
+      description: This is a bash script
+      type: string
+      default: ""
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute the bash script from
+      type: string
+      default: repo
+  required:
+    - bash_script
+template: |
+  steps:
+  - id: 'Run Bash script'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/{{ working_dir }} ;
+      {{ bash_script }}

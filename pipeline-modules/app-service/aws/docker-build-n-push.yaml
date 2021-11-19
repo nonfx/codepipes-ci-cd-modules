@@ -1,0 +1,57 @@
+provisioner: aws
+name: docker-build-n-push
+version: 1
+revision: 1
+displayName: Docker Build
+description: This plugin is for Docker build & push
+target: ""
+keywords:
+  - Docker
+  - Push
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    docker_build_args:
+      title: Docker Build Arguments
+      description: Arguments for the docker build command
+      type: array
+      default: []
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  required:
+    - container_repository
+template: |
+  version: 0.2
+
+  phases:
+    pre_build:
+      commands:
+        - echo Logging in to Amazon ECR...
+        - aws --version
+        - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+    build:
+      commands:
+        - echo Build started on `date`
+        - echo Building the Docker image...
+        - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+    post_build:
+      commands:
+        - echo Build completed on `date`
+        - echo Pushing the Docker image...
+        - docker push {{container_repository}}:{{container_tag}}

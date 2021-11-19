@@ -1,0 +1,43 @@
+provisioner: aws
+name: git-access
+version: 1
+revision: 1
+displayName: Git access
+description: Configure access to a remote Git repository.
+target: ""
+keywords:
+  - git
+  - access
+  - credentials
+  - auth
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_login:
+      title: Login
+      description: Git login.
+      type: string
+    git_remote_path:
+      title: Repository URL
+      description: The repository to configure access to.
+      type: string
+  required:
+    - git_remote_path
+    - git_login
+  internal:
+    - git_remote_path
+    - git_login
+template: |
+  {% set git_creds_path = '$HOME/.git-credentials' %}
+  {% set git_config_path = '$HOME/.gitconfig' %}
+  version: 0.2
+  phases:
+    pre_build:
+      commands:
+        - git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'
+        - git config --file {{ git_config_path }} credential.useHttpPath true
+        - git config --file {{ git_config_path }} credential.interactive never
+        - git config --global url."https://{{ git_login }}:$GIT_PASSWORD@github.com/".insteadOf "https://github.com/"
+        - git config --global url."https://{{ git_login }}:$GIT_PASSWORD@gitlab.com/".insteadOf "https://gitlab.com/"
+        - echo "https://{{ git_login }}:$GIT_PASSWORD@{{ git_remote_path }}" >> {{ git_creds_path }}

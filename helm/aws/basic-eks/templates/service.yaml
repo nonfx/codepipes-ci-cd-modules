@@ -1,0 +1,26 @@
+{{- if .Values.ports -}}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  name: {{ .Values.applicationName }}
+  namespace: {{ .Values.applicationName }}
+  labels:
+    projectName: {{ .Values.applicationName }}
+    environment: {{ .Values.environment }}
+    type: service
+spec:
+  type:  NodePort
+  ports:
+  {{- range  $port := $.Values.ports }}
+    - name: {{$port.name}}
+      targetPort: {{$port.containerPort}}
+      port: {{$port.containerPort}}
+      protocol: {{$port.protocol}}
+  {{- end}}
+  selector:
+    projectName: {{ .Values.applicationName }}
+    environment: {{ .Values.environment }}
+    type: deployment
+{{- end}}

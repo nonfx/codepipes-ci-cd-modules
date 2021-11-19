@@ -1,0 +1,41 @@
+provisioner: gcp
+name: git-clone
+version: 1
+revision: 1
+displayName: Git clone
+description: Clone remote Git repository and checkout a given commit if specified.
+target: ""
+keywords:
+  - git
+  - clone
+  - checkout
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    git_remote_path:
+      title: Repository URL
+      description: The repository to clone from.
+      type: string
+  required:
+    - git_remote_path
+template: |
+  steps:
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      set -x && \
+      git clone {% if git_checkout_target %}--no-checkout{% endif %} https://{{ git_remote_path }} {{ git_local_path }}{% if git_checkout_target %} && \
+      cd {{ git_local_path }} && git checkout {{ git_checkout_target }}{% endif %}

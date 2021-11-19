@@ -1,0 +1,282 @@
+provisioner: "aws"
+name: "basic-eks-regional"
+version: 1
+revision: 1
+displayName: "EKS deployment"
+description: "The bash script to run"
+target: ""
+keywords: ["bash", "linux"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - "container"
+  requiredResources:
+    - aws_eks_cluster
+inputs:
+  type: object
+  properties:
+    ports:
+      title: Ports
+      description: Port used in services
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Service name
+            type: string
+            minLength: 1
+          containerPort:
+            title: Container port
+            type: integer
+            maximum: 65535
+          protocol:
+            title: Protocol
+            type: string
+            enum:
+              - TCP
+              - UDP
+            default: TCP
+          healthCheck:
+            title: Health check path
+            type: string
+            example: /
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+      default: ""
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: ""
+    roleArn:
+      title: Role ARN
+      description: Role for deployment in EKS
+      type: string
+      default: ""
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    files:
+      title: Files
+      description: Files mounted in container
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    customer_bucket:
+      title: Customer Bucket Name
+      description: This is a vanguard Customer  bucket name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    deployment_templates_bucket:
+      title: Deployment templates bucket name
+      description: bucket name where all the deployment templates are hosted
+      type: string
+    deployment_timeout:
+      title: Deployment Timeout
+      description: Time to wait for pods to be ready before terming deployment as unsuccessful
+      type: string
+      default: 300s
+  required: []
+  internal:
+    - app_env
+    - files
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - customer_bucket
+    - job_type
+    - pipeline_summary_var
+    - deployment_templates_bucket
+
+template: |
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - wget https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz
+        - tar -zxvf helm-v3.5.3-linux-amd64.tar.gz
+        - mv linux-amd64/helm /usr/local/bin/helm
+    build:
+      commands:
+        - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
+        {% if job_type == 'deploy' %}
+        - mkdir basic-eks
+        - aws s3 sync s3://{{deployment_templates_bucket}}/basic-eks basic-eks
+        - cd basic-eks ;
+        - touch .helmignore;
+        - aws s3 cp s3://{{deployment_templates_bucket}}/aes aes ;
+        - chmod 777 aes;
+        - |
+          echo 'aes' >> .helmignore;
+          {% if files %}
+          {% for mounthPath, fs in files %}
+          {% if fs %}
+          {% for file in fs %}
+          aws s3 cp s3://{{customer_bucket}}/{{file}} {{file}} ;
+          ./aes -in={{file}} -out={{file}} -key=$vg_pipeline_artifact_aes_key ;
+          {% endfor %}
+          {% endif %}
+          {% endfor %}
+          # aws s3 rm  s3://{{customer_bucket}} --recursive ;
+          {% endif %}
+          rm values.yaml;
+          echo "applicationName: {{applicationName}} #auto
+          environment:  {{environment}} #auto
+          project: {{project}} #auto
+
+          deploy:
+            replicaCount: 1
+            strategy: RollingUpdate
+            maxUnavail: 1
+            maxSurge: 1
+            terminationGracePeriodSeconds: 30
+            healthCheck:
+              liveFailThreshold: '2'
+              liveSuccThreshold: '1'
+              readFailThreshold: '2'
+              readSuccThreshold: '1'
+              delay: '10'
+              period: '4'
+              timeout: '2'
+
+          ports:
+          {% for port in ports%}
+            - name: {{port.name}}
+              containerPort: {{port.containerPort}}
+              protocol: {{port.protocol}}
+              {% if port.healthCheck %}
+              healthcheck: {{port.healthCheck}}
+              {% endif %}
+          {% endfor %}
+
+          image: #auto
+            repository: {{ repository }}
+            pullPolicy: Always
+            tag:  {{ tag }}
+            registryCredentials:
+              registry: $docker_registry
+              username: $docker_username
+              password: $docker_password
+
+          service:
+            type: nodeport
+            private: false
+
+          autoscaling:
+            enabled: false
+            minReplicas: 1
+            maxReplicas: 5
+            targetCPUUtilizationPercentage: 80
+
+          resourcequota:
+            quotaRequestsCpu: 100
+            quotaRequestsMem: 0.2
+            quotaLimitsCpu: 200
+            quotaLimitsMem: 0.3
+
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+          lifecycle:
+            prestop:
+              command: ['/bin/sh', '-c', 'sleep 30']
+
+          artifacts:
+          {% for mountPath, fs in files %}
+            - mountPath: {{mountPath}}
+              files:
+              {% for file in fs %}
+                - '{{file}}'
+              {% endfor %}
+          {% endfor %}
+          envs:
+          {% for env_key, env_value in app_env %}
+            {{env_key}}: '{{ env_value }}'
+          {% endfor %}
+          " >> values.yaml
+        - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+
+    post_build:
+      commands:
+        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+        {% if pipeline_summary_var %}
+        {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+        {% endif %}
+        {% if ports %}
+        - echo '#!/bin/bash' >> test.sh
+        - echo 'summary=""' >> test.sh
+        - echo 'count=30' >> test.sh
+        - echo 'while [ true ]; do' >> test.sh
+        - echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+        - echo 'if [ ! -z "$summary" ]; then' >> test.sh
+        - echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+        - echo 'fi' >> test.sh
+        - echo 'if [ $count -eq 0 ]; then' >> test.sh
+        - echo 'break' >> test.sh
+        - echo 'fi' >> test.sh
+        - echo 'count=`expr $count - 1`' >> test.sh
+        - echo 'done' >> test.sh
+        - chmod 755 ./test.sh
+        - ./test.sh
+        {% endif %}
+        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+        - cat summary.txt
+      {% else %}
+        - helm uninstall {{applicationName}}-{{environment}}
+      {% endif %}

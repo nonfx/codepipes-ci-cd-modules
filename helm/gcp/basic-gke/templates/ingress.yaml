@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: {{ .Values.applicationName }}-ingress
+  namespace: {{ .Values.applicationName }}
+  annotations:
+  {{- if .Values.service.private}}
+    kubernetes.io/ingress.class: "gce-internal"
+  {{- end}}
+spec:
+{{- $len := len .Values.ports }}
+{{- if eq $len 1 }}
+  backend:
+    serviceName: {{ .Values.applicationName }}
+    {{- range  $index,$port := .Values.ports }}
+    {{- if eq $index  0}}
+    servicePort: {{$port.name}}
+    {{- end}}
+    {{- end}}
+{{- else}}
+  rules:
+  - http:
+      paths:
+      {{- range $index,$port := .Values.ports }}
+      - path: /{{$port.name}}/*
+        backend:
+          serviceName: {{ $.Values.applicationName }}
+          servicePort: {{ $port.name}}
+      {{- end}}
+{{- end }}

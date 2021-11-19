@@ -1,0 +1,307 @@
+provisioner: gcp
+name: basic-gke-regional
+version: 1
+revision: 1
+displayName: GKE deployment
+description: The bash script to run
+target: ""
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - container
+  requiredResources:
+    - google_container_cluster
+inputs:
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+      default: ""
+      minlength: 1
+    customer_bucket:
+      title: Customer Bucket Name
+      description: This is a vanguard Customer  bucket name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    files:
+      title: Files
+      description: Files mounted in container
+      type: object
+      default: {}
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    ports:
+      title: Ports
+      description: Port used in services
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          containerPort:
+            title: Container port
+            type: integer
+            maximum: 65535
+          healthCheck:
+            title: Health check path
+            type: string
+          name:
+            title: Service name
+            type: string
+            minlength: 1
+          protocol:
+            title: Protocol
+            type: string
+            default: TCP
+            enum:
+              - TCP
+              - UDP
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: ""
+      minlength: 1
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    deployment_templates_bucket:
+      title: Deployment templates bucket name
+      description: bucket name where all the deployment templates are hosted
+      type: string
+    deployment_timeout:
+      title: Deployment Timeout
+      description: Time to wait for pods to be ready before terming deployment as unsuccessful
+      type: string
+      default: 300s
+  required:
+    - cluster
+    - region
+  internal:
+    - app_env
+    - files
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - customer_bucket
+    - job_type
+    - pipeline_summary_var
+    - deployment_templates_bucket
+template: |
+  steps:
+  - id: 'Run Bash script'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      set -x && \
+      cd /workspace ;
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+      gsutil cp -r gs://{{deployment_templates_bucket}}/basic-gke . ;
+  - id: 'Install helm'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
+      cd cloud-builders-community/helm;
+      docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
+  {% if job_type == 'deploy' %}
+  - id: 'Setup environment variables'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/basic-gke ;
+      touch .helmignore;
+      gsutil cp gs://{{deployment_templates_bucket}}/aes . ;
+      chmod 777 aes;
+      echo 'aes' >> .helmignore;
+      {% if files %}
+      {% for mounthPath, fs in files %}
+      {% if fs %}
+      {% for file in fs %}
+      gsutil cp gs://{{customer_bucket}}/{{file}} . ;
+      ./aes -in={{file}} -out={{file}} -key=$$vg_pipeline_artifact_aes_key ;
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+      gsutil rm -r gs://{{customer_bucket}} ;
+      {% endif %}
+      rm values.yaml;
+      apt-get update
+      apt install jq -y
+      echo "applicationName: {{applicationName}} #auto
+      environment:  {{environment}} #auto
+      project: {{project}} #auto
+      deploy:
+        replicaCount: 1
+        strategy: RollingUpdate
+        maxUnavail: 1
+        maxSurge: 1
+        terminationGracePeriodSeconds: 30
+        healthCheck:
+          liveFailThreshold: '2'
+          liveSuccThreshold: '1'
+          readFailThreshold: '2'
+          readSuccThreshold: '1'
+          delay: '10'
+          period: '4'
+          timeout: '2'
+      ports:
+      {% for port in ports%}
+        - name: {{port.name}}
+          containerPort: {{port.containerPort}}
+          protocol: {{port.protocol}}
+          {% if port.healthCheck %}
+          healthcheck: {{port.healthCheck}}
+          {% endif %}
+      {% endfor %}
+      image: #auto
+        repository: {{ repository }}
+        pullPolicy: Always
+        tag:  {{ tag }}
+        registryCredentials:
+          registry: $$docker_registry
+          username: $$docker_username
+          password: $$docker_password
+
+      service:
+        type: nodeport
+        private: false
+      autoscaling:
+        enabled: false
+        minReplicas: 1
+        maxReplicas: 5
+        targetCPUUtilizationPercentage: 80
+      resourcequota:
+        quotaRequestsCpu: 100
+        quotaRequestsMem: 0.2
+        quotaLimitsCpu: 200
+        quotaLimitsMem: 0.3
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+      lifecycle:
+        prestop:
+          command: ['/bin/sh', '-c', 'sleep 30']
+      artifacts:
+      {% for mountPath, fs in files %}
+        - mountPath: {{mountPath}}
+          files:
+          {% for file in fs %}
+            - '{{file}}'
+          {% endfor %}
+      {% endfor %}
+      envs:
+      " >> values.yaml;
+      env | while IFS= read -r line; do
+      value=${line#*=}
+      name=${line%%=*}
+      printf '"%s": %s\n' $name "$(printf %s "$value" | jq -aRs .)" >> values.yaml
+      done;
+  - id: 'Install Aplication'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/basic-gke ;
+      helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      {% if pipeline_summary_var %}
+      {% for summary in pipeline_summary_var %}
+      {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+      {% endif %}
+      {% if ports %}
+        summary=""
+        count=30
+        while [ true ]
+        do
+          sleep 2
+          summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}`
+          if [ ! -z "$summary" ]; then
+            echo "Service URL=http://"$summary >> summary.txt
+            break
+          fi
+          if [ $count -eq 0 ]; then
+            break
+          fi
+          count=`expr $count - 1`
+        done
+      {% endif %}
+      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      cat summary.txt;
+  {% else %}
+  - id: 'Uninstall application'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd /workspace/basic-gke ;
+      helm list;
+      helm uninstall {{applicationName}}-{{environment}};
+  {% endif %}
