@@ -55,12 +55,26 @@ inputs:
       description: "When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon"
       type: string
       default: "false"
+    pipeline_module_git:
+      title: Pipeline module git repo url
+      description: git url for cloning the pipeline module repo.
+      type: string
+    pipeline_module_git_rev:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
   internal:
     - pipeline_logs_bucket
     - pipeline_env
     - pipeline_secret_env
     - privileged_mode
+    - pipeline_module_git
+    - pipeline_module_git_rev
 template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+
   artifacts:
     type: "NO_ARTIFACTS"
   badgeenabled: null
@@ -104,7 +118,28 @@ template: |
   source:
     auth: null
     buildstatusconfig: null
-    buildspec: ""
+    buildspec: |
+      phases:
+        pre_build:
+          commands:
+            # installing jq v1.6
+            - curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            - mkdir {{workspace}}/bin && mv jq-linux64 {{workspace}}/bin/jq
+            - chmod +x {{workspace}}/bin/jq
+            - export PATH="$PATH:{{workspace}}/bin"
+
+            # Preparing environment variables file...
+              {% for env_key, env_value in pipeline_env %}
+            - printf '{{env_key}}=%s\n' "$(printf '%s' "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
+              {% endfor %}
+              {% for env_key, env_value in pipeline_secret_env %}
+            - printf '{{env_key}}=%s\n' "$(printf '%s' "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
+              {% endfor %}
+            - cat {{pipeline_env_file}}
+
+            # Cloning the pipeline modules...
+            - mkdir -p {{pipeline_modules_path}}
+            - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
     gitclonedepth: null
     gitsubmodulesconfig: null
     insecuressl: null

@@ -116,10 +116,6 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-    deployment_templates_bucket:
-      title: Deployment templates bucket name
-      description: bucket name where all the deployment templates are hosted
-      type: string
     deployment_timeout:
       title: Deployment Timeout
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
@@ -137,9 +133,13 @@ inputs:
     - customer_bucket
     - job_type
     - pipeline_summary_var
-    - deployment_templates_bucket
 
 template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
+
   version: 0.2
   phases:
     install:
@@ -151,20 +151,15 @@ template: |
       commands:
         - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
         {% if job_type == 'deploy' %}
-        - mkdir basic-eks
-        - aws s3 sync s3://{{deployment_templates_bucket}}/basic-eks basic-eks
-        - cd basic-eks ;
+        - cd {{helm_chart_path}} ;
         - touch .helmignore;
-        - aws s3 cp s3://{{deployment_templates_bucket}}/aes aes ;
-        - chmod 777 aes;
         - |
-          echo 'aes' >> .helmignore;
           {% if files %}
           {% for mounthPath, fs in files %}
           {% if fs %}
           {% for file in fs %}
           aws s3 cp s3://{{customer_bucket}}/{{file}} {{file}} ;
-          ./aes -in={{file}} -out={{file}} -key=$vg_pipeline_artifact_aes_key ;
+          openssl aes-256-cbc -md sha256 -pbkdf2 -d -in {{file}} -out {{file}} -k $vg_pipeline_artifact_aes_key
           {% endfor %}
           {% endif %}
           {% endfor %}
@@ -246,10 +241,12 @@ template: |
               {% endfor %}
           {% endfor %}
           envs:
-          {% for env_key, env_value in app_env %}
-            {{env_key}}: '{{ env_value }}'
-          {% endfor %}
           " >> values.yaml
+          cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' "$name" "$value" >> values.yaml
+          done;
         - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
 
     post_build:
