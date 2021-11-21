@@ -113,10 +113,6 @@ inputs:
       description: Tagged container will deploy
       type: string
       default: latest
-    deployment_templates_bucket:
-      title: Deployment templates bucket name
-      description: bucket name where all the deployment templates are hosted
-      type: string
     deployment_timeout:
       title: Deployment Timeout
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
@@ -136,19 +132,14 @@ inputs:
     - customer_bucket
     - job_type
     - pipeline_summary_var
-    - deployment_templates_bucket
+
 template: |
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
+
   steps:
-  - id: 'Run Bash script'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      set -x && \
-      cd /workspace ;
-      gcloud container clusters get-credentials {{cluster}} --region {{region}}
-      gsutil cp -r gs://{{deployment_templates_bucket}}/basic-gke . ;
   - id: 'Install helm'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -159,31 +150,26 @@ template: |
       cd cloud-builders-community/helm;
       docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
   {% if job_type == 'deploy' %}
-  - id: 'Setup environment variables'
+  - id: 'Setup helm values'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      cd /workspace/basic-gke ;
+      cd {{helm_chart_path}} ;
       touch .helmignore;
-      gsutil cp gs://{{deployment_templates_bucket}}/aes . ;
-      chmod 777 aes;
-      echo 'aes' >> .helmignore;
       {% if files %}
       {% for mounthPath, fs in files %}
       {% if fs %}
       {% for file in fs %}
       gsutil cp gs://{{customer_bucket}}/{{file}} . ;
-      ./aes -in={{file}} -out={{file}} -key=$$vg_pipeline_artifact_aes_key ;
+      openssl aes-256-cbc -md sha256 -pbkdf2 -d -in {{file}} -out {{file}} -k $$vg_pipeline_artifact_aes_key
       {% endfor %}
       {% endif %}
       {% endfor %}
       gsutil rm -r gs://{{customer_bucket}} ;
       {% endif %}
       rm values.yaml;
-      apt-get update
-      apt install jq -y
       echo "applicationName: {{applicationName}} #auto
       environment:  {{environment}} #auto
       project: {{project}} #auto
@@ -252,20 +238,21 @@ template: |
       {% endfor %}
       envs:
       " >> values.yaml;
-      env | while IFS= read -r line; do
+      cat {{pipeline_env_file}} | while IFS= read -r line; do
       value=${line#*=}
       name=${line%%=*}
-      printf '"%s": %s\n' $name "$(printf %s "$value" | jq -aRs .)" >> values.yaml
+      printf '  %s: %s\n' $name "$value" >> values.yaml
       done;
-  - id: 'Install Aplication'
+  - id: 'Install Application'
     name: 'gcr.io/$PROJECT_ID/helm'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      cd /workspace/basic-gke ;
+      cd {{helm_chart_path}} ;
       helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - id: 'Extract summary vars'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
@@ -301,7 +288,7 @@ template: |
     args:
     - '-c'
     - |
-      cd /workspace/basic-gke ;
+      cd {{helm_chart_path}} ;
       helm list;
       helm uninstall {{applicationName}}-{{environment}};
   {% endif %}
