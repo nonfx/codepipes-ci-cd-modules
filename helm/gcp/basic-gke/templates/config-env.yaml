@@ -9,5 +9,5 @@ metadata:
     type: configmap
 data:
   {{- range $key,$val := .Values.envs }}
-    {{$key}}: "{{$val}}"
+  {{$key}}: {{$val | quote}}
   {{- end}}

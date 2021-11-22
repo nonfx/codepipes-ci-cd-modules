@@ -140,6 +140,13 @@ template: |
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
 
   steps:
+  - id: 'gcloud container setup'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
   - id: 'Install helm'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
@@ -156,7 +163,9 @@ template: |
     args:
     - '-c'
     - |
+      export PATH="$$PATH:{{workspace}}/bin";
       cd {{helm_chart_path}} ;
+
       touch .helmignore;
       {% if files %}
       {% for mounthPath, fs in files %}
@@ -170,6 +179,7 @@ template: |
       gsutil rm -r gs://{{customer_bucket}} ;
       {% endif %}
       rm values.yaml;
+
       echo "applicationName: {{applicationName}} #auto
       environment:  {{environment}} #auto
       project: {{project}} #auto
@@ -202,9 +212,11 @@ template: |
         tag:  {{ tag }}
         registryCredentials:
           registry: $$docker_registry
-          username: $$docker_username
-          password: $$docker_password
+          username: $$docker_username" >> values.yaml
 
+      printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs)" >> values.yaml
+
+      echo "
       service:
         type: nodeport
         private: false
@@ -236,8 +248,7 @@ template: |
             - '{{file}}'
           {% endfor %}
       {% endfor %}
-      envs:
-      " >> values.yaml;
+      envs:" >> values.yaml;
       cat {{pipeline_env_file}} | while IFS= read -r line; do
       value=${line#*=}
       name=${line%%=*}
