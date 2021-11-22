@@ -14,11 +14,6 @@ meta:
     - container
 inputs:
   properties:
-    app_env:
-      title: Application Environment
-      description: Application Related Envs
-      type: object
-      default: {}
     applicationName:
       title: Application name
       description: This is vanguard application name
@@ -64,7 +59,6 @@ inputs:
     - region
     - allowUnauthenticated
   internal:
-    - app_env
     - applicationName
     - environment
     - project
@@ -72,8 +66,28 @@ inputs:
     - tag
     - job_type
 template: |
+  ########################################################################################################################################################
+  # Switch the gcloud credentials with the service account provided by user.                                                                             #                                                                                    #
+  # The module creates knative config yaml to create cloud run instance,                                                                                 #
+  # Additionally it has been provided with policy config to control ingress traffic                                                                      #
+  # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+  # So we don't have to worry about character escaping in this module.                                                                                   #
+  ########################################################################################################################################################
+
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set google_credentials_path = workspace|add:'/codepipes-user-sa.json' %}
+
   steps:
   {% if job_type == 'deploy' %}
+  - id: 'Switch gcloud auth'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" >>  {{ google_credentials_path }}
+      gcloud auth activate-service-account --key-file  {{ google_credentials_path }}
   - id: 'Enable Cloud Run API'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -87,11 +101,43 @@ template: |
     args:
     - '-c'
     - |
-      gcloud run deploy {{applicationName|lower}} --image {{repository}}:{{tag}} --region {{region}} \
-      --platform managed \
-      --labels codepipes-project={{project}} \
-      --labels codepipes-enviroment={{environment}} \
-      {% if allowUnauthenticated == true %} --allow-unauthenticated {% else %}  {% endif %}
+      echo "
+      apiVersion: serving.knative.dev/v1
+      kind: Service
+      metadata:
+        name: {{applicationName|lower}}
+      spec:
+        template:
+          metadata:
+            labels:
+              codepipes-project: {{project}}
+              codepipes-environment: {{environment}}
+          spec:
+            containers:
+            - image: {{repository}}:{{tag}}
+              ports:
+              - name: http1
+                containerPort: 8080
+              env:" >> app.yaml
+      cat {{ pipeline_env_file }} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf '        - name: %s\n          value: %s\n' "$name" "$value" >>  app.yaml
+      done;
+      gcloud run services replace app.yaml --region {{region}}
+  {% if allowUnauthenticated == true %}
+  - id: 'Allow public access'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "bindings:
+            - members:
+              - allUsers
+              role: roles/run.invoker" >> policy.yaml
+      gcloud run services set-iam-policy {{applicationName|lower}} policy.yaml  --quiet --region {{region}}
+  {% else %}  {% endif %}
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -109,6 +155,5 @@ template: |
     args:
     - '-c'
     - |
-      gcloud beta run services delete {{applicationName}} --region {{region}} --platform managed --quiet;
+      gcloud beta run services delete {{applicationName|lower}} --region {{region}} --platform managed --quiet;
   {% endif %}
-
