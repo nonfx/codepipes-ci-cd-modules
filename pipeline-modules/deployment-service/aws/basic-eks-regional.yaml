@@ -149,6 +149,7 @@ template: |
         - mv linux-amd64/helm /usr/local/bin/helm
     build:
       commands:
+        - export PATH="$PATH:{{workspace}}/bin"
         - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
         {% if job_type == 'deploy' %}
         - cd {{helm_chart_path}} ;
@@ -166,6 +167,7 @@ template: |
           # aws s3 rm  s3://{{customer_bucket}} --recursive ;
           {% endif %}
           rm values.yaml;
+
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
@@ -201,9 +203,11 @@ template: |
             tag:  {{ tag }}
             registryCredentials:
               registry: $docker_registry
-              username: $docker_username
-              password: $docker_password
+              username: $docker_username" >> values.yaml
 
+          printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs)" >> values.yaml
+
+          echo "
           service:
             type: nodeport
             private: false
