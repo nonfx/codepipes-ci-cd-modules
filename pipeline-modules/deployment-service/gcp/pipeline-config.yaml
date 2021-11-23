@@ -92,7 +92,7 @@ template: |
       export GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-'{{ google_credentials_path }}' }
 
       # write the service-account json to file at GOOGLE_APPLICATION_CREDENTIALS
-      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" | base64 --decode > $$GOOGLE_APPLICATION_CREDENTIALS
+      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" > $$GOOGLE_APPLICATION_CREDENTIALS
 
       # activate gcloud cli tools to use GOOGLE_APPLICATION_CREDENTIALS
       gcloud auth activate-service-account --key-file $$GOOGLE_APPLICATION_CREDENTIALS
