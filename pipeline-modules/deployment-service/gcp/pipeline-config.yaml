@@ -79,8 +79,24 @@ template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set google_credentials_path = workspace|add:'/codepipes-user-sa.json' %}
 
   steps:
+  - id: 'Switch gcloud auth'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      # make sure GOOGLE_APPLICATION_CREDENTIALS is set
+      export GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-'{{ google_credentials_path }}' }
+
+      # write the service-account json to file at GOOGLE_APPLICATION_CREDENTIALS
+      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" | base64 --decode > $$GOOGLE_APPLICATION_CREDENTIALS
+
+      # activate gcloud cli tools to use GOOGLE_APPLICATION_CREDENTIALS
+      gcloud auth activate-service-account --key-file $$GOOGLE_APPLICATION_CREDENTIALS
+
   - id: 'Init setup'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
