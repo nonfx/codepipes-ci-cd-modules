@@ -76,18 +76,9 @@ template: |
 
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set google_credentials_path = workspace|add:'/codepipes-user-sa.json' %}
 
   steps:
   {% if job_type == 'deploy' %}
-  - id: 'Switch gcloud auth'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" >>  {{ google_credentials_path }}
-      gcloud auth activate-service-account --key-file  {{ google_credentials_path }}
   - id: 'Enable Cloud Run API'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
