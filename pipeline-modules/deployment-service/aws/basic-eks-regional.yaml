@@ -166,7 +166,7 @@ template: |
           {% endfor %}
           # aws s3 rm  s3://{{customer_bucket}} --recursive ;
           {% endif %}
-          rm -f values.yaml;
+          rm values.yaml;
 
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
@@ -203,8 +203,9 @@ template: |
             tag:  {{ tag }}
             registryCredentials:
               registry: $docker_registry
-              username: $docker_username
-              password: $docker_password" >> values.yaml
+              username: $docker_username" >> values.yaml
+
+          printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs)" >> values.yaml
 
           echo "
           service:
