@@ -163,7 +163,7 @@ template: |
     args:
     - '-c'
     - |
-      export PATH="$$PATH:{{workspace}}/bin";
+      export PATH="{{workspace}}/bin:$$PATH";
       cd {{helm_chart_path}} ;
 
       touch .helmignore;
@@ -214,7 +214,7 @@ template: |
           registry: $$docker_registry
           username: $$docker_username" >> values.yaml
 
-      printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs)" >> values.yaml
+      printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
       echo "
       service:
