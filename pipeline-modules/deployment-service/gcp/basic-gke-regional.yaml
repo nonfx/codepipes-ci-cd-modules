@@ -262,8 +262,7 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
-  - id: 'Extract summary vars'
-    name: 'gcr.io/cloud-builders/gcloud'
+  - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
