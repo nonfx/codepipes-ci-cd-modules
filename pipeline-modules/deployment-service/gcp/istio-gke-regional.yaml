@@ -87,8 +87,6 @@ inputs:
       title: Cluster Name
       description: Cluster name in which deployment will happen
       type: string
-      default: ""
-      minlength: 1
     customer_bucket:
       title: Customer Bucket Name
       description: This is a vanguard Customer  bucket name
@@ -145,6 +143,7 @@ inputs:
       default: []
       items:
         type: object
+        required: [name]
         properties:
           containerPort:
             title: Container port
@@ -156,7 +155,6 @@ inputs:
           name:
             title: Service name
             type: string
-            minlength: 1
           protocol:
             title: Protocol
             type: string
@@ -173,8 +171,6 @@ inputs:
       title: Region name
       description: region name for cluster
       type: string
-      default: ""
-      minlength: 1
     repository:
       title: Container Repository
       description: Enter Full container url without tag

@@ -22,11 +22,11 @@ inputs:
       default: []
       items:
         type: object
+        required: [name]
         properties:
           name:
             title: Service name
             type: string
-            minLength: 1
           containerPort:
             title: Container port
             type: integer
