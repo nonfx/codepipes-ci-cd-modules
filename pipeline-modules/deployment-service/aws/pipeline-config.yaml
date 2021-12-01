@@ -126,7 +126,7 @@ template: |
             - curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
             - mkdir {{workspace}}/bin && mv jq-linux64 {{workspace}}/bin/jq
             - chmod +x {{workspace}}/bin/jq
-            - export PATH="$PATH:{{workspace}}/bin"
+            - export PATH="{{workspace}}/bin:$PATH"
 
             # Preparing environment variables file...
               {% for env_key, env_value in pipeline_env %}

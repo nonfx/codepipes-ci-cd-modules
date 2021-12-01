@@ -149,7 +149,7 @@ template: |
         - mv linux-amd64/helm /usr/local/bin/helm
     build:
       commands:
-        - export PATH="$PATH:{{workspace}}/bin"
+        - export PATH="{{workspace}}/bin:$PATH"
         - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
         {% if job_type == 'deploy' %}
         - cd {{helm_chart_path}} ;
@@ -203,8 +203,9 @@ template: |
             tag:  {{ tag }}
             registryCredentials:
               registry: $docker_registry
-              username: $docker_username
-              password: $docker_password" >> values.yaml
+              username: $docker_username" >> values.yaml
+
+          printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
           echo "
           service:
