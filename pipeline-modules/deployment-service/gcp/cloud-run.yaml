@@ -33,8 +33,6 @@ inputs:
       title: Region name
       description: region name for cluster
       type: string
-      default: ""
-      minlength: 1
     repository:
       title: Container Repository
       description: Enter Full container url without tag
