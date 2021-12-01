@@ -166,7 +166,7 @@ template: |
           {% endfor %}
           # aws s3 rm  s3://{{customer_bucket}} --recursive ;
           {% endif %}
-          rm values.yaml;
+          rm -f values.yaml;
 
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
