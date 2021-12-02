@@ -65,7 +65,7 @@ inputs:
     - job_type
 template: |
   ########################################################################################################################################################
-  # Switch the gcloud credentials with the service account provided by user.                                                                             #                                                                                    #
+  # Switch the gcloud credentials with the service account provided by user.                                                                             #
   # The module creates knative config yaml to create cloud run instance,                                                                                 #
   # Additionally it has been provided with policy config to control ingress traffic                                                                      #
   # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
