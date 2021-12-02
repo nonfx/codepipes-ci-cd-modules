@@ -112,10 +112,10 @@ template: |
             name=${line%%=*}
             if [ $c -ge $length ] #Check to add or remove trailing comma while writing JSON
             then
-                printf '"%s":"%s"\n' $name "$value" >> env.json
+                printf '"%s":%s\n' "$name" "$value" >> env.json
                 break;
             else
-                printf '"%s":"%s",\n' $name "$value" >> env.json
+                printf '"%s":%s,\n' "$name" "$value" >> env.json
             fi
           c=$((c+1)) #Incrementing the counter
           done;
