@@ -4,7 +4,7 @@ version: 1
 revision: 1
 displayName: "App runner deployment"
 description: "AWS App Runner Deployment template"
-target: ""
+target: "deployment-template"
 keywords: ["bash", "linux"]
 author: "CloudCover"
 meta:

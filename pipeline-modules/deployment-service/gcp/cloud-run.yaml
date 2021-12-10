@@ -4,7 +4,7 @@ version: 1
 revision: 1
 displayName: Cloud Run Deployment
 description: Deploy cloud run on GCP
-target: ""
+target: "deployment-template"
 keywords:
   - bash
   - linux
