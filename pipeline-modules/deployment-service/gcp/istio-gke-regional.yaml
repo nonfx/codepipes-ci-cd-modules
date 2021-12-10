@@ -4,7 +4,7 @@ version: 1
 revision: 1
 displayName: GKE Istio Based Deployment
 description: The template is used for Istio Based deployments and also provision Virtual Service for application
-target: ""
+target: "deployment-template"
 keywords:
   - bash
   - linux

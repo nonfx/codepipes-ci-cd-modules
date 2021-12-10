@@ -4,7 +4,7 @@ version: 1
 revision: 1
 displayName: GKE deployment
 description: The bash script to run
-target: ""
+target: "deployment-template"
 keywords:
   - bash
   - linux
