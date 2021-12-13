@@ -129,13 +129,18 @@ template: |
             - export PATH="{{workspace}}/bin:$PATH"
 
             # Preparing environment variables file...
-              {% for env_key, env_value in pipeline_env %}
-            - printf '{{env_key}}=%s\n' "$(printf '%s' "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
-              {% endfor %}
-              {% for env_key, env_value in pipeline_secret_env %}
-            - printf '{{env_key}}=%s\n' "$(printf '%s' "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
-              {% endfor %}
-            - cat {{pipeline_env_file}}
+            - exported_variable_names=({% for env_key in pipeline_env %} "{{env_key}}" {% endfor %}{% for env_key in pipeline_secret_env %} "{{env_key}}" {% endfor %})
+            - env | while IFS= read -r line; do
+                name=${line%%=*}
+                re=[[:blank:]]$name[[:blank:]]
+                printf "  $name -> "
+                if [[ " ${exported_variable_names[@]} " =~ $re ]]; then
+                  printf "$name=%s\n" "$(printf '%s' "\$\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
+                  printf "EXPORT\n"
+                else
+                  printf "SKIP\n"
+                fi
+              done
 
             # Cloning the pipeline modules...
             - mkdir -p {{pipeline_modules_path}}
