@@ -119,6 +119,8 @@ template: |
     auth: null
     buildstatusconfig: null
     buildspec: |
+      env:
+        shell: bash
       phases:
         pre_build:
           commands:
@@ -129,8 +131,9 @@ template: |
             - export PATH="{{workspace}}/bin:$PATH"
 
             # Preparing environment variables file...
-            - exported_variable_names=({% for env_key in pipeline_env %} "{{env_key}}" {% endfor %}{% for env_key in pipeline_secret_env %} "{{env_key}}" {% endfor %})
-            - env | while IFS= read -r line; do
+            - |
+              exported_variable_names=({% for env_key in pipeline_env %} "{{env_key}}" {% endfor %}{% for env_key in pipeline_secret_env %} "{{env_key}}" {% endfor %})
+              env | while IFS= read -r line; do
                 name=${line%%=*}
                 re=[[:blank:]]$name[[:blank:]]
                 printf "  $name -> "
