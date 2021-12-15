@@ -113,7 +113,7 @@ template: |
       for name in $${__VG_EXPORTED_ENV_NAMES}
       do
         printf "$$name=%s\n" "$(eval printf "%s" "\$$$name" | jq -aRs .)" >> {{pipeline_env_file}}
-        printf "Exporting variable '$name'"
+        printf "Exporting variable '$name'\n"
       done
 
       echo "Cloning the pipeline modules..."
@@ -129,7 +129,7 @@ template: |
    {% if pipeline_machine_type %}machineType: {{ pipeline_machine_type }}{% endif %}
    {% if pipeline_disk_size_gb %}diskSizeGb: '{{ pipeline_disk_size_gb }}'{% endif %}
    env:
-   - '__VG_EXPORTED_ENV_NAMES="{% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"'
+   - '__VG_EXPORTED_ENV_NAMES={% for env_key in pipeline_env %}{{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %}{{env_key}} {% endfor %}'
    {% for env_key, env_value in pipeline_env %}
    - '{{env_key}}={{ env_value }}'
    {% endfor %}
