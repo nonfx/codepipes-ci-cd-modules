@@ -87,6 +87,9 @@ template: |
     certificate: null
     computetype: "{{ pipeline_compute_type }}"
     environmentvariables:
+    - name: "__VG_EXPORTED_ENV_NAMES"
+      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
+      type: "PLAINTEXT"
     {% for env_key, env_value in pipeline_env %}
     - name: "{{ env_key }}"
       value: "{{ env_value }}"
@@ -132,17 +135,10 @@ template: |
 
             # Preparing environment variables file...
             - |
-              exported_variable_names=({% for env_key in pipeline_env %} "{{env_key}}" {% endfor %}{% for env_key in pipeline_secret_env %} "{{env_key}}" {% endfor %})
-              env | while IFS= read -r line; do
-                name=${line%%=*}
-                re=[[:blank:]]$name[[:blank:]]
-                printf "  $name -> "
-                if [[ " ${exported_variable_names[@]} " =~ $re ]]; then
-                  printf "$name=%s\n" "$(printf '%s' "\$\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
-                  printf "EXPORT\n"
-                else
-                  printf "SKIP\n"
-                fi
+              for name in ${__VG_EXPORTED_ENV_NAMES}
+              do
+                printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
+                printf "Exporting variable '$name'"
               done
 
             # Cloning the pipeline modules...
