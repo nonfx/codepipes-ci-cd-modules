@@ -138,7 +138,7 @@ template: |
               for name in ${__VG_EXPORTED_ENV_NAMES}
               do
                 printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
-                printf "Exporting variable '$name'"
+                printf "Exporting variable '$name'\n"
               done
 
             # Cloning the pipeline modules...
