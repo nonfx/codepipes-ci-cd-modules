@@ -301,7 +301,7 @@ template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
 
   steps:
   - id: 'gcloud container setup'

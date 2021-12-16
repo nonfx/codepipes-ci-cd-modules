@@ -1,0 +1,12 @@
+{{- if .Values.manageCertificate }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ .Values.projectName | lower }}-certificate
+  namespace: istio-system
+spec:
+  domains:
+    {{- range .Values.domains }}
+    - {{ .name }} 
+    {{- end }}
+{{- end}}
