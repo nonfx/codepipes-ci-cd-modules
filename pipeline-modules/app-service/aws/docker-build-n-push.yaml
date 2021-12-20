@@ -42,9 +42,8 @@ template: |
   phases:
     pre_build:
       commands:
-        - echo Logging in to Amazon ECR...
-        - aws --version
-        - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+        - echo Logging in to docker
+        - echo $docker_password | docker login -u $docker_username --password-stdin $docker_registry
     build:
       commands:
         - echo Build started on `date`

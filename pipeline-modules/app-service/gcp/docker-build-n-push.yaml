@@ -38,6 +38,13 @@ inputs:
     - container_repository
 template: |
   steps:
+  - id: 'Docker login'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
   - id: 'Docker Build'
     name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}
