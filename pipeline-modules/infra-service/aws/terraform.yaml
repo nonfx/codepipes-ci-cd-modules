@@ -83,6 +83,7 @@ inputs:
     - tf_action
     - tf_state_file
     - tf_plan_file
+    - tf_version
 template: |
   {% set artifact_root_path = artifact_bucket|add:"/"|add:artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
   {% set artifact_build_path = artifact_root_path|add:"/"|add:"$CODEBUILD_BUILD_ID" %}  {# <artifact_bucket>/<artifact_dir>/<build_id> #}
