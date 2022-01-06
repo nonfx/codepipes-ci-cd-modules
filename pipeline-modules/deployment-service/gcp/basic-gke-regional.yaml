@@ -132,6 +132,7 @@ inputs:
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
 
@@ -249,6 +250,12 @@ template: |
       value=${line#*=}
       name=${line%%=*}
       printf '  %s: %s\n' $name "$value" >> values.yaml
+      done;
+      echo "secrets:" >> values.yaml;
+      cat {{pipeline_secret_file}} | while IFS= read -r line; do
+      value=${line#*=}
+      name=${line%%=*}
+      printf '  %s: %s\n' $name $value >> values.yaml
       done;
   - id: 'Install Application'
     name: 'gcr.io/$PROJECT_ID/helm'
