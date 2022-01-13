@@ -2,7 +2,7 @@ provisioner: gcp
 name: gke-istio-app
 version: 1
 revision: 1
-displayName: Run istio commands on GKE
+displayName: Istio Commands GKE
 description: To run istio commands on GKE
 target: "deployment-template"
 keywords:
@@ -46,7 +46,7 @@ template: |
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
 
   steps:
-  - id: 'istio installation'
+  - id: 'Istio installation'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
