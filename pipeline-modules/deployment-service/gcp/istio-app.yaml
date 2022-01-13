@@ -2,7 +2,7 @@ provisioner: gcp
 name: gke-istio-app
 version: 1
 revision: 1
-displayName: Run istio commands on GKE
+displayName: Istio Commands GKE
 description: To run istio commands on GKE
 target: "deployment-template"
 keywords:
