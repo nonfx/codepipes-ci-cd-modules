@@ -61,7 +61,7 @@ inputs:
       title: Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to run.
       type: integer
-      default: 4000
+      default: 60
   internal:
     - pipeline_env
     - pipeline_secret_env
