@@ -39,7 +39,7 @@ inputs:
       title: Run Timeout [min]
       description: Amount of time in minutes the pipeline will be allowed to run.
       type: integer
-      default: 60
+      default: 480
     pipeline_secret_env:
       title: Global Secret Environment
       description: Mapping of globally available secret variable id.
