@@ -1,0 +1,63 @@
+provisioner: gcp
+name: gke-istio-app
+version: 1
+revision: 1
+displayName: Istio Commands GKE
+description: To run istio commands on GKE
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - container
+  requiredResources:
+    - google_container_cluster
+inputs:
+  properties:
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+    istio_version:
+      title: Istio Version
+      description: Istio version to install
+      type: string
+      default: ""
+    istio_args:
+      title: Istio Arguments
+      description: Istio Argument
+      type: string
+      default: install --set profile=default
+
+  required:
+    - cluster
+    - region
+
+template: |
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
+
+  steps:
+  - id: 'Istio installation'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      #Set kubernetes config
+      gcloud container clusters get-credentials testing --region us-central1
+      #Install Istio
+      # Determines the operating system.
+      curl -sL https://istio.io/downloadIstioctl | sh -
+      export PATH=$$PATH:$$HOME/.istioctl/bin
+      istioctl {{istio_args}} -y;
+    env:
+    - 'ISTIO_VERSION={{istio_version}}'
