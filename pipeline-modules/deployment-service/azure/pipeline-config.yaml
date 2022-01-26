@@ -1,0 +1,30 @@
+provisioner: azure
+name: pipeline-config
+version: 1
+revision: 1
+displayName: Configure Pipeline
+description: Configure global pipeline options and environment.
+target: config
+keywords:
+  - env
+  - environment
+  - secret
+  - config
+  - configuration
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    variable_group_name:
+      title: Secret Variables Group
+      description: Keeps all secret variables available to pipeline.
+      type: string
+      default: ""
+  required:
+    - variable_group_name
+  internal:
+    - variable_group_name
+template: |
+  name: '$(Date:yyyyMMdd)$(Rev:.r)'
+  variables:
+    - group: {{ variable_group_name }}
