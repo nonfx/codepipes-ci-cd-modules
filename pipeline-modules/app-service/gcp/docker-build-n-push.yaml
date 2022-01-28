@@ -34,8 +34,9 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
-  required:
+  internal:
     - container_repository
+    - container_tag
 template: |
   steps:
   - id: 'Docker login'
