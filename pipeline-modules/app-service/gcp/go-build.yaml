@@ -3,7 +3,7 @@ name: go-build
 version: 1
 revision: 1
 displayName: Go Build
-description: This plugin is for Go builds
+description: Build source code using Golang
 target: ""
 keywords:
   - Go
@@ -25,10 +25,23 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    go_version:
+      title: Golang version
+      description: The version of Golang to use
+      type: string
+      default: latest
 template: |
   steps:
-  - id: 'Go build'
-    name: 'gcr.io/cloud-builders/go'
+  - id: 'Go Version'
+    name: "gcr.io/cloud-builders/go:{{ go_version }}"
+    args: ["version"]
+    env: ["GOPATH=/workspace"]
+  - id: 'Go Env'
+    name: "gcr.io/cloud-builders/go:{{ go_version }}"
+    args: ["env"]
+    env: ["GOPATH=/workspace"]
+  - id: 'Go Build'
+    name: 'gcr.io/cloud-builders/go:{{ go_version }}'
     dir: {{ working_dir }}
     env: ["GOPATH=/workspace", "PROJECT_ROOT={{ working_dir }}"]
     args:

@@ -34,8 +34,9 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
-  required:
+  internal:
     - container_repository
+    - container_tag
 template: |
   version: 0.2
 
@@ -48,6 +49,7 @@ template: |
       commands:
         - echo Build started on `date`
         - echo Building the Docker image...
+        - docker --version
         - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
     post_build:
       commands:
