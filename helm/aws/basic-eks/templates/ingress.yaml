@@ -13,7 +13,7 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.deploy.ingress.certificateArn }}
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
-    external-dns.alpha.kubernetes.io/hostname: "{{ .Values.applicationName }}.{{ .Values.deploy.ingress.domain }}"
+    external-dns.alpha.kubernetes.io/hostname: "{{ .Values.deploy.ingress.appDomain }}"
     external-dns.alpha.kubernetes.io/alias: "true"
     alb.ingress.kubernetes.io/tags: createdBy=codepipes
     {{- end}}
