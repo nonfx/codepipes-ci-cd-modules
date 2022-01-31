@@ -205,6 +205,17 @@ template: |
               registry: $docker_registry
               username: $docker_username" >> values.yaml
 
+          {% if ingress.domain %}
+          ingress:
+            domain: {{ingress.domain}}
+            certificateArn: {{ingress.certificateArn}}
+            {% if ingress.domain %}
+            appDomain: {{ingress.appDomain}}
+            {% else %}
+            appDomain: {{ingress.domain}}
+            {% endif %}
+          {% endif %}
+
           printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
           echo "
