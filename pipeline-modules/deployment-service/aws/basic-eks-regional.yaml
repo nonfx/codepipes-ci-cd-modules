@@ -209,7 +209,7 @@ template: |
           ingress:
             domain: {{ingress.domain}}
             certificateArn: {{ingress.certificateArn}}
-            {% if ingress.domain %}
+            {% if ingress.appDomain %}
             appDomain: {{ingress.appDomain}}
             {% else %}
             appDomain: {{ingress.domain}}
