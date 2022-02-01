@@ -42,6 +42,24 @@ inputs:
             title: Health check path
             type: string
             example: /
+    ingress:
+      title: Ingress
+      description: Ingress Details
+      type: array
+      default: []
+      items:
+        type: object
+        required: [domain]
+        properties:
+          domain:
+            title: DomainName
+            type: string
+          certificateArn:
+            title: CertificateARN
+            type: string
+          appDomain:
+            title: AppDomain
+            type: string
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -205,16 +223,18 @@ template: |
               registry: $docker_registry
               username: $docker_username" >> values.yaml
 
-          {% if ingress.domain %}
+          {% for ing in ingress%}
+          {% if ing.domain %}
           ingress:
-            domain: {{ingress.domain}}
-            certificateArn: {{ingress.certificateArn}}
-            {% if ingress.appDomain %}
-            appDomain: {{ingress.appDomain}}
+            domain: {{ing.domain}}
+            certificateArn: {{ing.certificateArn}}
+            {% if ing.appDomain %}
+            appDomain: {{ing.appDomain}}
             {% else %}
-            appDomain: {{ingress.domain}}
+            appDomain: {{ing.domain}}
             {% endif %}
           {% endif %}
+          {% endfor %}
 
           printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
