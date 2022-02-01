@@ -97,6 +97,7 @@ template: |
     args:
     - '-c'
     - |
+      client_email=$$(gcloud config list account --format "value(core.account)")
       echo "
       apiVersion: serving.knative.dev/v1
       kind: Service
@@ -109,6 +110,7 @@ template: |
               codepipes-project: {{project}}
               codepipes-environment: {{environment}}
           spec:
+            serviceAccountName: $$client_email
             containers:
             - image: {{repository}}:{{tag}}
               ports:
@@ -125,6 +127,7 @@ template: |
         name=${line%%=*}
         printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{application_name}}-$name" >>  app.yaml
       done;
+      cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
