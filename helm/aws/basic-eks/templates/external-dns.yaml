@@ -1,5 +1,5 @@
-{{- if .Values.deploy.ingress }}
-{{- if .Values.deploy.ingress.domain }}
+{{- if .Values.ingress }}
+{{- if .Values.ingress.domain }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
