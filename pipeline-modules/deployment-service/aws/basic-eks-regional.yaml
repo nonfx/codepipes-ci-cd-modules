@@ -95,22 +95,22 @@ inputs:
       title: Application name
       description: This is vanguard application name
       type: string
-      default: latest
+      default: ""
     environment:
       title: Environment Name
       description: This is vanguard environment name
       type: string
-      default: latest
+      default: ""
     project:
       title: Project Name
       description: This is a vanguard project name
       type: string
-      default: latest
+      default: ""
     customer_bucket:
       title: Customer Bucket Name
       description: This is a vanguard Customer  bucket name
       type: string
-      default: latest
+      default: ""
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
@@ -121,7 +121,10 @@ inputs:
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
       type: string
       default: 300s
-  required: []
+  required:
+    - cluster
+    - region
+    - roleArn
   internal:
     - app_env
     - files
