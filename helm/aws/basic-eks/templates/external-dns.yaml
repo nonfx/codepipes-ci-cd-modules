@@ -1,5 +1,5 @@
-{{- if .Values.ingress }}
-{{- if .Values.ingress.domain }}
+{{- if .Values.ingress -}}
+{{- if .Values.ingress.domain -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -58,11 +58,11 @@ spec:
         args:
         - --source=service
         - --source=ingress
-        - --domain-filter={{ .Values.deploy.ingress.domain }} # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+        - --domain-filter={{ .Values.ingress.domain }} # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
         - --provider=aws
         - --policy=sync # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
         - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
       securityContext:
         fsGroup: 65534
 {{- end}}
-{{- end}}
+#{{- end}}
