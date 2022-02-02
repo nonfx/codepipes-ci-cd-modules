@@ -221,7 +221,20 @@ template: |
             tag:  {{ tag }}
             registryCredentials:
               registry: $docker_registry
-              username: $docker_username" >> values.yaml
+              username: $docker_username
+
+          {% for ing in ingress%}
+          {% if ing.domain %}
+          ingress:
+            domain: {{ing.domain}}
+            certificateArn: {{ing.certificateArn}}
+            {% if ing.appDomain %}
+            appDomain: {{ing.appDomain}}
+            {% else %}
+            appDomain: {{ing.domain}}
+            {% endif %}
+          {% endif %}
+          {% endfor %}" >> values.yaml
 
           printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
