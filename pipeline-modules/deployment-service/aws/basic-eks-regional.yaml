@@ -60,6 +60,10 @@ inputs:
           appDomain:
             title: AppDomain
             type: string
+          externalDNSenabled:
+            title: externalDNSenabled
+            type: string
+            default: false
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -236,6 +240,7 @@ template: |
             {% else %}
             appDomain: {{ing.domain}}
             {% endif %}
+            externalDNSenabled: {{ing.externalDNSenabled}}
           {% endif %}
           {% endfor %}
 

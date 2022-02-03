@@ -12,9 +12,6 @@ deploy:
   maxUnavail: 1
   maxSurge: 1
   terminationGracePeriodSeconds: 30
-  ingress:
-    domain: codepipes.tk
-    certificateArn: arn:aws:acm:us-east-1:543332486884:certificate/df272f52-72fe-47ac-a4d3-9e07ec946175
   healthCheck:
     liveFailThreshold: "2"
     liveSuccThreshold: "1"
@@ -37,6 +34,12 @@ image:
     registry: ""
     username: ""
     password: ""
+
+ingress:
+  domain: codepipes.tk
+  certificateArn: arn:aws:acm:us-east-1:543332486884:certificate/df272f52-72fe-47ac-a4d3-9e07ec946175
+  appDomain: result.codepipes.tk
+  externalDNSenabled: false
 
 service:
   type: nodeport
