@@ -1,5 +1,5 @@
-{{- if .Values.ingress.externalDNSenabled -}}
 {{- if .Values.ingress -}}
+{{- if .Values.ingress.externalDNSenabled -}}
 {{- if .Values.ingress.domain -}}
 apiVersion: v1
 kind: ServiceAccount
