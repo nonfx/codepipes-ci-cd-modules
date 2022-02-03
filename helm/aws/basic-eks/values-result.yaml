@@ -37,9 +37,9 @@ image:
   pullPolicy: Always
   tag: "latest"
   registryCredentials: 
-    registry: "dfgdfg"
-    username: "gfhfgh"
-    password: "gfhfgh"
+    registry: ""
+    username: ""
+    password: ""
 
 service:
   type: nodeport
