@@ -151,7 +151,10 @@ template: |
       git checkout "{{ iac_checkout_target }}"
       printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
       cd "{{ local_code_path }}"
-      terraform init
+      # terraform state push
+      test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
+      # terraform init
+      terraform init >> {{ logger('init') }}
       az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {% if tf_action == 'plan' %}
