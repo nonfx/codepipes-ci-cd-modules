@@ -42,6 +42,28 @@ inputs:
             title: Health check path
             type: string
             example: /
+    ingress:
+      title: Ingress
+      description: Ingress Details
+      type: array
+      default: []
+      items:
+        type: object
+        required: [domain]
+        properties:
+          domain:
+            title: DomainName
+            type: string
+          certificateArn:
+            title: CertificateARN
+            type: string
+          appDomain:
+            title: AppDomain
+            type: string
+          externalDNSenabled:
+            title: externalDNSenabled
+            type: string
+            default: "false"
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -211,6 +233,20 @@ template: |
           printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
 
           echo "
+          {% for ing in ingress%}
+          {% if ing.domain %}
+          ingress:
+            domain: {{ing.domain}}
+            certificateArn: {{ing.certificateArn}}
+            {% if ing.appDomain %}
+            appDomain: {{ing.appDomain}}
+            {% else %}
+            appDomain: {{ing.domain}}
+            {% endif %}
+            externalDNSenabled: {{ing.externalDNSenabled}}
+          {% endif %}
+          {% endfor %}
+
           service:
             type: nodeport
             private: false
@@ -267,9 +303,17 @@ template: |
         - echo 'summary=""' >> test.sh
         - echo 'count=30' >> test.sh
         - echo 'while [ true ]; do' >> test.sh
-        - echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+        - {% if ingress %}
+          echo "sleep 2; summary=$(kubectl get ingress -n v{{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+          {% else %}
+          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+          {% endif %}
         - echo 'if [ ! -z "$summary" ]; then' >> test.sh
-        - echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+        - {% if ingress %}
+          echo 'echo "Service URL=https://"$summary >> summary.txt; break' >> test.sh
+          {% else %}
+          echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+          {% endif %}
         - echo 'fi' >> test.sh
         - echo 'if [ $count -eq 0 ]; then' >> test.sh
         - echo 'break' >> test.sh
@@ -277,6 +321,7 @@ template: |
         - echo 'count=`expr $count - 1`' >> test.sh
         - echo 'done' >> test.sh
         - chmod 755 ./test.sh
+        - cat ./test.sh
         - ./test.sh
         {% endif %}
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
