@@ -135,16 +135,18 @@ template: |
   {%- endmacro %}
 
   steps:
+  - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
+    displayName: 'Terraform install'
+    inputs:
+      terraformVersion: {{ tf_version }}
   - script: |
+      set -x
       {% for env_key, env_value in pipeline_env -%}
       export {{ env_key }}="{{ env_value }}"
       {% endfor -%}
       {% for env_key, env_value in pipeline_secret_env -%}
       export {{ env_key }}="$({{ env_key }})"
       {% endfor -%}
-      cd "/tmp"
-      wget "https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip"
-      unzip terraform_{{ tf_version }}_linux_amd64.zip -d /usr/bin
       mkdir -p "{{ local_artifact_path }}"
       git clone --no-checkout "https://{{ iac_checkout_src }}" "{{ local_checkout_path }}"
       cd "{{ local_checkout_path }}"
@@ -157,6 +159,7 @@ template: |
       terraform init >> {{ logger('init') }}
       az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
+      {{ upload_log('init') }}
       {% if tf_action == 'plan' %}
       # terraform plan
       terraform plan -var-file={{ tf_var_file_path }} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
