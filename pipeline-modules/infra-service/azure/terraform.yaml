@@ -136,6 +136,7 @@ template: |
 
   steps:
   - script: |
+      set -x
       {% for env_key, env_value in pipeline_env -%}
       export {{ env_key }}="{{ env_value }}"
       {% endfor -%}
