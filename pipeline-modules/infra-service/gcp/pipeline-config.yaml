@@ -62,12 +62,18 @@ inputs:
       description: Amount of time in seconds the pipeline will be allowed to run.
       type: integer
       default: 4000
+    pipeline_queue_timeout_sec:
+      title: Queue Timeout [s]
+      description: Amount of time in seconds the pipeline will be allowed to be queued waiting to run.
+      type: integer
+      default: 7200
   internal:
     - pipeline_env
     - pipeline_secret_env
     - pipeline_secret_env_key
 template: |
   timeout: {{ pipeline_timeout_sec }}s
+  queueTtl: {{ pipeline_queue_timeout_sec }}s
   {% if pipeline_logs_bucket %}logsBucket: 'gs://{{ pipeline_logs_bucket }}'{% endif %}
   tags:
   {% for tag in pipeline_tags %}
