@@ -49,7 +49,6 @@ inputs:
       default: []
       items:
         type: object
-        required: [domain]
         properties:
           domain:
             title: DomainName
