@@ -303,7 +303,11 @@ template: |
         - echo 'count=30' >> test.sh
         - echo 'while [ true ]; do' >> test.sh
         - {% if ingress %}
-          echo "sleep 2; summary=$(kubectl get ingress -n v{{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+          {% if ingress[0].domain %}
+          echo "sleep 2; summary=$(kubectl get ingress -n {{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+          {% else %}
+          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+          {% endif %}
           {% else %}
           echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
           {% endif %}
