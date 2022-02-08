@@ -313,7 +313,11 @@ template: |
           {% endif %}
         - echo 'if [ ! -z "$summary" ]; then' >> test.sh
         - {% if ingress %}
+          {% if ingress.0.domain %}
           echo 'echo "Service URL=https://"$summary >> summary.txt; break' >> test.sh
+          {% else %}
+          echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+          {% endif %}
           {% else %}
           echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
           {% endif %}
