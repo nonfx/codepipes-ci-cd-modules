@@ -95,7 +95,8 @@ template: |
     type: "LINUX_CONTAINER"
   filesystemlocations: null
   logsconfig:
-    cloudwatchlogs: null
+    cloudwatchlogs:
+      status: DISABLED
     s3logs:
       encryptiondisabled: false
       location: "{{ pipeline_logs_bucket }}"
