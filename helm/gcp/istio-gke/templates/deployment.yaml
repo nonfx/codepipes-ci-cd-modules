@@ -90,6 +90,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Values.applicationName }}-configmap
+            {{- if .Values.secrets }}
+            - secretRef:
+                name: {{ $.Values.applicationName }}-secret-env
+            {{- end}}
           env:
             {{- range .Values.env }}
           - name: {{ .name }}
