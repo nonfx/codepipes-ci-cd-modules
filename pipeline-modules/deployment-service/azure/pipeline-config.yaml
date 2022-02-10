@@ -20,11 +20,60 @@ inputs:
       description: Keeps all secret variables available to pipeline.
       type: string
       default: ""
+    pipeline_module_git:
+      title: Pipeline module git repo url
+      description: git url for cloning the pipeline module repo.
+      type: string
+    pipeline_env:
+      title: Global Environment
+      description: Mapping of globally available variables to values.
+      type: object
+      default: {}
+    pipeline_module_git_rev:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available variables to encrypted values.
+      type: object
+      default: {}
+    pipeline_secret_env_key:
+      title: Secret Environment Encryption Key
+      description: Name of a KMS key used to encrypt secret values.
+      type: string
+      default: ""
   required:
     - variable_group_name
   internal:
     - variable_group_name
+    - pipeline_env
+    - pipeline_secret_env
+    - pipeline_secret_env_key
+    - pipeline_module_git
+    - pipeline_module_git_rev
 template: |
+  {% set workspace = '/var/temp/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
+  steps:
+  - script: |
+      mkdir {{ workspace }}
+      echo "stringVal={{ echo_string }}"
+      echo "intVal={{ echo_int }}"
+      {% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}
+      for name in ${__VG_EXPORTED_ENV_NAMES}
+      do
+        printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
+        printf "Exporting variable '$name'\n"
+      done
+
+      echo "Cloning the pipeline modules..."
+      mkdir -p {{pipeline_modules_path}}
+      git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
   variables:
     - group: {{ variable_group_name }}
+    - name: __VG_EXPORTED_ENV_NAMES
+      value: {% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}
