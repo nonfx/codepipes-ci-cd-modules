@@ -1,0 +1,35 @@
+provisioner: azure
+name: bash
+version: 1
+revision: 1
+displayName: Bash script
+description: Execute a bash script
+target: ""
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    bash_script:
+      title: Bash script
+      description: This is a bash script
+      type: string
+      default: ""
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute the bash script from
+      type: string
+      default: repo
+  required:
+    - bash_script
+template: |
+  steps:
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      working_dir: {{ working_dir }}
+      script: |
+        set -x
+        {{ bash_script }}
