@@ -12,10 +12,14 @@ metadata:
     {{- if $.Values.ingress.domain }}
     alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
     external-dns.alpha.kubernetes.io/hostname: "{{ .Values.ingress.appDomain }}"
     external-dns.alpha.kubernetes.io/alias: "true"
     alb.ingress.kubernetes.io/tags: createdBy=codepipes
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
+    {{- if $.Values.ingress.bucketName }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: access_logs.s3.enabled=true,access_logs.s3.bucket={{ $.Values.ingress.bucketName }},access_logs.s3.prefix={{ $.Values.applicationName }}
+    {{- end}}
     {{- end}}
     {{- end}}
 spec:
