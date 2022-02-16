@@ -63,6 +63,9 @@ inputs:
             title: externalDNSenabled
             type: string
             default: "false"
+          bucketName:
+            title: S3BucketName
+            type: string
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -237,10 +240,13 @@ template: |
           ingress:
             domain: {{ing.domain}}
             certificateArn: {{ing.certificateArn}}
+            {% if ing.bucketName %}
+            bucketName: {{ing.bucketName}}
+            {% endif %}
             {% if ing.appDomain %}
             appDomain: {{ing.appDomain}}
             {% else %}
-            appDomain: {{ing.domain}}
+            appDomain: {{applicationName}}.{{ing.domain}}
             {% endif %}
             externalDNSenabled: {{ing.externalDNSenabled}}
           {% endif %}

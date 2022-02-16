@@ -24,8 +24,8 @@ deploy:
 ingress:
   domain: codepipes.tk
   certificateArn: arn:aws:acm:us-east-1:543332486884:certificate/df272f52-72fe-47ac-a4d3-9e07ec946175
-  appDomain: voting.codepipes.tk
   externalDNSenabled: true
+  bucketName: testbucekt
 
 ports: #auto
   - name: test
