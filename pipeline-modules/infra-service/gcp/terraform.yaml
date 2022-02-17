@@ -39,6 +39,7 @@ inputs:
       type: string
       enum:
         - plan
+        - plan-destroy
         - apply
         - destroy
     tf_plan_file:
@@ -198,13 +199,13 @@ template: |
     dir: {{ local_code_path }}
   {{ upload_log('init') }}
   {{ fail_on_flag() }}
-  {% if tf_action == 'plan' %}
+  {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
   - id: 'terraform plan'
     name: 'hashicorp/terraform:{{ tf_version }}'
     entrypoint: sh
     args:
       - -c
-      - 'terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }} || {{ set_fail_flag('terraform plan') }}'
+      - 'terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'plan-destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }} || {{ set_fail_flag('terraform plan') }}'
     dir: {{ local_code_path }}
   - id: 'terraform show'
     name: 'hashicorp/terraform:{{ tf_version }}'
