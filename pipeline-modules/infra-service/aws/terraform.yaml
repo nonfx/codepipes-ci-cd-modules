@@ -128,6 +128,8 @@ template: |
         - cd "/tmp"
         - wget "https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip"
         - unzip terraform_{{ tf_version }}_linux_amd64.zip -d /usr/bin
+        - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sh
+        - helm plugin install https://github.com/futuresimple/helm-secrets
     pre_build:
       commands:
         # initialize workspace
