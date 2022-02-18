@@ -18,6 +18,7 @@ inputs:
       default: []
       items:
         type: object
+        required: [Command, Name]
         properties:
           Command:
             title: Command

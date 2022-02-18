@@ -22,7 +22,7 @@ inputs:
       default: []
       items:
         type: object
-        required: [name]
+        required: [name, containerPort]
         properties:
           name:
             title: Service name
@@ -42,6 +42,7 @@ inputs:
             title: Health check path
             type: string
             example: /
+            default: ""
     ingress:
       title: Ingress
       description: Ingress Details
@@ -53,12 +54,15 @@ inputs:
           domain:
             title: DomainName
             type: string
+            default: ""
           certificateArn:
             title: CertificateARN
             type: string
+            default: ""
           appDomain:
             title: AppDomain
             type: string
+            default: ""
           externalDNSenabled:
             title: externalDNSenabled
             type: string
@@ -66,21 +70,19 @@ inputs:
           bucketName:
             title: S3BucketName
             type: string
+            default: ""
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
       type: string
-      default: ""
     region:
       title: Region name
       description: region name for cluster
       type: string
-      default: ""
     roleArn:
       title: Role ARN
       description: Role for deployment in EKS
       type: string
-      default: ""
     pipeline_summary_var:
       title: Pipeline Summary
       description: This will create pipeline summary as per user request
@@ -88,6 +90,7 @@ inputs:
       default: []
       items:
         type: object
+        required: [Command, Name]
         properties:
           Command:
             title: Command
