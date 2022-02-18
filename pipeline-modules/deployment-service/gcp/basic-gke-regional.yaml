@@ -57,6 +57,7 @@ inputs:
       default: []
       items:
         type: object
+        required: [Command, Name]
         properties:
           Command:
             title: Command
@@ -71,7 +72,7 @@ inputs:
       default: []
       items:
         type: object
-        required: [name]
+        required: [name, containerPort]
         properties:
           containerPort:
             title: Container port
@@ -80,6 +81,7 @@ inputs:
           healthCheck:
             title: Health check path
             type: string
+            default: ""
           name:
             title: Service name
             type: string
