@@ -39,6 +39,7 @@ inputs:
       type: string
       enum:
         - plan
+        - plan-destroy
         - apply
         - destroy
     tf_plan_file:
@@ -156,9 +157,9 @@ template: |
         - {{ upload_log_cmd('init') }}
     build:
       commands:
-      {% if tf_action == 'plan' %}
+      {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
         # terraform plan
-        - terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
+        - terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'plan-destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
         # terraform show
         - terraform show -json {{ local_artifact_path }}/{{ tf_plan_file }} 1> {{ local_artifact_path }}/{{ tf_plan_json_file }} 2>> {{ logger('plan', false) }}
       finally:

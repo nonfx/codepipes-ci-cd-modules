@@ -53,6 +53,7 @@ inputs:
       type: string
       enum:
         - plan
+        - plan-destroy
         - apply
         - destroy
     tf_plan_file:
@@ -160,9 +161,9 @@ template: |
       az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {{ upload_log('init') }}
-      {% if tf_action == 'plan' %}
+      {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
       # terraform plan
-      terraform plan -var-file={{ tf_var_file_path }} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
+      terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'plan-destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
       # terraform show
       terraform show -json {{ local_artifact_path }}/{{ tf_plan_file }} 1> {{ local_artifact_path }}/{{ tf_plan_json_file }} 2>> {{ logger('plan', false) }}
       {{ upload_log('plan') }}
@@ -170,8 +171,14 @@ template: |
       {{ upload_artifact(tf_plan_json_file) }}
       {% elif tf_action == 'apply' %}
       {{ download_artifact(tf_plan_file) }}
+      # terraform apply
       terraform apply -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} {{ local_artifact_path }}/{{ tf_plan_file }} > {{ logger('apply') }}
       {{ upload_log('apply') }}
       {{ upload_artifact(tf_state_file) }}
+      {% elif tf_action == 'destroy' %}
+      # terraform destroy
+      terraform destroy -var-file={{ tf_var_file_path }} -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('destroy') }}
+      {{ upload_log('destroy') }}
+      {{ upload_artifact(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
       {% endif %}
       az logout
