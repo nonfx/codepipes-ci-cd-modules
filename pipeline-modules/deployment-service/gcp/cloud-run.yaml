@@ -55,7 +55,6 @@ inputs:
       default: deploy
   required:
     - region
-    - allowUnauthenticated
   internal:
     - applicationName
     - environment
