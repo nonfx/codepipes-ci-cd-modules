@@ -16,9 +16,11 @@ inputs:
   properties:
     cluster:
       title: Cluster Name
+      type: string
       description: Cluster name in which deployment will happen
     region:
       title: Region name
+      type: string
       description: region name for cluster
     istio_version:
       title: Istio Version
