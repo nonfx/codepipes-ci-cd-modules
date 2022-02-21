@@ -162,6 +162,7 @@ template: |
         - {{ upload_log_cmd('init') }}
     build:
       commands:
+        - gpg --version
       {% if tf_action == 'plan' %}
         # terraform plan
         - terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
