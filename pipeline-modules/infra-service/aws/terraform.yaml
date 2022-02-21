@@ -131,7 +131,7 @@ template: |
         - wget https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
         - chmod 777 get-helm-3
         - ./get-helm-3
-        - helm plugin install https://github.com/futuresimple/helm-secrets
+        - helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
     pre_build:
       commands:
         # initialize workspace
