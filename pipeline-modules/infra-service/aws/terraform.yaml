@@ -179,6 +179,7 @@ template: |
       finally:
         - {{ upload_log_cmd('apply') }}
         - {{ upload_artifact_cmd(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
+        - cat /tmp/jsonoutput
       {% elif tf_action == 'destroy' %}
         # terraform destroy
         - terraform destroy -var-file={{ tf_var_file_path }} -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('destroy') }}
