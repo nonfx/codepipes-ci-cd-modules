@@ -117,7 +117,7 @@ template: |
 
   version: 0.2
   env:
-    shell: '/bin/sh'
+    shell: '/bin/bash'
     variables:
       TF_IN_AUTOMATION: 'true'
       TF_INPUT: 'false'
