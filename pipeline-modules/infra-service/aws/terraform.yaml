@@ -94,6 +94,7 @@ template: |
   {% set tf_var_name_prefix = 'VG_TF_VAR_' %}
   {% set tf_var_file_path = '/tmp/vg_tf_var_values.tfvars' %}
   {% set tf_var_name_dash_placeholder = '___' %}
+  {% set user_pre_script = "codepipes_init.sh" %}
 
   {# redirects shell command output to a log file #}
   {% macro logger(name, stdout=true) %}{{ local_artifact_path }}/{{ get_log_name(name) }} {% if stdout %}2>&1{% endif %}{% endmacro %}
@@ -117,7 +118,7 @@ template: |
 
   version: 0.2
   env:
-    shell: '/bin/bash'
+    shell: '/bin/sh'
     variables:
       TF_IN_AUTOMATION: 'true'
       TF_INPUT: 'false'
@@ -128,18 +129,6 @@ template: |
         - cd "/tmp"
         - wget "https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip"
         - unzip terraform_{{ tf_version }}_linux_amd64.zip -d /usr/bin
-        - |
-          if [ -n "$PGP_KEY" ]; then
-            wget https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-            chmod 777 get-helm-3
-            ./get-helm-3
-            helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
-            wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops_3.7.1_amd64.deb
-            dpkg -i sops_3.7.1_amd64.deb
-            echo "$PGP_KEY" > /tmp/secret.asc
-            gpg --import /tmp/secret.asc
-            gpg --list-keys
-          fi
     pre_build:
       commands:
         # initialize workspace
@@ -159,6 +148,8 @@ template: |
         # save the result as input variable file for terraform commands
         - printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
         - cd "{{ local_code_path }}"
+        # run a pre script for user if user 
+        - if [ -f {{user_pre_script}} ] ; then ./{{user_pre_script}} ; fi
         # terraform state push
         # push the downloaded global state to the Terraform backend
         - test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
@@ -169,11 +160,6 @@ template: |
     build:
       commands:
       {% if tf_action == 'plan' %}
-        - |
-          if [ -n "$PGP_KEY" ]; then
-            sh ./helm-secrets.sh
-            cat /tmp/jsonoutput | jq ".content_base64"
-          fi
         # terraform plan
         - terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
         # terraform show
@@ -190,12 +176,6 @@ template: |
       finally:
         - {{ upload_log_cmd('apply') }}
         - {{ upload_artifact_cmd(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
-        - |
-          if [ -n "$PGP_KEY" ]; then
-            gpg --list-keys
-            ls /tmp
-            cat /tmp/jsonoutput
-          fi
       {% elif tf_action == 'destroy' %}
         # terraform destroy
         - terraform destroy -var-file={{ tf_var_file_path }} -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('destroy') }}
