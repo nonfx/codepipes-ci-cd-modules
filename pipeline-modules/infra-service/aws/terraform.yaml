@@ -171,8 +171,7 @@ template: |
       {% if tf_action == 'plan' %}
         - |
           if [ -n "$PGP_KEY" ]; then
-            jq -n --arg b64sec "$(helm secrets view ../values/secrets.yaml -q | base64)" '{"content_base64":$b64sec}' > /tmp/jsonoutput
-            cat /tmp/jsonoutput
+            sh ./helm-secrets.sh
             cat /tmp/jsonoutput | jq ".content_base64"
           fi
         # terraform plan
