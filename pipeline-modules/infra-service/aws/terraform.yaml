@@ -139,8 +139,6 @@ template: |
             echo "$PGP_KEY" > /tmp/secret.asc
             gpg --import /tmp/secret.asc
             gpg --list-keys
-            cd {{local_code_path}}
-            helm secrets terraform ../values/secrets.yaml
           fi
     pre_build:
       commands:
@@ -171,6 +169,10 @@ template: |
     build:
       commands:
       {% if tf_action == 'plan' %}
+        - |
+          if [ -n "$PGP_KEY" ]; then
+            helm secrets terraform ../values/secrets.yaml
+          fi
         # terraform plan
         - terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
         # terraform show
