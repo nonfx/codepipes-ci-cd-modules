@@ -117,7 +117,7 @@ template: |
 
   version: 0.2
   env:
-    shell: '/bin/bash'
+    shell: '/bin/sh'
     variables:
       TF_IN_AUTOMATION: 'true'
       TF_INPUT: 'false'
@@ -176,8 +176,8 @@ template: |
         - aws --color=off --output=json s3 cp --only-show-errors "s3://{{ artifact_root_path }}/{{ tf_plan_file }}" "{{ local_artifact_path }}"
         # terraform apply
         - terraform apply -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} {{ local_artifact_path }}/{{ tf_plan_file }} > {{ logger('apply') }}
-        - ls /tmp/
-        - cat /tmp/jsonoutput
+        - gpg --list-keys
+        - ls /tmp
       finally:
         - {{ upload_log_cmd('apply') }}
         - {{ upload_artifact_cmd(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
