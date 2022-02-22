@@ -136,7 +136,7 @@ template: |
             helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
             wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops_3.7.1_amd64.deb
             dpkg -i sops_3.7.1_amd64.deb
-            echo "$PGP_KEY" > /tmp/secret.asc
+            printf "%s" "$PGP_KEY" > /tmp/secret.asc
             gpg --import /tmp/secret.asc
             gpg --list-keys
           fi
