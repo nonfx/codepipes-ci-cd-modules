@@ -128,12 +128,18 @@ template: |
         - cd "/tmp"
         - wget "https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip"
         - unzip terraform_{{ tf_version }}_linux_amd64.zip -d /usr/bin
-        - wget https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-        - chmod 777 get-helm-3
-        - ./get-helm-3
-        - helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
-        - wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops_3.7.1_amd64.deb
-        - dpkg -i sops_3.7.1_amd64.deb
+        - |
+          if [[ -n "$PGP_KEY" ]]; then
+            wget https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod 777 get-helm-3
+            ./get-helm-3
+            helm plugin install https://github.com/jkroepke/helm-secrets --version v3.12.0
+            wget https://github.com/mozilla/sops/releases/download/v3.7.1/sops_3.7.1_amd64.deb
+            dpkg -i sops_3.7.1_amd64.deb
+            printf "$PGP_KEY" > /tmp/secret.asc
+            gpg --import /tmp/secret.asc
+            gpg --list-keys
+          fi
     pre_build:
       commands:
         # initialize workspace
@@ -179,8 +185,11 @@ template: |
       finally:
         - {{ upload_log_cmd('apply') }}
         - {{ upload_artifact_cmd(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
-        - gpg --list-keys
-        - ls /tmp
+        - |
+          if [[ -n "$PGP_KEY" ]]; then
+            gpg --list-keys
+            ls /tmp
+          fi
       {% elif tf_action == 'destroy' %}
         # terraform destroy
         - terraform destroy -var-file={{ tf_var_file_path }} -auto-approve -backup=- -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('destroy') }}
