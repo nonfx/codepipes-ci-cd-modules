@@ -139,6 +139,8 @@ template: |
             echo "$PGP_KEY" > /tmp/secret.asc
             gpg --import /tmp/secret.asc
             gpg --list-keys
+            cd {{local_code_path}}
+            helm secrets terraform ../values/secrets.yaml
           fi
     pre_build:
       commands:
