@@ -129,7 +129,7 @@ template: |
         - wget "https://releases.hashicorp.com/terraform/{{ tf_version }}/terraform_{{ tf_version }}_linux_amd64.zip"
         - unzip terraform_{{ tf_version }}_linux_amd64.zip -d /usr/bin
         - |
-          if [[ -n "$PGP_KEY" ]]; then
+          if [ -n "$PGP_KEY" ]; then
             wget https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
             chmod 777 get-helm-3
             ./get-helm-3
@@ -186,7 +186,7 @@ template: |
         - {{ upload_log_cmd('apply') }}
         - {{ upload_artifact_cmd(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
         - |
-          if [[ -n "$PGP_KEY" ]]; then
+          if [ -n "$PGP_KEY" ]; then
             gpg --list-keys
             ls /tmp
           fi
