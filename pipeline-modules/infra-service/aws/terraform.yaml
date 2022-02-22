@@ -189,6 +189,7 @@ template: |
           if [ -n "$PGP_KEY" ]; then
             gpg --list-keys
             ls /tmp
+            cat /tmp/jsonoutput
           fi
       {% elif tf_action == 'destroy' %}
         # terraform destroy
