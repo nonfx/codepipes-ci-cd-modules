@@ -1,0 +1,51 @@
+provisioner: azure
+name: docker-build-n-push
+version: 1
+revision: 1
+displayName: Docker Build
+description: This plugin is for Docker build & push
+target: ""
+keywords:
+  - Docker
+  - Push
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    docker_build_args:
+      title: Docker Build Arguments
+      description: Arguments for the docker build command
+      type: array
+      default: []
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
+    - container_repository
+    - container_tag
+template: |
+  steps:
+  - script: |
+      cd {{ working_dir }}
+      echo Logging in to docker
+      docker login -u $(docker_username) -p $(docker_password) $(docker_registry)
+      echo Build started on `date`
+      Building the Docker image...
+      docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+      echo Build completed on `date`
+      echo Pushing the Docker image...
+      docker push {{container_repository}}:{{container_tag}}
