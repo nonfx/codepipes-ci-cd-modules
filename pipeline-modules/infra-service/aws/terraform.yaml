@@ -95,6 +95,7 @@ template: |
   {% set tf_var_name_prefix = 'VG_TF_VAR_' %}
   {% set tf_var_file_path = '/tmp/vg_tf_var_values.tfvars' %}
   {% set tf_var_name_dash_placeholder = '___' %}
+  {% set user_pre_script = "codepipes_init.sh" %}
 
   {# redirects shell command output to a log file #}
   {% macro logger(name, stdout=true) %}{{ local_artifact_path }}/{{ get_log_name(name) }} {% if stdout %}2>&1{% endif %}{% endmacro %}
@@ -148,6 +149,8 @@ template: |
         # save the result as input variable file for terraform commands
         - printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
         - cd "{{ local_code_path }}"
+        # run a pre script for user if user 
+        - if [ -f {{user_pre_script}} ] ; then chmod +x {{user_pre_script}} && ./{{user_pre_script}} ; fi
         # terraform state push
         # push the downloaded global state to the Terraform backend
         - test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
