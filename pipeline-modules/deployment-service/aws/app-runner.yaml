@@ -17,7 +17,6 @@ inputs:
       title: Region name
       description: region name for cluster
       type: string
-      default: ""
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -94,7 +93,7 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  
+
   version: 0.2
   phases:
     install:
@@ -153,4 +152,3 @@ template: |
       {% else %}
         - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
       {% endif %}
-      

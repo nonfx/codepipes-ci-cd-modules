@@ -39,7 +39,12 @@ inputs:
       title: Run Timeout [min]
       description: Amount of time in minutes the pipeline will be allowed to run.
       type: integer
-      default: 60
+      default: 480
+    pipeline_queue_timeout_min:
+      title: Queue Timeout [min]
+      description: Amount of time in minutes the pipeline will be allowed to be queued waiting to run.
+      type: integer
+      default: 480
     pipeline_secret_env:
       title: Global Secret Environment
       description: Mapping of globally available secret variable id.
@@ -90,7 +95,8 @@ template: |
     type: "LINUX_CONTAINER"
   filesystemlocations: null
   logsconfig:
-    cloudwatchlogs: null
+    cloudwatchlogs:
+      status: DISABLED
     s3logs:
       encryptiondisabled: false
       location: "{{ pipeline_logs_bucket }}"

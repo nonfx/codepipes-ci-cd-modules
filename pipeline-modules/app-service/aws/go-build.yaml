@@ -3,7 +3,7 @@ name: go-build
 version: 1
 revision: 1
 displayName: Go Build
-description: This plugin is for Go builds
+description: Build source code using Golang
 target: ""
 keywords:
   - Go
@@ -25,15 +25,22 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    go_version:
+      title: Golang version
+      description: The version of Golang to use
+      type: string
+      default: "1.15.15"
 template: |
   version: 0.2
 
   phases:
-    install:
-      runtime-versions:
-        golang: 1.13
     build:
       commands:
+        - echo Installing Golang v{{ go_version }}
+        - goenv install {{ go_version }}
+        - goenv local {{ go_version }}
+        - CGO_ENABLED=${CGO_ENABLED:-0}
+        - go version
         - echo Building the Go code...
         - cd {{ working_dir }}
         - go build -v {% for arg in go_build_args %} {{ arg }} {% endfor %}

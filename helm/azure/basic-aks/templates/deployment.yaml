@@ -45,7 +45,7 @@ spec:
       {{- if .Values.image.registryCredentials }}
       imagePullSecrets:
         - name: {{ .Values.applicationName }}-docker-registry
-      {{- end }}
+      {{- end }}      
       containers:
         - name: {{ .Values.applicationName }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -56,45 +56,39 @@ spec:
               containerPort: {{$port.containerPort}}
               protocol: {{$port.protocol}}
           {{- end}}
+          {{- if .Values.ports -}}
+          {{- if (index $.Values.ports 0).healthCheck }}
           livenessProbe:
-          {{- range  $index,$port := .Values.ports }}
+          {{- range  $index,$port := $.Values.ports }}
             {{- if eq $index  0}}
             tcpSocket:
-              port: {{$port.containerPort}}
+              port: {{$port.healthCheck}}
             {{- end}}
           {{- end}}
-            failureThreshold: {{ .Values.deploy.healthCheck.liveFailThreshold }}
-            successThreshold: {{ .Values.deploy.healthCheck.liveSuccThreshold }}
-            initialDelaySeconds: {{ .Values.deploy.healthCheck.delay }}
-            periodSeconds: {{ .Values.deploy.healthCheck.period }}
-            timeoutSeconds: {{ .Values.deploy.healthCheck.timeout }}
+            failureThreshold: {{ $.Values.deploy.healthCheck.liveFailThreshold }}
+            successThreshold: {{ $.Values.deploy.healthCheck.liveSuccThreshold }}
+            initialDelaySeconds: {{ $.Values.deploy.healthCheck.delay }}
+            periodSeconds: {{ $.Values.deploy.healthCheck.period }}
+            timeoutSeconds: {{ $.Values.deploy.healthCheck.timeout }}
           readinessProbe:
-            {{- range  $index,$port := .Values.ports }}
+            {{- range  $index,$port := $.Values.ports }}
             {{- if eq $index  0}}
-            {{ if $port.healthcheck }}
-            httpGet:
-              path: {{$port.healthcheck}}
-              port: {{$port.containerPort}}
-            {{- else -}}
             tcpSocket:
-              port:  {{$port.containerPort}}
+              port: {{$port.healthCheck}}
+              {{- end}}
             {{- end}}
-            {{- end}}
-            {{- end}}
-            failureThreshold: {{ .Values.deploy.healthCheck.readFailThreshold }}
-            successThreshold: {{ .Values.deploy.healthCheck.readSuccThreshold }}
-            initialDelaySeconds: {{ .Values.deploy.healthCheck.delay }}
-            periodSeconds: {{ .Values.deploy.healthCheck.period }}
-            timeoutSeconds: {{ .Values.deploy.healthCheck.timeout }}
+            failureThreshold: {{ $.Values.deploy.healthCheck.readFailThreshold }}
+            successThreshold: {{ $.Values.deploy.healthCheck.readSuccThreshold }}
+            initialDelaySeconds: {{ $.Values.deploy.healthCheck.delay }}
+            periodSeconds: {{ $.Values.deploy.healthCheck.period }}
+            timeoutSeconds: {{ $.Values.deploy.healthCheck.timeout }}
+          {{- end}}
+          {{- end}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.applicationName }}-configmap
-            {{- if .Values.secrets }}
-            - secretRef:
-                name: {{ $.Values.applicationName }}-secret-env
-            {{- end}}  
           volumeMounts:
           {{- range  $index,$artifact := .Values.artifacts }}
             - name: {{ $.Values.applicationName }}-volume-{{$index}}
@@ -106,8 +100,6 @@ spec:
               exec:
                 command: {{ .Values.lifecycle.prestop.command }}
         {{- end }}
-      serviceAccount: {{ .Values.applicationName }}-ksa
-      serviceAccountName: {{ .Values.applicationName }}-ksa
       terminationGracePeriodSeconds: {{ .Values.deploy.terminationGracePeriodSeconds }}
       volumes:
         {{- range  $index,$artifact := .Values.artifacts }}
@@ -115,4 +107,3 @@ spec:
           secret:
             secretName: {{ $.Values.applicationName }}-secret-{{$index}}
         {{- end}}
-        

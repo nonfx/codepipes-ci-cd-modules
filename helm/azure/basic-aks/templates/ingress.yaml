@@ -6,20 +6,13 @@ metadata:
   name: {{ $.Values.applicationName }}-ingress
   namespace: {{ $.Values.applicationName }}
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
+    kubernetes.io/ingress.class: azure/application-gateway
     {{- if $.Values.ingress }}
     {{- if $.Values.ingress.domain }}
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: {{ .Values.ingress.certificateName }}
+    appgw.ingress.kubernetes.io/ssl-redirect: true
     external-dns.alpha.kubernetes.io/hostname: "{{ .Values.ingress.appDomain }}"
     external-dns.alpha.kubernetes.io/alias: "true"
-    alb.ingress.kubernetes.io/tags: createdBy=codepipes
-    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
-    {{- if $.Values.ingress.bucketName }}
-    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,access_logs.s3.enabled=true,access_logs.s3.bucket={{ $.Values.ingress.bucketName }},access_logs.s3.prefix={{ $.Values.applicationName }}
-    {{- end}}
     {{- end}}
     {{- end}}
 spec:
@@ -38,12 +31,6 @@ spec:
   rules:
   - http:
       paths:
-      - path: /
-        backend:
-          service:
-            name: ssl-redirect
-            port:
-              name: use-annotation
       {{- range $index,$port := $.Values.ports }}
       - path: /{{$port.name}}/*
         backend:

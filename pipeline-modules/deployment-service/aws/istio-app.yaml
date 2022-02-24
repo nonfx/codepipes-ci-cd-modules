@@ -1,0 +1,64 @@
+provisioner: "aws"
+name: "istio-eks-app"
+version: 1
+revision: 1
+displayName: "EKS Istio Commands"
+description: "Run Istio commands on EKS Clusters"
+target: "deployment-template"
+keywords: ["bash", "linux"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - "container"
+  requiredResources:
+    - aws_eks_cluster
+inputs:
+  properties:
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+      default: "insertValue"
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+      default: "insertValue"
+    istio_version:
+      title: Istio Version
+      description: Istio version to install
+      type: string
+      default: ""
+    istio_args:
+      title: Istio Arguments
+      description: Istio Argument
+      type: string
+      default: install --set profile=default
+    roleArn:
+      title: AWS Role ARN
+      description: AWS Role ARN to be user
+      type: string
+      default: ""
+
+template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+
+  version: 0.2
+  env:
+    variables:
+      ISTIO_VERSION: "{{istio_version}}"
+  phases:
+    install:
+      commands:
+      - curl -sL https://istio.io/downloadIstioctl | sh -
+      - export PATH=$PATH:$HOME/.istioctl/bin
+      - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
+      - istioctl x precheck
+    build:
+      commands:
+        - export PATH="{{workspace}}/bin:$PATH"
+        - istioctl {{istio_args}} -y
+
+

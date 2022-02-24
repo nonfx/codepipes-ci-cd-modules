@@ -51,6 +51,7 @@ inputs:
           name:
             title: Domain name
             type: string
+            default: "insertValue"
     virtualService:
       title: Virtual Service
       description: Istio Virtual Service
@@ -62,12 +63,15 @@ inputs:
           rewriteEnabled:
             title: Virtual Service Rewrite Enabled
             type: string
+            default: "false"
           rewriteValue:
             title: Value of Virtual Service Rewrite Path
             type: string
+            default: /
           prefix:
             title: Virtual Service Prefix
             type: string
+            default: codepipes
     deployment:
       title: Create Deployment
       description: This is to create deployment
@@ -133,9 +137,11 @@ inputs:
           Command:
             title: Command
             type: string
+            default: "echo"
           Name:
             title: Name
             type: string
+            default: "codepipes"
     ports:
       title: Ports
       description: Port used in services
@@ -149,9 +155,11 @@ inputs:
             title: Container port
             type: integer
             maximum: 65535
+            default: 80
           healthCheck:
             title: Health check path
             type: string
+            default: /
           name:
             title: Service name
             type: string
@@ -228,12 +236,12 @@ inputs:
       default: 256Mi
     replicaCount:
       title: Replica Count
-      description: Replica Count 
+      description: Replica Count
       type: integer
       default: 1
     maxUnavail:
       title: Maximum Unavailable Percentage or absolute value for Pods
-      description: Maximum Unavailable 
+      description: Maximum Unavailable
       type: string
       default: 50%
     maxSurge:
@@ -248,22 +256,22 @@ inputs:
       default: 30
     liveFailThreshold:
       title: Liveliness Probe Fail Threshold
-      description: Successive Fail Threshold for Liveliness Probe 
+      description: Successive Fail Threshold for Liveliness Probe
       type: integer
       default: 2
     liveSuccThreshold:
       title: Liveliness Probe Success Threshold
-      description: Successive Success Threshold for Liveliness Probe 
+      description: Successive Success Threshold for Liveliness Probe
       type: integer
       default: 1
     readFailThreshold:
       title: Readiness Probe Fail Threshold
-      description: Successive Fail Threshold for Readiness Probe 
+      description: Successive Fail Threshold for Readiness Probe
       type: integer
       default: 2
     readSuccThreshold:
       title: Readiness Probe Success Threshold
-      description: Successive Success Threshold for Readiness Probe 
+      description: Successive Success Threshold for Readiness Probe
       type: integer
       default: 1
     probeDelay:
@@ -300,6 +308,7 @@ inputs:
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
 
@@ -464,7 +473,12 @@ template: |
       name=${line%%=*}
       printf '  %s: %s\n' $name "$value" >> values.yaml
       done;
-
+      echo "secrets:" >> values.yaml;
+      cat {{pipeline_secret_file}} | while IFS= read -r line; do
+      value=${line#*=}
+      name=${line%%=*}
+      printf '  %s: %s\n' $name $value >> values.yaml
+      done;
   - id: 'Install Application'
     name: 'gcr.io/$PROJECT_ID/helm'
     entrypoint: 'bash'

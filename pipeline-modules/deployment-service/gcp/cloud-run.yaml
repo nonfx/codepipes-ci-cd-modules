@@ -47,7 +47,6 @@ inputs:
       title: Allow Unauthenticated
       description: Boolean to allow Unauthenticated traffic
       type: boolean
-      default: true
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
@@ -74,27 +73,35 @@ template: |
 
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+  {% set application_name = applicationName|lower %}
 
   steps:
   {% if job_type == 'deploy' %}
-  - id: 'Enable Cloud Run API'
+  - id: 'Add secrets to secret manager'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      gcloud services enable run.googleapis.com;
+      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        gcloud secrets delete {{application_name}}-$name --quiet || true
+        printf $value | gcloud secrets create {{application_name}}-$name --data-file=- --replication-policy=user-managed --locations={{region}}
+      done;
   - id: 'Create cloud run application'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
+      client_email=$$(gcloud config list account --format "value(core.account)")
       echo "
       apiVersion: serving.knative.dev/v1
       kind: Service
       metadata:
-        name: {{applicationName|lower}}
+        name: {{application_name}}
       spec:
         template:
           metadata:
@@ -102,6 +109,7 @@ template: |
               codepipes-project: {{project}}
               codepipes-environment: {{environment}}
           spec:
+            serviceAccountName: $$client_email
             containers:
             - image: {{repository}}:{{tag}}
               ports:
@@ -113,6 +121,12 @@ template: |
         name=${line%%=*}
         printf '        - name: %s\n          value: %s\n' "$name" "$value" >>  app.yaml
       done;
+      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{application_name}}-$name" >>  app.yaml
+      done;
+      cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
@@ -125,7 +139,7 @@ template: |
             - members:
               - allUsers
               role: roles/run.invoker" >> policy.yaml
-      gcloud run services set-iam-policy {{applicationName|lower}} policy.yaml  --quiet --region {{region}}
+      gcloud run services set-iam-policy {{application_name}} policy.yaml  --quiet --region {{region}}
   {% else %}  {% endif %}
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -133,7 +147,7 @@ template: |
     - '-c'
     - |
       echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-      summary=`gcloud run services describe {{applicationName|lower}} --platform managed --region {{region}} --format 'value(status.url)'`
+      summary=`gcloud run services describe {{application_name}} --platform managed --region {{region}} --format 'value(status.url)'`
       echo "Service URL="$summary >> summary.txt
       echo "###pipeline-summary-end###" >> summary.txt 2>&1;
       cat summary.txt;
@@ -144,5 +158,10 @@ template: |
     args:
     - '-c'
     - |
-      gcloud beta run services delete {{applicationName|lower}} --region {{region}} --platform managed --quiet;
+      gcloud beta run services delete {{application_name}} --region {{region}} --platform managed --quiet;
+      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        gcloud secrets delete {{application_name}}-$name --quiet || true
+      done;
   {% endif %}
