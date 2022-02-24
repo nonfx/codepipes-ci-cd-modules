@@ -9,7 +9,7 @@ metadata:
     environment: {{ .Values.environment }}
     type: service
 spec:
-  type:  NodePort
+  type:  LoadBalancer
   ports:
   {{- range  $port := $.Values.ports }}
     - name: {{$port.name}}
