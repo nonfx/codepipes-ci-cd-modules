@@ -55,9 +55,11 @@ inputs:
 template: |
   {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
 
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
+  trigger: none
   steps:
   - script: |
 
@@ -72,7 +74,7 @@ template: |
       {% endfor %}
       {%- for env_key in pipeline_secret_env %}
         export {{env_key}}="$({{env_key}})"
-        printf "{{env_key}}=%s\n" "$(printf "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
+        printf "{{env_key}}=%s\n" "$(printf "${{env_key}}" | jq -aRs .)" >> {{pipeline_secret_file}}
       {% endfor %}
 
       echo "Printing env file..."
@@ -83,3 +85,7 @@ template: |
       git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
   variables:
     - group: {{ variable_group_name }}
+    - name: __VG_EXPORTED_ENV_NAMES
+      value: {% for env_key in pipeline_env %} {{env_key}} {% endfor %}
+    - name: __VG_EXPORTED_SECRET_ENV_NAMES
+      value: {% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}

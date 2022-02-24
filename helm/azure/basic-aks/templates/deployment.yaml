@@ -1,0 +1,109 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.applicationName }}-deployment
+  namespace: {{ .Values.applicationName }}
+  labels:
+    projectName: {{ .Values.applicationName }}
+    environment: {{ .Values.environment }}
+    type: deployment
+spec:
+  selector:
+    matchLabels:
+      projectName: {{ .Values.applicationName }}
+      environment: {{ .Values.environment }}
+      type: deployment
+  strategy:
+    type: {{ .Values.deploy.strategy }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.deploy.maxUnavail }}
+      maxSurge: {{ .Values.deploy.maxSurge }}
+  template:
+    metadata:
+      labels:
+        projectName: {{ .Values.applicationName }}
+        environment: {{ .Values.environment }}
+        type: deployment
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: project
+                  operator: In
+                  values:
+                  - {{ .Values.applicationName }}
+                - key: env
+                  operator: In
+                  values:
+                  - {{ .Values.environment }}
+              topologyKey: failure-domain.beta.kubernetes.io/zone
+            weight: 100
+      {{- if .Values.image.registryCredentials }}
+      imagePullSecrets:
+        - name: {{ .Values.applicationName }}-docker-registry
+      {{- end }}      
+      containers:
+        - name: {{ .Values.applicationName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          {{- range  $port := .Values.ports }}
+            - name: {{$port.name}}
+              containerPort: {{$port.containerPort}}
+              protocol: {{$port.protocol}}
+          {{- end}}
+          {{- if .Values.ports -}}
+          {{- if (index $.Values.ports 0).healthCheck }}
+          livenessProbe:
+          {{- range  $index,$port := $.Values.ports }}
+            {{- if eq $index  0}}
+            tcpSocket:
+              port: {{$port.healthCheck}}
+            {{- end}}
+          {{- end}}
+            failureThreshold: {{ $.Values.deploy.healthCheck.liveFailThreshold }}
+            successThreshold: {{ $.Values.deploy.healthCheck.liveSuccThreshold }}
+            initialDelaySeconds: {{ $.Values.deploy.healthCheck.delay }}
+            periodSeconds: {{ $.Values.deploy.healthCheck.period }}
+            timeoutSeconds: {{ $.Values.deploy.healthCheck.timeout }}
+          readinessProbe:
+            {{- range  $index,$port := $.Values.ports }}
+            {{- if eq $index  0}}
+            tcpSocket:
+              port: {{$port.healthCheck}}
+              {{- end}}
+            {{- end}}
+            failureThreshold: {{ $.Values.deploy.healthCheck.readFailThreshold }}
+            successThreshold: {{ $.Values.deploy.healthCheck.readSuccThreshold }}
+            initialDelaySeconds: {{ $.Values.deploy.healthCheck.delay }}
+            periodSeconds: {{ $.Values.deploy.healthCheck.period }}
+            timeoutSeconds: {{ $.Values.deploy.healthCheck.timeout }}
+          {{- end}}
+          {{- end}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.applicationName }}-configmap
+          volumeMounts:
+          {{- range  $index,$artifact := .Values.artifacts }}
+            - name: {{ $.Values.applicationName }}-volume-{{$index}}
+              mountPath: {{ $artifact.mountPath }}
+          {{- end}}
+        {{- if  .Values.lifecycle.prestop.command }}        
+          lifecycle:
+            preStop:
+              exec:
+                command: {{ .Values.lifecycle.prestop.command }}
+        {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.deploy.terminationGracePeriodSeconds }}
+      volumes:
+        {{- range  $index,$artifact := .Values.artifacts }}
+        - name: {{ $.Values.applicationName }}-volume-{{$index}}
+          secret:
+            secretName: {{ $.Values.applicationName }}-secret-{{$index}}
+        {{- end}}

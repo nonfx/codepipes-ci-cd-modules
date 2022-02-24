@@ -11,6 +11,7 @@ author: CloudCover
 meta:
   inputArtifactType:
     - container
+    - git
 
 inputs:
   properties:

@@ -16,12 +16,14 @@ inputs:
   properties:
     cluster:
       title: Cluster Name
-      type: string
       description: Cluster name in which deployment will happen
+      type: string
+      default: ""
     region:
       title: Region name
-      type: string
       description: region name for cluster
+      type: string
+      default: ""
     istio_version:
       title: Istio Version
       description: Istio version to install
@@ -36,10 +38,12 @@ inputs:
       title: AWS Role ARN
       description: AWS Role ARN to be user
       type: string
+      default: ""
   required:
     - cluster
     - region
     - roleArn
+
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -60,3 +64,5 @@ template: |
       commands:
         - export PATH="{{workspace}}/bin:$PATH"
         - istioctl {{istio_args}} -y
+
+

@@ -149,6 +149,7 @@ template: |
       export {{ env_key }}="$({{ env_key }})"
       {% endfor -%}
       mkdir -p "{{ local_artifact_path }}"
+      {{ download_artifact(tf_state_file) }}
       git clone --no-checkout "https://{{ iac_checkout_src }}" "{{ local_checkout_path }}"
       cd "{{ local_checkout_path }}"
       git checkout "{{ iac_checkout_target }}"
