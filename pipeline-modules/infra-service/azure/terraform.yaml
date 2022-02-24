@@ -104,7 +104,8 @@ inputs:
     - pipeline_env
     - storage_account_name
 template: |
-  {% set artifact_root_path = artifact_dir|add:"/$(Build.BuildId)" %}     {# <artifact_dir>/$(Build.BuildId) #}
+  {% set artifact_root_path = artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
+  {% set artifact_build_path = artifact_dir|add:"/$(Build.BuildId)" %}     {# <artifact_dir>/$(Build.BuildId) #}
   {% set local_checkout_path = '$(System.DefaultWorkingDirectory)/code' %}
   {% set local_code_path = local_checkout_path|add:"/"|add:iac_root %}
   {% set local_artifact_path = '$(System.DefaultWorkingDirectory)/artifacts' %}
@@ -128,11 +129,11 @@ template: |
 
   {# uploads a file artifact, by default fail on error #}
   {% macro upload_artifact(file, ignore_err=false) -%}
-  az storage blob upload   --name "{{ artifact_root_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
+  az storage blob upload   --name "{{ artifact_build_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
   {%- endmacro %}
 
   {% macro download_artifact(file, ignore_err=false) -%}
-  az storage blob download --name "{{ artifact_dir }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
+  az storage blob download --name "{{ artifact_root_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
   {%- endmacro %}
 
   steps:
