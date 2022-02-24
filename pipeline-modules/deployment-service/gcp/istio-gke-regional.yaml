@@ -138,9 +138,11 @@ inputs:
           Command:
             title: Command
             type: string
+            default: "echo"
           Name:
             title: Name
             type: string
+            default: "codepipes"
     ports:
       title: Ports
       description: Port used in services
@@ -154,6 +156,7 @@ inputs:
             title: Container port
             type: integer
             maximum: 65535
+            default: 80
           healthCheck:
             title: Health check path
             type: string
