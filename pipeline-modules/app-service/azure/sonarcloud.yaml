@@ -1,0 +1,60 @@
+provisioner: azure
+name: sonar-cloud
+version: 1
+revision: 1
+displayName: Sonar Cloud
+description: Analyze source code using Sonar Cloud
+target: ""
+keywords:
+  - Analyze Code
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""
+    sonar_cloud_service_connection:
+      title: Sonar service connection
+      description: Azure DevOps service connection for Sonar cloud. Create it from project settings > service connection. Use sonar token from account > security
+      type: string
+    sonar_cloud_org:
+      title: Sonar Organization Key
+      description: Sonar organization key found in project information section of sonar cloud web console
+      type: string
+    sonar_cloud_project_key:
+      title: Sonar Project Key
+      description: Sonar project key found in project information section of sonar cloud web console
+      type: string
+  required:
+    - sonar_cloud_service_connection
+    - sonar_cloud_org
+    - sonar_cloud_project_key
+template: |
+  steps:
+    - script: |
+        cd {{working_dir}}
+        # because sonar needs the base branch fetched for comparison
+        git fetch --all
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: {{ sonar_cloud_service_connection }}
+        organization: {{ sonar_cloud_org }}
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: {{ sonar_cloud_project_key }}
+        extraProperties: |
+          sonar.projectBaseDir={{ working_dir }}
+          {% if git_checkout_target %}
+          sonar.scm.revision={{ git_checkout_target }}
+          sonar.branch.name={{ git_checkout_target }}
+          {% endif %}
+    - task: SonarCloudAnalyze@1
+    - task: SonarCloudPublish@1
