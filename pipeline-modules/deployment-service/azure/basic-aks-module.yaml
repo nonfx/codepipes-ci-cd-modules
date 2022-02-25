@@ -72,15 +72,14 @@ inputs:
       default: []
       items:
         type: object
+        required: [Name, Command]
         properties:
           Command:
             title: Command
             type: string
-            default: "echo"
           Name:
             title: Name
             type: string
-            default: "codepipes"
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -259,3 +258,20 @@ template: |
             helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
       displayName: "Helm Deploy {{applicationName}}"
       workingDirectory: {{ workingDir }}
+    {% if pipeline_summary_var %}
+    - script: |
+            summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
+            cat <<EOF >>summary.txt
+            ###pipeline-summary-start###
+            {% if pipeline_summary_var %}
+            {% for summary in pipeline_summary_var %}
+            $({{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s" {% endfor %})
+            {% else %}
+            Service URL=http://$summary_command
+            {% endif %}
+            ###pipeline-summary-end###
+            EOF
+            cat summary.txt
+      displayName: "Pipeline Summary for {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}
