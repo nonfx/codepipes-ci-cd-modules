@@ -143,6 +143,7 @@ template: |
       terraformVersion: {{ tf_version }}
   - script: |
       set -x
+      az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       {% for env_key, env_value in pipeline_env -%}
       export {{ env_key }}="{{ env_value }}"
       {% endfor -%}
@@ -160,7 +161,6 @@ template: |
       test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
       # terraform init
       terraform init >> {{ logger('init') }}
-      az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {{ upload_log('init') }}
       {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
