@@ -1,0 +1,28 @@
+provisioner: azure
+name: java-build
+version: 1
+revision: 1
+displayName: Build JARs (Maven)
+description: Runs maven install command on working directory
+target: ""
+keywords:
+  - java
+  - build
+  - maven
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
+  - working_dir
+template: |
+  steps:
+  - script: mvn clean install
+    displayName: 'Maven Build'
+    workingDirectory: {{ working_dir }}
+    
