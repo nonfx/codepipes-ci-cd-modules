@@ -263,7 +263,7 @@ template: |
             summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
             cat <<EOF >>summary.txt
             ###pipeline-summary-start###
-            {% if pipeline_summary_var %}
+            {% if pipeline_summary_var -%}
             {% for summary in pipeline_summary_var %}
             $({{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s" {% endfor %})
             {% else %}
@@ -271,6 +271,8 @@ template: |
             {% endif %}
             ###pipeline-summary-end###
             EOF
+            awk 'NF' summary.txt  > tmp.txt
+            mv tmp.txt summary.txt
             cat summary.txt
       displayName: "Pipeline Summary for {{applicationName}}"
       workingDirectory: {{ workingDir }}
