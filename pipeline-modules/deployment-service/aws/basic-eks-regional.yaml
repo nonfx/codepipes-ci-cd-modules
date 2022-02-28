@@ -198,6 +198,10 @@ template: |
           {% endif %}
           rm -f values.yaml;
 
+          if [ -z "$docker_registry" ]; then
+          export docker_registry="index.docker.io"
+          fi
+
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
