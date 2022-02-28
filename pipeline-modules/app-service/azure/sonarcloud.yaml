@@ -11,16 +11,16 @@ author: CloudCover
 meta: {}
 inputs:
   properties:
-    working_dir:
-      title: Working directory
-      description: The current working directory to execute command
-      type: string
-      default: repo
     git_checkout_target:
       title: Checkout Target
       description: Git branch, tag or commit hash to checkout.
       type: string
       default: ""
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
     sonar_cloud_service_connection:
       title: Sonar service connection
       description: Azure DevOps service connection for Sonar cloud. Create it from project settings > service connection. Use sonar token from account > security
@@ -40,9 +40,10 @@ inputs:
 template: |
   steps:
     - script: |
-        cd {{working_dir}}
         # because sonar needs the base branch fetched for comparison
         git fetch --all
+      displayName: 'Git fetch base'
+      workingDirectory: {{ git_local_path }}
     - task: SonarCloudPrepare@1
       inputs:
         SonarCloud: {{ sonar_cloud_service_connection }}
@@ -51,10 +52,10 @@ template: |
         configMode: 'manual'
         cliProjectKey: {{ sonar_cloud_project_key }}
         extraProperties: |
-          sonar.projectBaseDir={{ working_dir }}
-          {% if git_checkout_target %}
+          sonar.projectBaseDir={{ git_local_path }}
+          {% if git_checkout_target -%}
           sonar.scm.revision={{ git_checkout_target }}
           sonar.branch.name={{ git_checkout_target }}
-          {% endif %}
+          {%- endif %}
     - task: SonarCloudAnalyze@1
     - task: SonarCloudPublish@1
