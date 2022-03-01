@@ -49,3 +49,4 @@ template: |
       echo Build completed on `date`
       echo Pushing the Docker image...
       docker push {{container_repository}}:{{container_tag}}
+    displayName: 'Docker Build & Push'

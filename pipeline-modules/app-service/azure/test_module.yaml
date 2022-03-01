@@ -58,3 +58,4 @@ template: |
       {% for list_value in echo_list %}
       echo "    {{ list_value }}"
       {% endfor %}
+    displayName: 'Test Module'
