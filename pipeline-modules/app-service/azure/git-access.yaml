@@ -38,3 +38,4 @@ template: |
       git config --file {{ git_config_path }} credential.interactive never
       git config --global url."https://{{ git_login }}:$(GIT_PASSWORD)@github.com/".insteadOf "https://github.com/"
       echo "https://{{ git_login }}:$(GIT_PASSWORD)@{{ git_remote_path }}" >> {{ git_creds_path }}
+    displayName: 'Git Access'

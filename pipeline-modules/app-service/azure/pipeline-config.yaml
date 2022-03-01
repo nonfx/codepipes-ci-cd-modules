@@ -35,8 +35,6 @@ inputs:
       description: Name of a KMS key used to encrypt secret values.
       type: string
       default: ""
-  required:
-    - variable_group_name
   internal:
     - variable_group_name
     - pipeline_env
@@ -58,6 +56,6 @@ template: |
       export {{env_key}}="$({{env_key}})"
       printf "{{env_key}}=%s\n" "$(printf "%s" "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
       {%- endfor %}
-
+    displayName: 'Pipeline Config'
   variables:
     - group: {{ variable_group_name }}
