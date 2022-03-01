@@ -20,6 +20,11 @@ inputs:
       description: Keeps all secret variables available to pipeline.
       type: string
       default: ""
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
@@ -43,7 +48,10 @@ inputs:
 template: |
   {% set workspace = '$BUILD_SOURCESDIRECTORY' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-
+  {% if pool_name %}
+  pool:
+    name: {{ pool_name }}
+  {% endif %}
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   steps:
   - script: |
@@ -57,8 +65,7 @@ template: |
       printf "{{env_key}}=%s\n" "$(printf "%s" "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
       {%- endfor %}
     displayName: 'Pipeline Config'
-
   {% if variable_group_name -%}
   variables:
-    - group: {{ variable_group_name }}
+  - group: {{ variable_group_name }}
   {%- endif %}
