@@ -57,5 +57,8 @@ template: |
       printf "{{env_key}}=%s\n" "$(printf "%s" "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
       {%- endfor %}
     displayName: 'Pipeline Config'
+
+  {% if variable_group_name -%}
   variables:
     - group: {{ variable_group_name }}
+  {%- endif %}
