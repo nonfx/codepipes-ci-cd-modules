@@ -47,6 +47,7 @@ inputs:
       title: Allow Unauthenticated
       description: Boolean to allow Unauthenticated traffic
       type: boolean
+      default: true
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
