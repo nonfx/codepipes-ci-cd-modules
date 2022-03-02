@@ -62,11 +62,9 @@ inputs:
           Command:
             title: Command
             type: string
-            default: "echo"
           Name:
             title: Name
             type: string
-            default: "codepipes"
     ports:
       title: Ports
       description: Port used in services
