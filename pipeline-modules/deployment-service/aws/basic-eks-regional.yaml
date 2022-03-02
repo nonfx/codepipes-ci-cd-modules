@@ -31,7 +31,6 @@ inputs:
             title: Container port
             type: integer
             maximum: 65535
-            default: 80
           protocol:
             title: Protocol
             type: string
