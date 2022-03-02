@@ -18,17 +18,15 @@ inputs:
       title: Cluster Name
       description: Cluster name in which deployment will happen
       type: string
-      default: ""
     region:
       title: Region name
       description: region name for cluster
       type: string
-      default: ""
     istio_version:
       title: Istio Version
       description: Istio version to install
       type: string
-      default: ""
+      default: "1.13"
     istio_args:
       title: Istio Arguments
       description: Istio Argument
@@ -38,7 +36,6 @@ inputs:
       title: AWS Role ARN
       description: AWS Role ARN to be user
       type: string
-      default: ""
   required:
     - cluster
     - region
