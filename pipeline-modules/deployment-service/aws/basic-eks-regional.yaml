@@ -96,11 +96,9 @@ inputs:
           Command:
             title: Command
             type: string
-            default: "echo"
           Name:
             title: Name
             type: string
-            default: "codepipes"
     app_env:
       title: Application Environment
       description: Application Related Envs
