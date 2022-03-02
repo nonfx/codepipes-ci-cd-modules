@@ -1,0 +1,30 @@
+provisioner: azure
+name: java-unit-test
+version: 1
+revision: 1
+displayName: Run Java UnitTest with Maven
+description: run Java unit test with Maven
+target: ""
+keywords:
+  - java
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    test_args:
+      title: Mvn test command arguments
+      description: Arguments for mvn test command
+      type: array
+      default: []
+      items:
+        type: string
+template: |
+  steps:
+  - script: mvn test {% for arg in test_args %} {{ arg }} {% endfor %}
+    displayName: 'Maven Run UnitTest'
+    workingDirectory: {{ working_dir }}
