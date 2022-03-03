@@ -59,3 +59,7 @@ template: |
           {%- endif %}
     - task: SonarCloudAnalyze@1
     - task: SonarCloudPublish@1
+    - task: sonarcloud-buildbreaker@2
+      inputs:
+        SonarCloud: {{ sonar_cloud_service_connection }}
+        organization: {{ sonar_cloud_org }}
