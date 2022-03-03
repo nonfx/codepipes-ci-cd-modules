@@ -1,0 +1,62 @@
+provisioner: azure
+name: go-scan
+version: 1
+revision: 1
+displayName: Go Scan
+description: Scans go code for vulnarabilities using gosec and golint
+target: ""
+keywords:
+  - Go
+  - Scan
+  - lint
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    go_sec_args:
+      title: Go sec args
+      description: Arguments for Go sec command
+      type: array
+      items:
+        type: string
+      default: ["./..."]
+    go_lint_args:
+      title: Go lint args
+      description: Arguments for Go lint command
+      type: array
+      items:
+        type: string
+      default: ["run"]
+    gosec_version:
+      title: Go sec version
+      description: Gosec version https://github.com/securego/gosec
+      type: string
+      default: 2.9.6
+    golint_version:
+      title: Go lint version
+      description: Golint version https://github.com/golangci/golangci-lint
+      type: string
+      default: 1.44.0
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
+    - working_dir
+template: |
+  steps:
+  - script: |
+      echo Installing Gosec
+      wget -O - -q https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s v{{gosec_version}}
+      ./bin/gosec --version
+      ./bin/gosec {% for arg in go_sec_args %} {{ arg }} {% endfor %}
+    displayName: Security scan
+    workingDirectory: {{ working_dir }}
+  - script: |
+      echo Installing Golint
+      wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v{{golint_version}}
+      ./bin/golangci-lint --version
+      ./bin/golangci-lint {% for arg in go_lint_args %} {{ arg }} {% endfor %}
+    displayName: Linting scan
+    workingDirectory: {{ working_dir }}
