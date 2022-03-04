@@ -31,12 +31,17 @@ inputs:
       type: string
     sonar_cloud_project_key:
       title: Sonar Project Key
-      description: Sonar project key found in project information section of sonar cloud web console
+      description: Sonar project key found in project information section of sonar cloud web console. This is required if sonar_config_file is not set
       type: string
+      default: ""
+    sonar_config_file:
+      title: Sonar config file name
+      description: Optionally, use a config file in the repo to setup sonar properties
+      type: string
+      default: ""
   required:
     - sonar_cloud_service_connection
     - sonar_cloud_org
-    - sonar_cloud_project_key
 template: |
   steps:
     - script: |
@@ -49,8 +54,13 @@ template: |
         SonarCloud: {{ sonar_cloud_service_connection }}
         organization: {{ sonar_cloud_org }}
         scannerMode: 'CLI'
+        {% if sonar_config_file -%}
+        configMode: 'file'
+        configFile: {{ git_local_path }}/{{ sonar_config_file }}
+        {% else -%}
         configMode: 'manual'
         cliProjectKey: {{ sonar_cloud_project_key }}
+        {%- endif %}
         extraProperties: |
           sonar.projectBaseDir={{ git_local_path }}
           {% if git_checkout_target -%}
