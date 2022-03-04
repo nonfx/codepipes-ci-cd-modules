@@ -26,7 +26,7 @@ inputs:
       title: Istio Version
       description: Istio version to install
       type: string
-      default: ""
+      default: "1.13"
     istio_args:
       title: Istio Arguments
       description: Istio Argument
@@ -60,3 +60,5 @@ template: |
       commands:
         - export PATH="{{workspace}}/bin:$PATH"
         - istioctl {{istio_args}} -y
+
+

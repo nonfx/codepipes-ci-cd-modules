@@ -104,7 +104,8 @@ inputs:
     - pipeline_env
     - storage_account_name
 template: |
-  {% set artifact_root_path = artifact_dir|add:"/$(Build.BuildId)" %}     {# <artifact_dir>/$(Build.BuildId) #}
+  {% set artifact_root_path = artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
+  {% set artifact_build_path = artifact_dir|add:"/$(Build.BuildId)" %}     {# <artifact_dir>/$(Build.BuildId) #}
   {% set local_checkout_path = '$(System.DefaultWorkingDirectory)/code' %}
   {% set local_code_path = local_checkout_path|add:"/"|add:iac_root %}
   {% set local_artifact_path = '$(System.DefaultWorkingDirectory)/artifacts' %}
@@ -128,11 +129,11 @@ template: |
 
   {# uploads a file artifact, by default fail on error #}
   {% macro upload_artifact(file, ignore_err=false) -%}
-  az storage blob upload   --name "{{ artifact_root_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
+  az storage blob upload   --name "{{ artifact_build_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
   {%- endmacro %}
 
   {% macro download_artifact(file, ignore_err=false) -%}
-  az storage blob download --name "{{ artifact_dir }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
+  az storage blob download --name "{{ artifact_root_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
   {%- endmacro %}
 
   steps:
@@ -142,6 +143,7 @@ template: |
       terraformVersion: {{ tf_version }}
   - script: |
       set -x
+      az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       {% for env_key, env_value in pipeline_env -%}
       export {{ env_key }}="{{ env_value }}"
       {% endfor -%}
@@ -149,6 +151,7 @@ template: |
       export {{ env_key }}="$({{ env_key }})"
       {% endfor -%}
       mkdir -p "{{ local_artifact_path }}"
+      {{ download_artifact(tf_state_file) }}
       git clone --no-checkout "https://{{ iac_checkout_src }}" "{{ local_checkout_path }}"
       cd "{{ local_checkout_path }}"
       git checkout "{{ iac_checkout_target }}"
@@ -158,7 +161,6 @@ template: |
       test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
       # terraform init
       terraform init >> {{ logger('init') }}
-      az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) -t $(ARM_TENANT_ID)
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {{ upload_log('init') }}
       {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
