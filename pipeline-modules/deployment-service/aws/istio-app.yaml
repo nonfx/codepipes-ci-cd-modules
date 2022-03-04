@@ -16,12 +16,12 @@ inputs:
   properties:
     cluster:
       title: Cluster Name
-      description: Cluster name in which deployment will happen
       type: string
+      description: Cluster name in which deployment will happen
     region:
       title: Region name
-      description: region name for cluster
       type: string
+      description: region name for cluster
     istio_version:
       title: Istio Version
       description: Istio version to install
@@ -40,7 +40,6 @@ inputs:
     - cluster
     - region
     - roleArn
-
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
