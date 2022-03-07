@@ -82,7 +82,7 @@ inputs:
         - WARN
         - ERROR
         - JSON
-      default: DEBUG
+      default: ERROR
   required:
     - iac_checkout_src
     - iac_checkout_target
@@ -135,6 +135,11 @@ template: |
   {% macro download_artifact(file, ignore_err=false) -%}
   az storage blob download --name "{{ artifact_root_path }}/{{ file }}" --file "{{ local_artifact_path }}/{{ file }}" --account-name {{storage_account_name}} --auth-mode login --container-name {{artifact_bucket}}
   {%- endmacro %}
+
+  variables:
+    TF_IN_AUTOMATION: 'true'
+    TF_INPUT: 'false'
+    TF_LOG: '{{ tf_log_level }}'
 
   steps:
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
