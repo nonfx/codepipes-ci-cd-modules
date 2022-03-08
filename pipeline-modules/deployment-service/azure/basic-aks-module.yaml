@@ -258,7 +258,6 @@ template: |
             helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
       displayName: "Helm Deploy {{applicationName}}"
       workingDirectory: {{ workingDir }}
-    {% if pipeline_summary_var %}
     - script: |
             summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
             cat <<EOF >>summary.txt
@@ -276,4 +275,3 @@ template: |
             cat summary.txt
       displayName: "Pipeline Summary for {{applicationName}}"
       workingDirectory: {{ workingDir }}
-    {% endif %}
