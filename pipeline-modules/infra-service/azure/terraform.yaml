@@ -82,7 +82,7 @@ inputs:
         - WARN
         - ERROR
         - JSON
-      default: ERROR
+      default: DEBUG
   required:
     - iac_checkout_src
     - iac_checkout_target
