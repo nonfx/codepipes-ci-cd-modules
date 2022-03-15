@@ -27,12 +27,18 @@ inputs:
       title: Repository URL
       description: The repository to clone from.
       type: string
-  required:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
     - git_remote_path
+    - working_dir
 template: |
   version: 0.2
   phases:
     pre_build:
       commands:
         - git clone {% if git_checkout_target %}--no-checkout{% endif %} https://{{ git_remote_path }} {{ git_local_path }}{% if git_checkout_target %}
-        - cd {{ git_local_path }} && git checkout {{ git_checkout_target }} && cd .. {% endif %}
+        - cd {{ git_local_path }} && git checkout {{ git_checkout_target }} && cd .. {% endif %} && cd {{working_dir}}
