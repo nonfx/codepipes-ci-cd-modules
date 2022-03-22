@@ -36,6 +36,7 @@ inputs:
       title: Sonar config file name
       description: Optionally, use a config file in the repo to setup sonar properties
       type: string
+      default: ""
   required:
     - sonar_host
     - sonar_cloud_org
