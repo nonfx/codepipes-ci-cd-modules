@@ -9,7 +9,7 @@ keywords: ["bash", "linux"]
 author: "CloudCover"
 meta:
   inputArtifactType:
-    - "container"
+    - ContainerImage
 inputs:
   type: object
   properties:
