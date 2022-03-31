@@ -38,7 +38,7 @@ inputs:
 template: |
   version: 0.2
   phases:
-    pre_build:
+    build:
       commands:
         - git clone {% if git_checkout_target %}--no-checkout{% endif %} https://{{ git_remote_path }} {{ git_local_path }}{% if git_checkout_target %}
         - cd {{ git_local_path }} && git checkout {{ git_checkout_target }} && cd .. {% endif %} && cd {{working_dir}}

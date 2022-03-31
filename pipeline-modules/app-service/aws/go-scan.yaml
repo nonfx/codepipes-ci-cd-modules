@@ -50,7 +50,6 @@ template: |
     build:
       commands:
         - echo Installing Gosec
-        - cd {{ working_dir }}
         - wget -O - -q https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s v{{gosec_version}}
         - ./bin/gosec --version
         - ./bin/gosec {% for arg in go_sec_args %} {{ arg }} {% endfor %}

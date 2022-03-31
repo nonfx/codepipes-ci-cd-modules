@@ -42,5 +42,4 @@ template: |
         - CGO_ENABLED=${CGO_ENABLED:-0}
         - go version
         - echo Building the Go code...
-        - cd {{ working_dir }}
         - go build -v {% for arg in go_build_args %} {{ arg }} {% endfor %}
