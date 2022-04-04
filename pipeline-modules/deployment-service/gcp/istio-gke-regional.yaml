@@ -11,7 +11,7 @@ keywords:
 author: CloudCover
 meta:
   inputArtifactType:
-    - container
+    - ContainerImage
 
 inputs:
   properties:
