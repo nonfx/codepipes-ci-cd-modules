@@ -1,0 +1,33 @@
+provisioner: azure
+name: sonatype-nexus-iq
+version: 1
+revision: 1
+displayName: Sonatype nexus IQ
+description: Sonatype nexus IQ server integration
+target: ""
+keywords:
+  - nexusIQ
+  - sonatype
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    nexus_service_connection:
+      title: NexusIQ Service Connection
+      description:  NexusIQ Service Connection Name
+      type: string
+    application_id:
+      title: NexusIQ Application ID
+      description: NexusIQ Application ID
+      type: string
+  required:
+    - nexus_service_connection
+    - application_id
+template: |
+  steps:
+  - task: NexusIqPipelineTask@1
+    inputs:
+      nexusIqService: '{{nexus_service_connection}}'
+      applicationId: '{{application_id}}'
+      stage: 'Build'
+      scanTargets: '**/*.jar'
