@@ -41,17 +41,14 @@ template: |
   version: 0.2
 
   phases:
-    pre_build:
+    build:
       commands:
         - echo Logging in to docker
         - echo $docker_password | docker login -u $docker_username --password-stdin $docker_registry
-    build:
-      commands:
         - echo Build started on `date`
         - echo Building the Docker image...
         - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
-    post_build:
-      commands:
         - echo Build completed on `date`
         - echo Pushing the Docker image...
         - docker push {{container_repository}}:{{container_tag}}
+        

@@ -30,7 +30,4 @@ template: |
   phases:
     build:
       commands:
-        - current_dir=$(pwd)
-        - cd {{ working_dir }}
         - {{ bash_script }}
-        - cd $current_dir
