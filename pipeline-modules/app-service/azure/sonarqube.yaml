@@ -1,0 +1,71 @@
+provisioner: azure
+name: sonar-qube
+version: 1
+revision: 1
+displayName: Sonar Qube
+description: Analyze source code using Sonar Qube
+target: ""
+keywords:
+  - Analyze Code
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    sonar_qube_service_connection:
+      title: Sonar service connection
+      description: Azure DevOps service connection for Sonar Qube. Create it from project settings > service connection. Use sonar token from account > security
+      type: string
+    sonar_qube_org:
+      title: Sonar Organization Key
+      description: Sonar organization key found in project information section of sonar qube web console
+      type: string
+    sonar_qube_project_key:
+      title: Sonar Project Key
+      description: Sonar project key found in project information section of sonar qube web console. This is required if sonar_config_file is not set
+      type: string
+    sonar_config_file:
+      title: Sonar config file name
+      description: Optionally, use a config file in the repo to setup sonar properties
+      type: string
+      default: ""
+  required:
+    - sonar_qube_service_connection
+    - sonar_qube_org
+    - sonar_qube_project_key
+template: |
+  steps:
+    - script: |
+        # because sonar needs the base branch fetched for comparison
+        git fetch --all
+      displayName: 'Git fetch base'
+      workingDirectory: {{ git_local_path }}
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: {{ sonar_qube_service_connection }}
+        organization: {{ sonar_qube_org }}
+        scannerMode: 'CLI'
+        {% if sonar_config_file -%}
+        configMode: 'file'
+        configFile: {{ git_local_path }}/{{ sonar_config_file }}
+        {% else -%}
+        configMode: 'manual'
+        cliProjectKey: {{ sonar_qube_project_key }}
+        {%- endif %}
+        extraProperties: |
+          sonar.projectBaseDir={{ git_local_path }}
+          {% if git_checkout_target -%}
+          sonar.scm.revision={{ git_checkout_target }}
+          sonar.branch.name={{ git_checkout_target }}
+          {%- endif %}
+    - task: SonarQubeAnalyze@5
+    - task: SonarQubePublish@5

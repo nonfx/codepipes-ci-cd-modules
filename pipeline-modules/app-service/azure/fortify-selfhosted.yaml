@@ -18,6 +18,16 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    INSTALLER_PATH:
+      title: Path to installer present on hosted agent
+      description: Path to installer present on hosted agent 
+      type: string
+      default: 
+    LICENSE_PATH:
+      title: Path to fortify licence file
+      description: Path to fortify licence file
+      type: string
+      default: 
     SSC_URL:
       title: Scan central URL
       description: Scan central URL 
@@ -39,18 +49,18 @@ inputs:
       type: string
       default:
     CRITICAL_THRESHOLD:
-      title: Fortify App Version
-      description: version of applicaton created in fortify 
+      title: Critical severity threshold
+      description: Upper limit to number of critical level vulnarabilities allowed 
       type: string
       default: 
     HIGH_THRESHOLD:
-      title: Fortify App Version
-      description: version of applicaton created in fortify 
+      title: High severity threshold
+      description: Upper limit to number of high level vulnarabilities allowed 
       type: string
       default: 
     WARNING_THRESHOLD:
-      title: Fortify App Version
-      description: version of applicaton created in fortify 
+      title: Warning severity threshold
+      description:  Upper limit to number of warning level vulnarabilities allowed  
       type: string
       default: 
   internal:
@@ -59,12 +69,20 @@ inputs:
     - SSC_URL
     - FortifyAppName
     - FortifyAppVersion
+    - INSTALLER_PATH
+    - LICENSE_PATH
     - CRITICAL_THRESHOLD
     - HIGH_THRESHOLD
     - WARNING_THRESHOLD
     - CONTROLLER_TOKEN
 template: |
   steps:
+    - task: InstallFortifySCA@7
+      inputs:
+        InstallerPath: '{{ INSTALLER_PATH }}'
+        LicenseFile: '{{ LICENSE_PATH }}'
+        RunFortifyRulepackUpdate: true
+        ProxyPort: 
     - task: FortifySCA@7
       inputs:
         runBuildTranslate: true
