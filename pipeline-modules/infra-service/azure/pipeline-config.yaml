@@ -20,11 +20,22 @@ inputs:
       description: Keeps all secret variables available to pipeline.
       type: string
       default: ""
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
   required:
     - variable_group_name
   internal:
     - variable_group_name
 template: |
+  pool:
+  {% if pool_name %}
+    name: {{ pool_name }}
+  {% else %}
+    vmImage: ubuntu-latest
+  {% endif %}
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   variables:
     - group: {{ variable_group_name }}
