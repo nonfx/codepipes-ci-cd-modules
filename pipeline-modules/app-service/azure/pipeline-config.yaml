@@ -48,9 +48,11 @@ inputs:
 template: |
   {% set workspace = '$BUILD_SOURCESDIRECTORY' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% if pool_name %}
   pool:
+  {% if pool_name %}
     name: {{ pool_name }}
+  {% else %}
+    vmImage: ubuntu-latest
   {% endif %}
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   steps:
