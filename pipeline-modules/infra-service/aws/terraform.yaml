@@ -143,13 +143,15 @@ template: |
         # IaC revision checkout
         - cd "{{ local_checkout_path }}"
         - git checkout "{{ iac_checkout_target }}"
+        # include infrastructure component modules
+        - find $CODEBUILD_SRC_DIR/* -name "cp_components*.tf" -maxdepth 0 -type f -exec cp -f "{}" "{{ local_code_path }}" \;
         # prepare terraform input values
         # get all environment variables with '{{ tf_var_name_prefix }}' name prefix, remove the prefix,
         # replace all '{{ tf_var_name_dash_placeholder }}' placeholders with '-' and quote the value
         # save the result as input variable file for terraform commands
         - printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
         - cd "{{ local_code_path }}"
-        # run a pre script for user if user 
+        # run a pre script for user if user
         - if [ -f {{user_pre_script}} ] ; then chmod +x {{user_pre_script}} && ./{{user_pre_script}} ; fi
         # terraform state push
         # push the downloaded global state to the Terraform backend
