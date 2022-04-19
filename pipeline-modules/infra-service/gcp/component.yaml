@@ -1,0 +1,155 @@
+provisioner: gcp
+name: component
+version: 1
+revision: 1
+displayName: Infrastructure component
+description: Include infrastructure component modules imported from a shared library repository.
+target: ""
+keywords:
+    - terraform
+author: CloudCover
+meta: {}
+inputs:
+    type: object
+    properties:
+        components:
+            title: Component Definitions
+            description: Component definitions to be included in the root Terraform configuration.
+            type: array
+            default: []
+            items:
+                type: object
+                required:
+                    - label
+                    - locator
+                properties:
+                    label:
+                        title: Local Name
+                        description: Name to refer to this instance of the module.
+                        type: string
+                    locator:
+                        title: Source Locator
+                        description: Module source locator in the repository.
+                        type: object
+                        properties:
+                            namespace:
+                                title: Namespace
+                                description: The user the module is owned by.
+                                type: string
+                            name:
+                                title: Name
+                                description: The name of the module.
+                                type: string
+                            provider:
+                                title: Provider
+                                description: The name of the provider.
+                                type: string
+                            version:
+                                title: Version
+                                description: The version of the module.
+                                type: string
+                            path:
+                                title: Path
+                                description: Relative path to the sub-module directory.
+                                type: string
+                                default: ""
+                        required:
+                            - namespace
+                            - name
+                            - provider
+                            - version
+                    inputs:
+                        title: Input Values
+                        description: Module input values.
+                        type: array
+                        default: []
+                        items:
+                            type: object
+                            required:
+                                - name
+                                - expression
+                            properties:
+                                name:
+                                    title: Input Name
+                                    description: Name of the module input variable.
+                                    type: string
+                                expression:
+                                    title: Input Expression
+                                    description: Expression that resolves into the input value.
+                                    type: string
+                                declare:
+                                    title: Declare Variable
+                                    description: Whether a new Terraform variable should be declared for this input value.
+                                    type: boolean
+                                    default: false
+                    outputs:
+                        title: Output Values
+                        description: Component output declarations.
+                        type: array
+                        default: []
+                        items:
+                            type: object
+                            required:
+                                - name
+                            properties:
+                                name:
+                                    title: Output Name
+                                    description: Name of the output variable will be pre-fixed by 'component.label'.
+                                    type: string
+                                expression:
+                                    title: Output Expression
+                                    description: Expression that resolves into the output value. Defaults to 'module.<component.label>.<name>'.
+                                    type: string
+                                    default: ""
+                                description:
+                                    title: Output Description
+                                    description: Description of the output variable.
+                                    type: string
+                                    default: ""
+    required: []
+    internal:
+        - components
+template: |
+    steps:
+    {% for component in components %}
+      - id: '{{ component.name }}'
+      name: 'gcr.io/cloud-builders/gcloud'
+      entrypoint: sh
+      args:
+        - -c
+        - |
+        cat <<'EOF' >>cp_components.{% now '20060102150405.000000' %}.tf
+        # Input variable declarations.
+        {% for input in component.inputs %}
+        {% if input.declare %}
+        variable "{{ input.expression }}" {}
+        {% endif %}
+        {% endfor %}
+
+        # Output variable declarations.
+        {% for output in component.outputs %}
+        output "{{ component.label }}_{{ output.name }}" {
+        {% if not output.expression %}
+        value = module.{{ component.label }}[*].{{ output.name }}
+        {% else %}
+        value = {{ output.expression }}
+        {% endif %}
+        description = "{{ output.description }}"
+        }
+        {% endfor %}
+
+        # Module definition.
+        module "{{ component.label }}" {
+        source = "{{ component.locator.namespace }}/{{ component.locator.name }}/{{ component.locator.provider }}//{{ component.locator.path }}"
+        version = "{{ component.locator.version }}"
+
+        {% for input in component.inputs %}
+        {% if input.declare %}
+        {{ input.name }} = var.{{ input.expression }}
+        {% else %}
+        {{ input.name }} = {{ input.expression }}
+        {% endif %}
+        {% endfor %}
+        }
+        EOF
+    {% endfor %}

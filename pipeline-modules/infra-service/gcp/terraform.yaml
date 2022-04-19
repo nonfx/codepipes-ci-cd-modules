@@ -174,6 +174,12 @@ template: |
       - checkout
       - '{{ iac_checkout_target }}'
     dir: {{ local_checkout_path }}
+  - id: 'include infrastructure component modules'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: sh
+    args:
+      - -c
+      - find . -name "cp_components*.tf" -maxdepth 1 -type f -exec cp -f "{}" '{{ local_code_path }}' \;
   - id: 'prepare terraform input values'
     # get all environment variables with '{{ tf_var_name_prefix }}' name prefix, remove the prefix,
     # replace all '{{ tf_var_name_dash_placeholder }}' placeholders with '-' and quote the value
