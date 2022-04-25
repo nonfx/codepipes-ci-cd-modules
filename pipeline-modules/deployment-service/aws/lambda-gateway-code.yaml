@@ -1,0 +1,166 @@
+provisioner: aws
+name: lambda-gateway-code
+version: 1
+revision: 1
+displayName: "AWS Lambda deployment with code"
+description: "Deploy Lambda functions with API gateway"
+target: "deployment-template"
+keywords: ["bash", "linux","functions"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - GitCode
+inputs:
+  type: object
+  properties:
+    region:
+      title: Region name
+      description: Region name for lambda deployment
+      type: string
+    app_env:
+      title: Application Environment
+      description: Application environment variables
+      type: object
+      default: {}
+    memory:
+      title: Memory
+      description: Memory in MB, default 1024MB
+      type: string
+      default: "1024"
+    timeout:
+      title: timeout
+      description: Timeout in seconds, default 10 seconds
+      type: integer
+      default: 10
+    applicationName:
+      title: Application name
+      description: A Code Pipes application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: A Code Pipes environment name
+      type: string
+      default: dev
+    architecture:
+      title: Processor architecture
+      description: Processor architecture x86_64 or arm64, default x86_64
+      type: string
+      default: x86_64
+    bucket:
+      title: bucket to store state of IAC
+      description: S3 bucket to hold serverless state file
+      type: string
+    runtime:
+      title: runtime
+      description: application runtime
+      type: string
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    funcs:
+      title: function config
+      description: Function configuration
+      type: array
+      items:
+        type: object
+        properties:
+          path:
+            title: Path
+            type: string
+          name:
+            title: Name
+            type: string
+          handler:
+            title: handler
+            type: string
+          verb:
+            title: Verb
+            type: string
+        required:
+          - path
+          - name
+          - handler
+          - verb
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required: ["region","bucket","funcs",runtime]
+  internal:
+    - app_env
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - job_type
+    - repo_dir
+template: |
+  ########################################################################################################################################################
+  # The template uses serverless framework to deploy function to lambdas using container images                                                          #
+  # Uses serverless-deployment-bucket plugin to keep iac code                                                                                            #
+  # Uses machine env from .env file https://www.serverless.com/framework/docs/environment-variables                                                           #
+  ########################################################################################################################################################
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - aws configure set region {{region}}
+        - npm install -g npm
+        - npm install serverless -g
+        - npm install serverless-deployment-bucket -g
+    build: 
+      commands:
+        - |
+          echo "
+          service: {{applicationName}}
+          useDotenv: true
+          frameworkVersion: '3'
+          provider:
+            name: aws
+            stage: {{environment}}
+            runtime: {{runtime}}
+            memorySize: {{memory}}
+            timeout: {{timeout}}
+            deploymentBucket:
+              name: {{ bucket }}
+          functions:
+          {% for func in funcs %} 
+            {{ func.name }}:
+              handler: {{ func.handler }}
+              events:
+                - httpApi:
+                    path: {{ func.path }}
+                    method: {{ func.verb }}
+          {% endfor %}  
+          plugins:
+            - serverless-deployment-bucket  
+          " >> serverless.yml
+      {% if job_type == 'deploy' %}
+        - cd {{source_code_path}}/{{repo_dir}}/
+        - ls && make
+        - serverless deploy
+      {% else %}
+        - serverless remove
+      {% endif %}
+    {% if job_type == 'deploy' %}
+    post_build:
+      commands:
+        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+        - | 
+          grab=$(sls info | sed -n "/{% if funcs | length > 1 %}endpoints{% else %}endpoint{% endif %}:/,/functions:/p" | sed 's/endpoint:/ /g' | sed 's/functions:/ /g' | xargs')
+          count=1
+          while IFS= read -r line; do
+              replaceTxt='='
+              echo "$count ${line/ - /$replaceTxt}" >> summary.txt 
+              let "count+=1" 
+          done <<< "$grab"
+        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+        - cat summary.txt
+    {% endif %}
