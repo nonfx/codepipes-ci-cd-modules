@@ -48,6 +48,11 @@ inputs:
       description: Boolean to allow Unauthenticated traffic
       type: boolean
       default: true
+    containerPort:
+      title: Container Port
+      description: Requests will be sent to the container on this port, default is 8080
+      type: string
+      default: 8080
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
@@ -114,7 +119,7 @@ template: |
             - image: {{repository}}:{{tag}}
               ports:
               - name: http1
-                containerPort: 8080
+                containerPort: {{containerPort}}
               env:" >> app.yaml
       cat {{ pipeline_env_file }} | while IFS= read -r line; do
         value=${line#*=}
