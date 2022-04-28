@@ -1,0 +1,87 @@
+provisioner: azure
+name: nginx-aks-module
+version: 1
+revision: 1
+displayName: AKS nginx Based Deployment
+description: The template is used for nginx based deployments and also provision virtual service for application
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - ContainerImage
+
+inputs:
+  properties:
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    resourceGroup:
+      title: Resource Group Name
+      description: Name of the resource group where AKS Cluster is deployed
+      type: string
+    workingDir:
+      title: Working Directory
+      description: Working Directory where the code is to be run
+      type: string
+      default: $(Build.SourcesDirectory)
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    namespace:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: ingress-basic
+    publicIP:
+      title: Public IP
+      description: This is Public IP to be alloted to the Load Balancer
+      type: string
+  required:
+    - cluster
+    - resourceGroup
+    - publicIP
+  internal:
+    - app_env
+    - files
+    - job_type
+
+template: |
+  {% set workspace = '' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+
+  steps:
+    - task: HelmInstaller@0
+      inputs:
+        helmVersion: {{helmVersion}}
+        installKubectl: true
+        kubectlVersion: {{kubectlVersion}}
+    - script: |
+          az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+      displayName: "Get AKS Kubecofing"
+      workingDirectory: {{ workingDir }}
+    {% if job_type == 'deploy' %}
+    - script: |
+          NAMESPACE={{namespace}}
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update
+          helm install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace $NAMESPACE --set controller.service.loadBalancerIP={{publicIP}} --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}}
+      displayName: "Helm Deploy {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% else %}
+    - script: |
+            NAMESPACE={{namespace}}
+            helm uninstall nginx-ingress --namespace {{namespace}};
+            kubectl delete ns {{namespace}};
+      displayName: "Helm Uninstall {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}

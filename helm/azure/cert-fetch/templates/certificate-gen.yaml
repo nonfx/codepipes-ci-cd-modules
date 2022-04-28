@@ -1,0 +1,17 @@
+{{- if .Values.managedCertificate }}
+apiVersion: spv.no/v2beta1
+kind: AzureKeyVaultSecret
+metadata:
+  name: {{ .Values.projectName | lower }}-certificate
+  namespace: istio-system
+spec:
+  vault:
+    name: {{ $.Values.azure.keyVaultName }} # name of key vault
+    object:
+      name: {{ $.Values.azure.keyVaultCertName }}
+      type: certificate
+  output: 
+    secret:
+      name: {{ .Values.projectName | lower }}-certificate-secret # kubernetes secret name
+      type: kubernetes.io/tls # kubernetes secret type
+{{- end }}

@@ -1,0 +1,88 @@
+provisioner: azure
+name: key-vault-driver
+version: 1
+revision: 1
+displayName: Azure Key Vault CSI Driver
+description: The template is used to install Azure CSI Driver on AKS Cluster
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - git
+
+inputs:
+  properties:
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    resourceGroup:
+      title: Resource Group Name
+      description: Name of the resource group where AKS Cluster is deployed
+      type: string
+    workingDir:
+      title: Working Directory
+      description: Working Directory where the code is to be run
+      type: string
+      default: $(Build.SourcesDirectory)
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    namespace:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: kube-system
+    publicIP:
+      title: Public IP
+      description: This is Public IP to be alloted to the Load Balancer
+      type: string
+  required:
+    - cluster
+    - resourceGroup
+    - publicIP
+  internal:
+    - app_env
+    - files
+    - job_type
+
+template: |
+  {% set workspace = '' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+
+  steps:
+    - task: HelmInstaller@0
+      inputs:
+        helmVersion: {{helmVersion}}
+        installKubectl: true
+        kubectlVersion: {{kubectlVersion}}
+    - script: |
+          az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+      displayName: "Get AKS Kubecofing"
+      workingDirectory: {{ workingDir }}
+    {% if job_type == 'deploy' %}
+    - script: |
+          helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
+          helm repo update
+          helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --namespace {{namespace}}
+          kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
+          kubectl create secret generic secrets-store-creds --from-literal clientid=$(ARM_CLIENT_ID) --from-literal clientsecret=$(ARM_CLIENT_SECRET)
+          kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
+      displayName: "Helm Deploy {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% else %}
+    - script: |
+            helm uninstall csi --namespace {{namespace}};
+            kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
+      displayName: "Helm Uninstall {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}

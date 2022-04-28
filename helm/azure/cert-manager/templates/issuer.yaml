@@ -1,0 +1,32 @@
+{{- if .Values.managedCertificate }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt
+  namespace: istio-system
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    #server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: vanguard@cldcvr.com
+    privateKeySecretRef:
+      name: letsencrypt
+    # Use dns-01 challenges in order to support wildcard domain names
+    solvers:
+    - dns01:
+        azureDNS:
+          # Azure Cloud Environment, default to AzurePublicCloud
+          environment: AzurePublicCloud
+          # Service principal client id
+          clientID: {{ $.Values.azure.clientID }}
+          # Secret with the password
+          clientSecretSecretRef:
+            key: ARM_CLIENT_SECRET
+            name: {{ $.Values.applicationName }}-secret-env
+          # Name of the DNS Zone
+          hostedZoneName: {{ $.Values.azure.hostedZone }}
+          # Resource group where the DNS Zone is located
+          resourceGroupName: {{ $.Values.azure.resourceGroup }}
+          subscriptionID: {{ $.Values.azure.subscriptionID }}
+          tenantID: {{ $.Values.azure.tenantID }}
+{{- end }}

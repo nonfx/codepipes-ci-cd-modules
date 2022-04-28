@@ -1,0 +1,226 @@
+provisioner: azure
+name: aks-cert-manager
+version: 1
+revision: 1
+displayName: AKS Cert Manager Installation
+description: The template is used to install Cert Manager, Gateway, Cert Issuer and Ingress
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - ContainerImage
+
+inputs:
+  properties:
+    projectName:
+      title: CodePipes Project Name
+      description: CodePipes Project Name
+      type: string
+      default: "codepipes"
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+            default: ""
+    deployment:
+      title: Create Deployment
+      description: This is to create deployment
+      type: boolean
+      default: true
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        required: [Command, Name]
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    ports:
+      title: Ports
+      description: Port used in services
+      type: array
+      default: []
+      items:
+        type: object
+        required: [name, containerPort]
+        properties:
+          containerPort:
+            title: Container port
+            type: integer
+            maximum: 65535
+          healthCheck:
+            title: Health check path
+            type: string
+            default: ""
+          name:
+            title: Service name
+            type: string
+          protocol:
+            title: Protocol
+            type: string
+            default: TCP
+            enum:
+              - TCP
+              - UDP
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    resourceGroup:
+      title: Resource Group Name
+      description: Name of the resource group where AKS Cluster is deployed
+      type: string
+    workingDir:
+      title: Working Directory
+      description: Working Directory where the code is to be run
+      type: string
+      default: $(Build.SourcesDirectory)
+    managedCertificate:
+      title: Managed Certificate from LetsEncrypt
+      description: This will deploy acme certificate issuer with letsencrypt as signing authority
+      type: boolean
+      default: false
+    certManagerVersion:
+      title: CertManager Version
+      description: CertManager version to install
+      type: string
+      default: v1.7.2
+    hostedZone:
+      title: Azure DNS Hosted Zone for CertManager
+      description: Name of the Azure DNS Hosted Zone for CertManager for which certificate is required
+      type: string
+      default: ""
+  required:
+    - cluster
+    - resourceGroup
+  internal:
+    - app_env
+    - files
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - job_type
+    - pipeline_summary_var
+
+template: |
+  {% set workspace = '' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/cert-fetch" %}
+
+  steps:
+    - task: HelmInstaller@0
+      inputs:
+        helmVersion: {{helmVersion}}
+        installKubectl: true
+        kubectlVersion: {{kubectlVersion}}
+    - script: |
+          az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+      displayName: "Get AKS Kubecofing"
+      workingDirectory: {{ workingDir }}
+    - script: |
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+          helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version {{certManagerVersion}} --set installCRDs=true
+      displayName: "Install CertManager"
+      workingDirectory: {{ workingDir }}
+    - script: |
+          export PATH="{{workspace}}/bin:$$PATH";
+          cp {{pipeline_env_file}} {{helm_chart_path}} 2>/dev/null || :;
+          cp {{pipeline_secret_file}} {{helm_chart_path}} 2>/dev/null || :;
+          cd {{helm_chart_path}} ;
+          touch .helmignore;
+          rm -f values.yaml;
+          echo "projectName: {{projectName}}
+          applicationName: {{applicationName}} #auto
+          environment:  {{environment}} #auto
+          project: {{project}} #auto
+          managedCertificate: {{managedCertificate}}
+          azure:
+              clientID: $(ARM_CLIENT_ID)
+              tenantID: $(ARM_TENANT_ID)
+              subscriptionID: $(ARM_SUBSCRIPTION_ID)
+              resourceGroup: {{resourceGroup}}
+              hostedZone: {{hostedZone}}
+
+          {% if domains %}
+          domains:
+          {% for domain in domains %}
+          - name: {{domain.name}}
+          {% endfor %}
+          {% endif %}
+
+          envs:" >> values.yaml;
+          cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' $name "$value" >> values.yaml
+          done;
+          echo "secrets:" >> values.yaml;
+          cat {{pipeline_secret_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' $name $value >> values.yaml
+          done;
+      displayName: "Generate values file"
+      workingDirectory: {{ workingDir }}
+    {% if job_type == 'deploy' %}
+    - script: |
+            cd {{helm_chart_path}} ;
+            cat values.yaml;
+            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
+      displayName: "Helm Deploy {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% else %}
+    - script: |
+            cd {{helm_chart_path}} ;
+            helm list;
+            helm uninstall {{applicationName}}-{{environment}};
+      displayName: "Helm Uninstall {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}

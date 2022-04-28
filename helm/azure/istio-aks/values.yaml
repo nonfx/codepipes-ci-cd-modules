@@ -1,0 +1,119 @@
+# Default values for demochart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+projectName: #{projectName}#
+applicationName: #{applicationName}#
+environment: #{environment}#
+project: #{gcpProject}#
+istioInjection: #{istioInjection}#
+
+deploy:
+  replicaCount: #{replicaCount}#
+  strategy: #{strategy}#
+  maxUnavail: #{maxUnavail}#
+  maxSurge: #{maxSurge}#
+  terminationGracePeriodSeconds: #{terminationGracePeriodSeconds}#
+  healthCheck:
+    healthz: #{healthz_path}#
+    ready: #{ready_path}#
+    liveFailThreshold: #{liveFailThreshold}#
+    liveSuccThreshold: #{liveSuccThreshold}#
+    readFailThreshold: #{readFailThreshold}#
+    readSuccThreshold: #{readSuccThreshold}#
+    delay: #{delay}#
+    period: #{period}#
+    timeout: #{timeout}#
+
+env:
+  # - name: "GOOGLE_APPLICATION_CREDENTIALS"
+  #   value: "/root/.gcp/event-tracking-service-sa.json"
+  - name: "ACTIVE_ENV"
+    value: #{environment}#
+
+image:
+  repository: #{repository}#
+  pullPolicy: #{pullPolicy}#
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: #{tag}#
+  ports:
+    - name: #{httpName}#
+      internalPort: #{httpInternalPort}#
+      externalPort: #{httpExternalPort}#
+      protocol: #{httpProtocol}#
+    - name: #{grpcName}#
+      internalPort: #{grpcInternalPort}#
+      externalPort: #{gprcExternalPort}#
+      protocol: #{grpcProtocol}#
+  registryCredentials:
+    registry: #{registry}#
+    username: #{DOCKER_USERNAME}#
+    password: #{DOCKER_PASSWORD}#
+
+domains:
+  - name: #{domainName}#
+  - name: api.#{domainName}#
+
+
+healthCheckEnabled: #{healthCheckEnabled}#
+
+ingress:
+  staticIP: #{gcp_staticIP}#
+
+virtualService: 
+  prefix: #{virtualServicePrefix}#
+  rewrite:
+    enabled: #{virtualServiceRewriteEnabled}#
+    value: #{virtualServiceRewriteValue}#
+
+
+service:
+  type: #{serviceType}#
+  port: #{servicePort}#
+  neg: #{serviceNeg}#
+
+
+autoscaling:
+  enabled: #{autoscalingEnabled}#
+  minReplicas: #{autoscalingMinReplicas}#
+  maxReplicas: #{autoscalingMaxReplicas}#
+  targetCPUUtilizationPercentage: #{autoscalingtargetCPUUtilizationPercentage}#
+
+resourcequota:
+  quotaRequestsCpu: #{quotaRequestsCpu}#
+  quotaRequestsMem: #{quotaRequestsMem}#
+  quotaLimitsCpu: #{quotaLimitsCpu}#
+  quotaLimitsMem: #{quotaLimitsMem}#
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: #{cpuLimit}#
+    memory: #{memLimit}#
+  requests:
+    cpu: #{cpuRequest}#
+    memory: #{memRequest}#
+
+
+lifecycle:
+  prestop:
+    command: '["/bin/sh", "-c", "sleep 30"]'
+# ingress:
+#   ## Set to true to enable ingress record generation
+#   enabled: true
+#   hosts:
+#     host: chart-example.local
+#     paths: /
+
+#   ## Set this annotations is used to allow ingress to be able to listen on 443
+#   backendProtocol: false
+#   tls:
+#     secretName: chart-example-tls
+
+#   ## Set this for kubernetes.io/ingress.class
+#   class: false
+#   ## Set this if your service requires more than 10Mb for upload
+#   proxyBodySize: 15m
+

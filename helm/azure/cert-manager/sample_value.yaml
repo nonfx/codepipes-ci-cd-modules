@@ -1,0 +1,19 @@
+projectName: Testing
+applicationName: test-cert-manager #auto
+environment: Testing #auto
+project: azure #auto
+managedCertificate: true
+
+azure:
+    clientID: "$(ARM_CLIENT_ID)"
+    tenantID: $(ARM_TENANT_ID)
+    subscriptionID: $(ARM_SUBSCRIPTION_ID)
+    resourceGroup: $(ARM_RESOURCE_GROUP)
+    hostedZone: $(hostedZone)
+
+domains:
+- name: staging.az.int.codepipes.io
+- name: api.staging.az.int.codepipes.io
+
+secrets:
+    sensikey: "shhhhhhhhh"

@@ -9,6 +9,7 @@ keywords: ["bash", "linux"]
 author: CloudCover
 meta:
   inputArtifactType:
+    - git
     - ContainerImage
 inputs:
   properties:
@@ -169,6 +170,9 @@ template: |
           cd {{helm_chart_path}} ;
           touch .helmignore;
           rm -f values.yaml;
+          if [ -z "$(docker_registry)" ]; then
+            export docker_registry="index.docker.io"
+          fi
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
@@ -201,8 +205,8 @@ template: |
             tag:  {{ tag }}
             registryCredentials:
               registry: $docker_registry
-              username: $docker_username" >> values.yaml
-          printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
+              username: $(docker_username)" >> values.yaml
+          printf '    password: %s\n' "$(printf '%s' "$(docker_password)" | jq -aRs .)" >> values.yaml
           echo "
           service:
             type: nodeport
@@ -250,10 +254,7 @@ template: |
       displayName: "Generate values file"
       workingDirectory: {{ workingDir }}
     - script: |
-            ls -la;
             cd {{helm_chart_path}} ;
-            ls -la;
-            cat values.yaml;
             helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
       displayName: "Helm Deploy {{applicationName}}"
       workingDirectory: {{ workingDir }}
