@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.projectName | lower }}-istio-ingress
+  namespace: istio-system
+  annotations:
+    kubernetes.io/ingress.class: istio
+spec:
+  rules:
+  {{- range .Values.domains }}  
+  - host: {{ .name }} 
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          # In this case we don't go directly to app-specific services,
+          # but first to the Istio ingress-gateway
+          # We use port 80 because it is the "ingress-like" port of the ingress-gateway
+          service:
+            name: istio-ingressgateway
+            port: 
+              number: 80
+  {{- end }}

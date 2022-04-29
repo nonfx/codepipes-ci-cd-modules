@@ -1,0 +1,147 @@
+provisioner: "azure"
+name: "istio-aks-app"
+version: 1
+revision: 1
+displayName: "AKS Istio Commands"
+description: "Run Istio commands on AKS Clusters"
+target: "deployment-template"
+keywords: ["bash", "linux"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - ContainerImage
+
+inputs:
+  properties:
+    cluster:
+      title: Cluster Name
+      type: string
+      description: Cluster name in which deployment will happen
+    istio_version:
+      title: Istio Version
+      description: Istio version to install
+      type: string
+      default: "1.13.2"
+    istio_args:
+      title: Istio Arguments
+      description: Istio Argument
+      type: string
+      default: install --set profile=default
+    resourceGroup:
+      title: Azure Resource Group
+      description: Azure Resource Group where AKS Cluster is deployed
+      type: string
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    projectName:
+      title: CodePipes Project Name
+      description: CodePipes Project Name
+      type: string
+      default: "codepipes"
+    lb_type:
+      title: Load Balancer Typer
+      type: string
+      default: Internal
+      enum:
+        - Internal
+        - Public
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+            default: ""
+    publicIP:
+      title: Public IP
+      description: This is Public IP to be alloted to the Load Balancer
+      type: string
+      default: ""
+  required:
+    - cluster
+    - resourceGroup
+  internal:
+    - job_type
+template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  steps:
+    - script: |
+          az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          curl -sL https://istio.io/downloadIstioctl | sh -
+          export PATH=$PATH:$HOME/.istioctl/bin
+          az aks get-credentials --name {{cluster}} -g {{resourceGroup}} -a
+          {% if job_type == 'deploy' %}
+          istioctl x precheck
+          export PATH="{{workspace}}/bin:$PATH"
+          {% if job_type == 'Public' %}
+          istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.loadBalancerIP={{publicIP}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
+          {% else %}
+          istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="true" --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
+          {% endif %}
+          {% else %}
+          istioctl x uninstall --purge --skip-confirmation
+          {% endif %}
+      displayName: "Istio {{job_type}}"
+      env:
+        ISTIO_VERSION: "{{istio_version}}"
+    - script: |
+          echo "apiVersion: networking.istio.io/v1alpha3
+          kind: Gateway
+          metadata:
+            name: {{ projectName | lower }}-httpbin-gateway
+          spec:
+            selector:
+              istio: ingressgateway # use Istio default gateway implementation
+            servers:
+            - port:
+                number: 80
+                name: http
+                protocol: HTTP
+              hosts:
+              - '*'" >> gateway.yaml;
+          {% if job_type == 'deploy' %}
+          kubectl apply -f gateway.yaml;
+          {% else %}
+          kubectl delete -f gateway.yaml;
+          {% endif %}
+      displayName: "Gateway {{job_type}}"
+    - script: |
+          echo ""
+          echo "apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: {{ projectName | lower }}-istio-ingress
+            namespace: istio-system
+          spec:
+            rules:
+            {% if domains %}
+            {% for domain in domains %}
+            - host: {{domain.name}}
+              http:
+                paths:
+                - path: /*
+                  backend:
+                    service:
+                      name: istio-ingressgateway
+                      port:
+                        number: 80
+                  pathType: ImplementationSpecific
+          {% endfor %}
+          {% endif %}" >> ingress.yaml;
+          {% if job_type == 'deploy' %}
+          kubectl apply -f ingress.yaml;
+          {% else %}
+          kubectl delete -f ingress.yaml;
+          {% endif %}
+      displayName: "Ingress {{job_type}}"
+

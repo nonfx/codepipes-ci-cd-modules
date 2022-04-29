@@ -359,7 +359,11 @@ template: |
       applicationName: {{applicationName}} #auto
       environment:  {{environment}} #auto
       project: {{project}} #auto
-      istioInjection: {{ istioInjection | lower }}
+      {% if istioInjection %}
+      istioInjection: enabled
+      {% else %}
+      istioInjection: disabled
+      {% endif %}
       serviceAccount: {{ serviceAccountEnabled | lower }}
       manageCertificate: {{ manageCertificate | lower }}
       cloudProject: $PROJECT_ID

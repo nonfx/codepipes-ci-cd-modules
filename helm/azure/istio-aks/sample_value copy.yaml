@@ -1,0 +1,108 @@
+# Default values for demochart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+projectName: strato
+applicationName: api-service2
+environment: staging
+project: vanguard-20200519
+istioInjection: enabled
+serviceAccount: true
+manageCertificate: true
+deploy:
+  replicaCount: 1
+  strategy: RollingUpdate
+  maxUnavail: 1
+  maxSurge: 1
+  terminationGracePeriodSeconds: 30
+  healthCheck:
+    healthz: "v0/healthcheck/"
+    ready: "v0/healthcheck/"
+    liveFailThreshold: 2
+    liveSuccThreshold: 1
+    readFailThreshold: 2
+    readSuccThreshold: 1
+    delay: 30
+    period: 4
+    timeout: 2
+
+env:
+  # - name: "GOOGLE_APPLICATION_CREDENTIALS"
+  #   value: "/root/.gcp/event-tracking-service-sa.json"
+  - name: "ACTIVE_ENV"
+    value: staging
+
+image:
+  repository: gcr.io/vanguard-20200519/identity-service
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+  ports:
+    - name: http
+      internalPort: 8080
+      externalPort: 8080
+      protocol: TCP
+    - name: grpc-web
+      internalPort: 9090
+      externalPort: 9090
+      protocol: TCP
+  registryCredentials:
+    registry: https://index.docker.io/v1/
+    username: username
+    password: password
+
+service:
+  type: NodePort
+  port: 8080
+  neg: false
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+resourcequota:
+  quotaRequestsCpu: 100
+  quotaRequestsMem: 0.2
+  quotaLimitsCpu: 200
+  quotaLimitsMem: 0.3
+
+domains:
+  - name: strato.beta.cldcvr.dev
+  - name: api.strato.beta.cldcvr.dev
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 600m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 500Mi
+
+lifecycle:
+  prestop:
+    command: '["/bin/sh", "-c", "sleep 30"]'
+
+    
+virtualService: 
+  prefix: /
+  rewrite:
+    enabled: true
+    value: /v1
+
+artifacts:
+  # - files: ["b.yaml"]
+  #   mountPath: /tmp/2
+  # - files: ["a.yaml"]
+  #   mountPath: /tmp/1
+
+envs:
+  key: value
+  key1: value1
+
+secrets:
+  sensikey: "shhhhhhhhh"

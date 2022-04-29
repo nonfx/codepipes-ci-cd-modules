@@ -1,0 +1,24 @@
+{{- if .Values.service }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.applicationName }}
+  namespace: {{ .Values.applicationName }}
+  labels:
+    projectName: {{ .Values.applicationName }}
+    environment: {{ .Values.environment }}
+    type: service
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  {{- range  $port := .Values.ports }}
+    - name: {{$port.name}}
+      targetPort: {{$port.containerPort}}
+      port: {{$port.containerPort}}
+      protocol: {{$port.protocol}}
+  {{- end}}
+  selector:
+    projectName: {{ .Values.applicationName }}
+    environment: {{ .Values.environment }}
+    type: deployment
+{{- end }}

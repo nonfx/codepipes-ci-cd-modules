@@ -1,0 +1,85 @@
+projectName: Testing
+applicationName: test-events-service #auto
+environment: Testing #auto
+project: azure #auto
+istioInjection: enabled
+managedCertificate: true
+
+deploy:
+  replicaCount: 1
+  strategy: RollingUpdate
+  maxUnavail: 50%
+  maxSurge: 2
+  terminationGracePeriodSeconds: 30
+  healthCheck:
+    liveFailThreshold: '2'
+    liveSuccThreshold: '1'
+    readFailThreshold: '2'
+    readSuccThreshold: '1'
+    delay: '10'
+    period: '4'
+    timeout: '2'
+image: #auto
+  repository: cldcvr/vanguard-external-events-service
+  pullPolicy: Always
+  tag: 5203f2b81057f8bc223c6943b269919a87f59fca
+
+registryCredentials:
+    registry: $docker_registry
+    username: $(docker_username)"
+
+ports:
+  - name: external
+    containerPort: 8080
+    protocol: TCP
+    healthcheck: /v0/healthcheck/
+  - name: grpc-web
+    containerPort: 9090
+    protocol: TCP
+
+service:
+  type: NodePort
+  private: false
+  neg: false
+
+domains:
+- name: staging.az.int.codepipes.io
+- name: api.staging.az.int.codepipes.io
+
+virtualService:
+  prefix: /external
+  rewrite:
+    enabled: false
+    value: /
+
+autoscaling:
+  enabled: False
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+resourcequota:
+  quotaRequestsCpu: 100
+  quotaRequestsMem: 0.2
+  quotaLimitsCpu: 200
+  quotaLimitsMem: 0.3
+
+resources:
+  limits:
+    cpu: 900m
+    memory: 4Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+lifecycle:
+  prestop:
+    command: ['/bin/sh', '-c','sleep 30']
+
+artifacts:
+envs:
+    key: value
+    key1: value1
+
+secrets:
+    sensikey: "shhhhhhhhh"

@@ -1,0 +1,471 @@
+provisioner: azure
+name: istio-aks-module
+version: 1
+revision: 1
+displayName: AKS Istio Based Deployment
+description: The template is used for Istio based deployments and also provision virtual service for application
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - ContainerImage
+
+inputs:
+  properties:
+    istioInjection:
+      title: Istio Injection Enabled
+      description: Enable Istio Injection in namespace
+      type: boolean
+      default: false
+    projectName:
+      title: CodePipes Project Name
+      description: CodePipes Project Name
+      type: string
+      default: "codepipes"
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+            default: ""
+    virtualService:
+      title: Virtual Service
+      description: Istio Virtual Service
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          rewriteEnabled:
+            title: Virtual Service Rewrite Enabled
+            type: string
+            default: ""
+          rewriteValue:
+            title: Value of Virtual Service Rewrite Path
+            type: string
+            default: ""
+          prefix:
+            title: Virtual Service Prefix
+            type: string
+            default: ""
+    deployment:
+      title: Create Deployment
+      description: This is to create deployment
+      type: boolean
+      default: true
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    customer_bucket:
+      title: Customer Bucket Name
+      description: This is a vanguard Customer  bucket name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    files:
+      title: Files
+      description: Files mounted in container
+      type: object
+      default: {}
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    service_port:
+      title: Service port
+      description: Service port
+      type: string
+      default: NodePort
+    ingressIP:
+      title: AKS Ingress IP
+      description: Ingress IP for AKS Ingress
+      type: string
+      default: ""
+    ingressIPName:
+      title: Ingress IP Name
+      description: Ingress IP Name for AKS Ingress
+      type: string
+      default: ""
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        required: [Command, Name]
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    ports:
+      title: Ports
+      description: Port used in services
+      type: array
+      default: []
+      items:
+        type: object
+        required: [name, containerPort]
+        properties:
+          containerPort:
+            title: Container port
+            type: integer
+            maximum: 65535
+          healthCheck:
+            title: Health check path
+            type: string
+            default: ""
+          name:
+            title: Service name
+            type: string
+          protocol:
+            title: Protocol
+            type: string
+            default: TCP
+            enum:
+              - TCP
+              - UDP
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    resourceGroup:
+      title: Resource Group Name
+      description: Name of the resource group where AKS Cluster is deployed
+      type: string
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    deployment_timeout:
+      title: Deployment Timeout
+      description: Time to wait for pods to be ready before terming deployment as unsuccessful
+      type: string
+      default: 300s
+    autoscalingEnabled:
+      title: Enable Autoscaling
+      description: Whether to enable autoscaling
+      type: boolean
+      default: false
+    minReplicas:
+      title: Minimum Replicas
+      description: Minimum number of Replicas (if autoscaling is enabled)
+      type: integer
+      default: 1
+    maxReplicas:
+      title: Maximum Replicas
+      description: maximum number of Replicas (if autoscaling is enabled)
+      type: integer
+      default: 5
+    targetCPUUtilizationPercentage:
+      title: CPU Utilization to scale
+      description: Target CPU Utilization to scale replicase
+      type: integer
+      default: 80
+    cpuLimit:
+      title: CPU Limit
+      description: CPU Limit for the pods
+      type: string
+      default: 200m
+    memoryLimit:
+      title: Memory Limit
+      description: Memory Limit for the pods
+      type: string
+      default: 256Mi
+    cpuRequest:
+      title: CPU Request
+      description: CPU Request for the pods
+      type: string
+      default: 200m
+    memoryRequest:
+      title: Memory Request
+      description: Memory Request for the pods
+      type: string
+      default: 256Mi
+    replicaCount:
+      title: Replica Count
+      description: Replica Count
+      type: integer
+      default: 1
+    maxUnavail:
+      title: Maximum Unavailable Percentage or absolute value for Pods
+      description: Maximum Unavailable
+      type: string
+      default: 50%
+    maxSurge:
+      title: Maximum Surge Percentage or absolute value for Pods
+      description: Maximum Surge
+      type: integer
+      default: 2
+    terminationGracePeriodSeconds:
+      title: Grace Period before terminating pod in seconds
+      description: Grace Period
+      type: integer
+      default: 30
+    liveFailThreshold:
+      title: Liveliness Probe Fail Threshold
+      description: Successive Fail Threshold for Liveliness Probe
+      type: integer
+      default: 2
+    liveSuccThreshold:
+      title: Liveliness Probe Success Threshold
+      description: Successive Success Threshold for Liveliness Probe
+      type: integer
+      default: 1
+    readFailThreshold:
+      title: Readiness Probe Fail Threshold
+      description: Successive Fail Threshold for Readiness Probe
+      type: integer
+      default: 2
+    readSuccThreshold:
+      title: Readiness Probe Success Threshold
+      description: Successive Success Threshold for Readiness Probe
+      type: integer
+      default: 1
+    probeDelay:
+      title: Probe Delay
+      description: Delay in seconds between probes
+      type: integer
+      default: 10
+    probePeriod:
+      title: Probe Period
+      description: Probe Period in seconds
+      type: integer
+      default: 4
+    probeTimeout:
+      title: Probe Timeout
+      description: Probe Timeout in seconds
+      type: integer
+      default: 2
+    workingDir:
+      title: Working Directory
+      description: Working Directory where the code is to be run
+      type: string
+      default: $(Build.SourcesDirectory)
+    manageCertificate:
+      title: Managed Certificate from LetsEncrypt
+      description: This will deploy acme certificate issuer with letsencrypt as signing authority
+      type: boolean
+      default: false
+  required:
+    - cluster
+    - resourceGroup
+  internal:
+    - app_env
+    - files
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - job_type
+    - pipeline_summary_var
+
+template: |
+  {% set workspace = '' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+
+  steps:
+    - task: HelmInstaller@0
+      inputs:
+        helmVersion: {{helmVersion}}
+        installKubectl: true
+        kubectlVersion: {{kubectlVersion}}
+    - script: |
+          az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+          az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+      displayName: "Get AKS Kubecofing"
+      workingDirectory: {{ workingDir }}
+    {% if job_type == 'deploy' %}
+    - script: |
+          export PATH="{{workspace}}/bin:$$PATH";
+          cp {{pipeline_env_file}} {{helm_chart_path}} 2>/dev/null || :;
+          cp {{pipeline_secret_file}} {{helm_chart_path}} 2>/dev/null || :;
+          cd {{helm_chart_path}} ;
+          touch .helmignore;
+          rm -f values.yaml;
+          if [ -z "$(docker_registry)" ]; then
+            export docker_registry="index.docker.io"
+          fi
+          echo "projectName: {{projectName}}
+          applicationName: {{applicationName}} #auto
+          environment:  {{environment}} #auto
+          project: {{project}} #auto
+          manageCertificate: {{manageCertificate}}
+          {% if istioInjection %}
+          istioInjection: enabled
+          {% else %}
+          istioInjection: disabled
+          {% endif %}
+          {% if deployment %}
+          deploy:
+            replicaCount: {{replicaCount}}
+            strategy: RollingUpdate
+            maxUnavail: {{maxUnavail}}
+            maxSurge: {{maxSurge}}
+            terminationGracePeriodSeconds: {{terminationGracePeriodSeconds}}
+            healthCheck:
+              liveFailThreshold: '{{liveFailThreshold}}'
+              liveSuccThreshold: '{{liveSuccThreshold}}'
+              readFailThreshold: '{{readFailThreshold}}'
+              readSuccThreshold: '{{readSuccThreshold}}'
+              delay: '{{probeDelay}}'
+              period: '{{probePeriod}}'
+              timeout: '{{probeTimeout}}'
+
+          image: #auto
+            repository: {{ repository }}
+            pullPolicy: Always
+            tag:  {{ tag }}
+            registryCredentials:
+              registry: $docker_registry
+              username: $(docker_username)" >> values.yaml
+
+          printf '    password: %s\n' "$(printf '%s' "$(docker_password)" | jq -aRs .)" >> values.yaml
+
+          echo "
+          {% endif %}
+          {% if ports %}
+          ports:
+          {% for port in ports%}
+            - name: {{port.name}}
+              containerPort: {{port.containerPort}}
+              protocol: {{port.protocol}}
+              {% if port.healthCheck %}
+              healthcheck: {{port.healthCheck}}
+              {% endif %}
+          {% endfor %}
+          {% endif %}
+
+          {% if ports %}
+          service:
+            type: {{ service_port }}
+            private: false
+            neg: {{ serviceAccountEnabled | lower }}
+          {% endif %}
+
+          {% if domains %}
+          domains:
+          {% for domain in domains %}
+          - name: {{domain.name}}
+          {% endfor %}
+          {% endif %}
+
+          {% if virtualService %}
+          virtualService:
+          {% for vs in virtualService %}
+            prefix: {{vs.prefix}}
+            rewrite:
+              enabled: {{vs.rewriteEnabled | lower }}
+              value: {{vs.rewriteValue}}
+          {% endfor %}
+          {% endif %}
+
+          {% if ingressIP %}
+          ingress:
+            {% if ingressIPName %}
+            staticIPName: {{ingressIPName}}
+            {% endif %}
+            staticIP: {{ingressIP}}
+          {% endif %}
+
+
+          autoscaling:
+            enabled: {{autoscalingEnabled}}
+            minReplicas: {{minReplicas}}
+            maxReplicas: {{maxReplicas}}
+            targetCPUUtilizationPercentage: {{targetCPUUtilizationPercentage}}
+
+          resourcequota:
+            quotaRequestsCpu: 100
+            quotaRequestsMem: 0.2
+            quotaLimitsCpu: 200
+            quotaLimitsMem: 0.3
+
+          resources:
+            limits:
+              cpu: {{cpuLimit}}
+              memory: {{memoryLimit}}
+            requests:
+              cpu: {{cpuRequest}}
+              memory: {{memoryRequest}}
+
+          lifecycle:
+            prestop:
+              command: ['/bin/sh', '-c', 'sleep 30']
+
+          artifacts:
+          {% for mountPath, fs in files %}
+            - mountPath: {{mountPath}}
+              files:
+              {% for file in fs %}
+                - '{{file}}'
+              {% endfor %}
+          {% endfor %}
+          envs:" >> values.yaml;
+          cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' $name "$value" >> values.yaml
+          done;
+          echo "secrets:" >> values.yaml;
+          cat {{pipeline_secret_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' $name $value >> values.yaml
+          done;
+      displayName: "Generate values file"
+      workingDirectory: {{ workingDir }}
+    - script: |
+            ls -la;
+            cd {{helm_chart_path}} ;
+            ls -la;
+            cat values.yaml;
+            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}}
+      displayName: "Helm Deploy {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% else %}
+    - script: |
+            cd {{helm_chart_path}} ;
+            helm list;
+            helm uninstall {{applicationName}}-{{environment}};
+      displayName: "Helm Uninstall {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}

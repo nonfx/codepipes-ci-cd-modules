@@ -1,0 +1,16 @@
+{{- $needPods := (lookup "v1" "Pods" "app-service" "") -}}
+The lookup value is {{ $needPods }}
+{{- if $needPods }}
+The lookup value for Pods is True
+{{- else }}
+The lookup value for Pods False
+{{- end}}
+
+
+{{- $needCert := (lookup "v1" "Certificate" "default" "wildcard") -}}
+The lookup value is {{ $needCert }}
+{{- if $needCert }}
+The lookup value is True
+{{- else }}
+The lookup value is False
+{{- end}}

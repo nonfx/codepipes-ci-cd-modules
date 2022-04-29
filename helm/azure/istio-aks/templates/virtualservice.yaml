@@ -11,7 +11,7 @@ spec:
     - {{ .name }} 
     {{- end }}
   gateways:
-  - {{ .Values.projectName | lower }}-httpbin-gateway
+  - istio-system/{{ .Values.projectName | lower }}-httpbin-gateway
   http:
   - name: {{ .Values.applicationName }}-route
     match:
