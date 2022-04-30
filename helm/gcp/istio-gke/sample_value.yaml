@@ -50,10 +50,22 @@ image:
     username: username
     password: password
 
+ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+  - name: grpc-web
+    containerPort: 9090
+    protocol: TCP
+
 service:
   type: NodePort
   port: 8080
   neg: false
+
+ingress:
+  staticIPName: test-ip
+  staticIP: 1.1.1.1
 
 autoscaling:
   enabled: true

@@ -143,8 +143,6 @@ template: |
       value: 'false'
     - name: TF_LOG
       value: '{{ tf_log_level }}'
-  pool:
-    vmImage: 'ubuntu-latest'
   steps:
   - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@0
     displayName: 'Terraform install'
