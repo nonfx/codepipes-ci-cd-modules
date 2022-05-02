@@ -51,7 +51,7 @@ inputs:
     containerPort:
       title: Container Port
       description: Requests will be sent to the container on this port, default is 8080
-      type: string
+      type: integer
       default: 8080
     job_type:
       title: Job Type
