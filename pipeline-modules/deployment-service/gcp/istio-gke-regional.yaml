@@ -360,9 +360,9 @@ template: |
       environment:  {{environment}} #auto
       project: {{project}} #auto
       {% if istioInjection %}
-      istioInjection: enabled
+      istioInjection: "enabled"
       {% else %}
-      istioInjection: disabled
+      istioInjection: "disabled"
       {% endif %}
       serviceAccount: {{ serviceAccountEnabled | lower }}
       manageCertificate: {{ manageCertificate | lower }}
