@@ -28,7 +28,7 @@ spec:
           {{- with (first .Values.ports) }}
           number: {{ .containerPort }}
           {{- end }}
-    {{- if .Values.istioInjection.enabled}}
+    {{- if eq .Values.istioInjection "enabled"}}
     corsPolicy:
       allowHeaders:
       - sec-ch-ua
