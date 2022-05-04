@@ -48,6 +48,11 @@ inputs:
       description: Boolean to allow Unauthenticated traffic
       type: boolean
       default: true
+    domain:
+      title: Custom Domain
+      description: Creates a domain mapping provided the domain has been already verified with the GCP project
+      type: string
+      default: ""
     containerPort:
       title: Container Port
       description: Requests will be sent to the container on this port, default is 8080
@@ -133,6 +138,9 @@ template: |
       done;
       cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
+      {% if domain %}
+      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet || true
+      {% endif %}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
     name: 'gcr.io/cloud-builders/gcloud'
