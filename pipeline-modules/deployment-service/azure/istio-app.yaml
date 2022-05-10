@@ -42,12 +42,16 @@ inputs:
       type: string
       default: "codepipes"
     lb_type:
-      title: Load Balancer Typer
+      title: Load Balancer Type
       type: string
-      default: Internal
+      default: Public
       enum:
         - Internal
         - Public
+    install_ingress:
+      title: Install Ingress
+      type: boolean
+      default: false
     domains:
       title: Domain Names
       description: Domain Names to be used for Ingress/Certificates
@@ -83,7 +87,7 @@ template: |
           {% if job_type == 'deploy' %}
           istioctl x precheck
           export PATH="{{workspace}}/bin:$PATH"
-          {% if job_type == 'Public' %}
+          {% if lb_type == 'Public' %}
           istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.loadBalancerIP={{publicIP}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
           {% else %}
           istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="true" --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
@@ -94,6 +98,7 @@ template: |
       displayName: "Istio {{job_type}}"
       env:
         ISTIO_VERSION: "{{istio_version}}"
+    {% if install_ingress %}
     - script: |
           echo "apiVersion: networking.istio.io/v1alpha3
           kind: Gateway
@@ -144,4 +149,5 @@ template: |
           kubectl delete -f ingress.yaml;
           {% endif %}
       displayName: "Ingress {{job_type}}"
+    {% endif %}
 
