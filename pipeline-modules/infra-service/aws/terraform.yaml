@@ -153,9 +153,8 @@ template: |
         - cd "{{ local_code_path }}"
         # run a pre script for user if user
         - if [ -f {{user_pre_script}} ] ; then chmod +x {{user_pre_script}} && ./{{user_pre_script}} ; fi
-        # terraform state push
-        # push the downloaded global state to the Terraform backend
-        - test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }}
+        # copy pre-existing terraform state to the working directory
+        - test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }}
         # terraform init
         - terraform init >> {{ logger('init') }}
       finally:
