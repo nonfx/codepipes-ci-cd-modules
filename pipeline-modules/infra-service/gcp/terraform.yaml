@@ -189,12 +189,12 @@ template: |
     args:
       - -c
       - printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
-  - id: 'terraform state push'
-    name: 'hashicorp/terraform:{{ tf_version }}'
+  - id: 'copy current terraform state'
+    name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: sh
     args:
       - -c
-      - 'test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || terraform state push {{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('init') }} || {{ set_fail_flag('terraform init') }}'
+      - 'test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }} || {{ set_fail_flag('terraform init') }}'
     dir: {{ local_code_path }}
   - id: 'terraform init'
     name: 'hashicorp/terraform:{{ tf_version }}'
