@@ -22,6 +22,11 @@ inputs:
       description: Tag name for the container image
       type: string
       default: latest
+    use_github_tag:
+      title: Use github tag
+      description: Tag name for the container image using github sha
+      type: boolean
+      default: true
     docker_build_args:
       title: Docker Build Arguments
       description: Arguments for the docker build command
@@ -46,18 +51,17 @@ template: |
     - '-c'
     - |
       echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
-  - id: 'Docker Build'
+  - id: 'Docker Build and Push'
     name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     dir: {{ working_dir }}
     args:
-      - 'build'
-      - '-t'
-      - '{{container_repository}}:{{container_tag}}'
-      {% for arg in docker_build_args %}
-      - '{{ arg }}'
-      {% endfor %}
-      - '.'
-  - id: 'Docker Push'
-    name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '{{container_repository}}:{{container_tag}}']
-    images: ['{{container_repository}}']
+    - '-c'
+    - |
+      {% if use_github_tag == true %}
+      sha_tag=$$(git log --format="%H" -n 1);
+      docker build -t {{container_repository}}:$$sha_tag .
+      docker push {{container_repository}}:$$sha_tag
+      {% endif %}
+      docker build -t {{container_repository}}:{{container_tag}} .
+      docker push {{container_repository}}:{{container_tag}}
