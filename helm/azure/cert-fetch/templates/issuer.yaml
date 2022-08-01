@@ -22,7 +22,7 @@ spec:
           # Secret with the password
           clientSecretSecretRef:
             key: ARM_CLIENT_SECRET
-            name: {{ $.Values.applicationName }}-secret-env
+            name: {{ $.Values.deploymentName }}-secret-env
           # Name of the DNS Zone
           hostedZoneName: {{ $.Values.azure.hostedZone }}
           # Resource group where the DNS Zone is located

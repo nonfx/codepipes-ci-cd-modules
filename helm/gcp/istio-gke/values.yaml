@@ -6,6 +6,7 @@ applicationName: #{applicationName}#
 environment: #{environment}#
 project: #{gcpProject}#
 istioInjection: #{istioInjection}#
+deploymentName: #{deploymentName}#
 
 deploy:
   replicaCount: #{replicaCount}#

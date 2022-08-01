@@ -141,6 +141,7 @@ inputs:
     - repository
     - tag
     - applicationName
+    - deploymentName
     - environment
     - job_type
     - pipeline_summary_var
@@ -213,14 +214,14 @@ template: |
     - script: |
             cd {{helm_chart_path}} ;
             cat values.yaml;
-            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
-      displayName: "Helm Deploy {{applicationName}}"
+            helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
+      displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             cd {{helm_chart_path}} ;
             helm list;
-            helm uninstall {{applicationName}}-{{environment}};
-      displayName: "Helm Uninstall {{applicationName}}"
+            helm uninstall {{deploymentName}}-{{environment}};
+      displayName: "Helm Uninstall {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

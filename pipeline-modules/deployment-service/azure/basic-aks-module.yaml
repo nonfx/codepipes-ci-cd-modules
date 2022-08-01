@@ -139,6 +139,7 @@ inputs:
     - repository
     - tag
     - applicationName
+    - deploymentName
     - environment
     - project
     - customer_bucket
@@ -255,12 +256,12 @@ template: |
       workingDirectory: {{ workingDir }}
     - script: |
             cd {{helm_chart_path}} ;
-            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
-      displayName: "Helm Deploy {{applicationName}}"
+            helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+      displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% if ports %}
     - script: |
-            summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
+            summary_command=$(kubectl get svc -n {{deploymentName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
             cat <<EOF >>summary.txt
             ###pipeline-summary-start###
             {% if pipeline_summary_var -%}
@@ -274,6 +275,6 @@ template: |
             awk 'NF' summary.txt  > tmp.txt
             mv tmp.txt summary.txt
             cat summary.txt
-      displayName: "Pipeline Summary for {{applicationName}}"
+      displayName: "Pipeline Summary for {{deploymentName}}"
       workingDirectory: {{ workingDir }}
       {% endif %}

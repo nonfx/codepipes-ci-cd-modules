@@ -158,6 +158,7 @@ inputs:
     - repository
     - tag
     - applicationName
+    - deploymentName
     - environment
     - project
     - customer_bucket
@@ -253,7 +254,7 @@ template: |
             {% if ing.appDomain %}
             appDomain: {{ing.appDomain}}
             {% else %}
-            appDomain: {{applicationName}}.{{ing.domain}}
+            appDomain: {{deploymentName}}.{{ing.domain}}
             {% endif %}
             externalDNSenabled: {{ing.externalDNSenabled}}
           {% endif %}
@@ -302,7 +303,7 @@ template: |
           name=${line%%=*}
           printf '  %s: %s\n' "$name" "$value" >> values.yaml
           done;
-        - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+        - helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
 
     post_build:
       commands:
@@ -317,12 +318,12 @@ template: |
         - echo 'while [ true ]; do' >> test.sh
         - {% if ingress %}
           {% if ingress.0.domain %}
-          echo "sleep 2; summary=$(kubectl get ingress -n {{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+          echo "sleep 2; summary=$(kubectl get ingress -n {{deploymentName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
           {% else %}
-          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+          echo 'sleep 2; summary=`kubectl get ingress -n {{deploymentName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
           {% endif %}
           {% else %}
-          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+          echo 'sleep 2; summary=`kubectl get ingress -n {{deploymentName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
           {% endif %}
         - echo 'if [ ! -z "$summary" ]; then' >> test.sh
         - {% if ingress %}
@@ -347,5 +348,5 @@ template: |
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
         - cat summary.txt
       {% else %}
-        - helm uninstall {{applicationName}}-{{environment}}
+        - helm uninstall {{deploymentName}}-{{environment}}
       {% endif %}

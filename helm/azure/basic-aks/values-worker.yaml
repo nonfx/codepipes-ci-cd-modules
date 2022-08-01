@@ -5,6 +5,7 @@
 applicationName: "voting-worker" #auto
 environment: "demo"  #auto
 project: "codepipes" #auto
+deploymentName: "voting-worker-app"
 
 deploy:
   replicaCount: 1
