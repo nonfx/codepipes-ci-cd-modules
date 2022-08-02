@@ -130,6 +130,10 @@ inputs:
       description: Working Directory where the code is to be run
       type: string
       default: $(Build.SourcesDirectory)
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string       
   required:
     - cluster
     - resourceGroup

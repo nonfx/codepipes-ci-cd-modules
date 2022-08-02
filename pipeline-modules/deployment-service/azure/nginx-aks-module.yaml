@@ -42,6 +42,10 @@ inputs:
       title: Public IP
       description: This is Public IP to be alloted to the Load Balancer
       type: string
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string   
   required:
     - cluster
     - resourceGroup

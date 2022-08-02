@@ -282,6 +282,10 @@ inputs:
       description: This will deploy acme certificate issuer with letsencrypt as signing authority
       type: boolean
       default: false
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string   
   required:
     - cluster
     - resourceGroup

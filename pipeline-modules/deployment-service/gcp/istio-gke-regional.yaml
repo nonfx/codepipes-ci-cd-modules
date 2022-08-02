@@ -287,7 +287,10 @@ inputs:
       description: Probe Timeout in seconds
       type: integer
       default: 2
-
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of application
+      type: string 
   required:
     - cluster
     - region

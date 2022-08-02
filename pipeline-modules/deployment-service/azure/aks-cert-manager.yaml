@@ -132,6 +132,10 @@ inputs:
       description: Name of the Azure DNS Hosted Zone for CertManager for which certificate is required
       type: string
       default: ""
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string       
   required:
     - cluster
     - resourceGroup

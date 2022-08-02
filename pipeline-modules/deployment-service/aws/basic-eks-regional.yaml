@@ -148,6 +148,10 @@ inputs:
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
       type: string
       default: 300s
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string       
   required:
     - cluster
     - region
