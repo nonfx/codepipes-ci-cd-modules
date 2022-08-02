@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 projectName: #{projectName}#
 applicationName: #{applicationName}#
+deploymentName: #{deploymentName}#
 environment: #{environment}#
 project: #{gcpProject}#
 istioInjection: #{istioInjection}#

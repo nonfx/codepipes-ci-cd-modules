@@ -1,7 +1,7 @@
 applicationName: "helloworld" #auto
 environment: "dev"  #auto
 project: "test" #auto
-
+deploymentName:  "helloworld"
 deploy:
   replicaCount: 1
   strategy: RollingUpdate

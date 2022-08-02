@@ -2,17 +2,17 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ .Values.applicationName }}-hpa
-  namespace: {{ .Values.applicationName }}
+  name: {{ .Values.deploymentName }}-hpa
+  namespace: {{ .Values.deploymentName }}
   labels:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.applicationName }}-deployment
+    name: {{ .Values.deploymentName }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

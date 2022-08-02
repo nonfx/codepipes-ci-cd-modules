@@ -3,10 +3,10 @@ kind: Service
 metadata:
   annotations:
       cloud.google.com/neg: '{"ingress": true}' 
-  name: {{ .Values.applicationName }}
-  namespace: {{ .Values.applicationName }}
+  name: {{ .Values.deploymentName }}
+  namespace: {{ .Values.deploymentName }}
   labels:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: service
 spec:
@@ -19,6 +19,6 @@ spec:
       protocol: {{$port.protocol}}
   {{- end}}
   selector:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: deployment

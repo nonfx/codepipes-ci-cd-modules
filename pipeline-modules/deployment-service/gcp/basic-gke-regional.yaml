@@ -116,6 +116,10 @@ inputs:
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
       type: string
       default: 300s
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of application
+      type: string      
   required:
     - cluster
     - region
@@ -125,6 +129,7 @@ inputs:
     - repository
     - tag
     - applicationName
+    - deploymentName
     - environment
     - project
     - customer_bucket
@@ -270,7 +275,7 @@ template: |
     - '-c'
     - |
       cd {{helm_chart_path}} ;
-      helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+      helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
@@ -287,7 +292,7 @@ template: |
         while [ true ]
         do
           sleep 2
-          summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}`
+          summary=`kubectl get ingress -n {{deploymentName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}`
           if [ ! -z "$summary" ]; then
             echo "Service URL=http://"$summary >> summary.txt
             break
@@ -309,5 +314,5 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm list;
-      helm uninstall {{applicationName}}-{{environment}};
+      helm uninstall {{deploymentName}}-{{environment}};
   {% endif %}

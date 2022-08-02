@@ -8,10 +8,10 @@ metadata:
     cloud.google.com/neg: '{"exposed_ports": {"{{ .externalPort }}":{}}}'
     {{- end}}
     {{- end }}
-  name: {{ .Values.applicationName }}
-  namespace: {{ .Values.applicationName }}
+  name: {{ .Values.deploymentName }}
+  namespace: {{ .Values.deploymentName }}
   labels:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: service
 spec:
@@ -24,7 +24,7 @@ spec:
       protocol: {{$port.protocol}}
   {{- end}}
   selector:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: deployment
 {{- end }}

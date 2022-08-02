@@ -1,5 +1,6 @@
 projectName: Testing
 applicationName: test-events-service #auto
+deploymentName: test-events-service
 environment: Testing #auto
 project: azure #auto
 istioInjection: enabled

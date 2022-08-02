@@ -2,17 +2,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.applicationName }}-deployment
-  namespace: {{ .Values.applicationName }}
+  name: {{ .Values.deploymentName }}
+  namespace: {{ .Values.deploymentName }}
   labels:
-    projectName: {{ .Values.applicationName }}
+    projectName: {{ .Values.deploymentName }}
     environment: {{ .Values.environment }}
     type: deployment
 spec:
   replicas: {{ .Values.deploy.replicaCount }}
   selector:
     matchLabels:
-      projectName: {{ .Values.applicationName }}
+      projectName: {{ .Values.deploymentName }}
       environment: {{ .Values.environment }}
       type: deployment
   strategy:
@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        projectName: {{ .Values.applicationName }}
+        projectName: {{ .Values.deploymentName }}
         environment: {{ .Values.environment }}
         type: deployment
     spec:
@@ -36,7 +36,7 @@ spec:
                 - key: project
                   operator: In
                   values:
-                  - {{ .Values.applicationName }}
+                  - {{ .Values.deploymentName }}
                 - key: env
                   operator: In
                   values:
@@ -45,14 +45,14 @@ spec:
             weight: 100
       {{- if .Values.image.registryCredentials }}
       imagePullSecrets:
-        - name: {{ .Values.applicationName }}-docker-registry
+        - name: {{ .Values.deploymentName }}-docker-registry
       {{- end }}
       containers:
-        - name: {{ .Values.applicationName }}
+        - name: {{ .Values.deploymentName }}
           {{- if .Values.image.repository }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           {{- else }}
-          image: "gcr.io/{{ .Values.project }}/{{ .Values.applicationName }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "gcr.io/{{ .Values.project }}/{{ .Values.deploymentName }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -89,10 +89,10 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: {{ .Values.applicationName }}-configmap
+                name: {{ .Values.deploymentName }}-configmap
             {{- if .Values.secrets }}
             - secretRef:
-                name: {{ $.Values.applicationName }}-secret-env
+                name: {{ $.Values.deploymentName }}-secret-env
             {{- end}}
           env:
             {{- range .Values.env }}
@@ -101,7 +101,7 @@ spec:
           {{- end }}
           volumeMounts:
           {{- range  $index,$artifact := .Values.artifacts }}
-            - name: {{ $.Values.applicationName }}-volume-{{$index}}
+            - name: {{ $.Values.deploymentName }}-volume-{{$index}}
               mountPath: {{ $artifact.mountPath }}
           {{- end}}
         {{- if  .Values.lifecycle.prestop.command }}        
@@ -111,14 +111,14 @@ spec:
                 command: {{ .Values.lifecycle.prestop.command }}
         {{- end }}
       {{- if .Values.serviceAccount }}
-      serviceAccount: {{ .Values.applicationName }}-ksa
-      serviceAccountName: {{ .Values.applicationName }}-ksa
+      serviceAccount: {{ .Values.deploymentName }}-ksa
+      serviceAccountName: {{ .Values.deploymentName }}-ksa
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.deploy.terminationGracePeriodSeconds }}
       volumes:
         {{- range  $index,$artifact := .Values.artifacts }}
-        - name: {{ $.Values.applicationName }}-volume-{{$index}}
+        - name: {{ $.Values.deploymentName }}-volume-{{$index}}
           secret:
-            secretName: {{ $.Values.applicationName }}-secret-{{$index}}
+            secretName: {{ $.Values.deploymentName }}-secret-{{$index}}
         {{- end}}
 {{- end}}
