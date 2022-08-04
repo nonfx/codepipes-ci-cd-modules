@@ -156,7 +156,6 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/basic-aks" %}
-  {% if deploymentName|length < 64 %}
 
   steps:
     - task: HelmInstaller@0
@@ -284,4 +283,3 @@ template: |
       displayName: "Pipeline Summary for {{deploymentName}}"
       workingDirectory: {{ workingDir }}
       {% endif %}
-  {% endif %}
