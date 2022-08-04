@@ -79,8 +79,8 @@ template: |
     computetype: "{{ pipeline_compute_type }}"
     environmentvariables:
     {% for env_key, env_value in pipeline_env %}
-    - name: "{{ env_key }}"
-      value: "{{ env_value }}"
+    - name: {{ env_key|cpi_quote }}
+      value: {{ env_value|cpi_quote }}
       type: "PLAINTEXT"
     {% endfor %}
     {% for env_key, env_value in pipeline_secret_env %}
