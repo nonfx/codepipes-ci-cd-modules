@@ -156,7 +156,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/cert-manager" %}
-
+  {% if deploymentName|length < 64 %}
   steps:
     - task: HelmInstaller@0
       inputs:
@@ -183,6 +183,7 @@ template: |
           rm -f values.yaml;
           echo "projectName: {{projectName}}
           applicationName: {{applicationName}} #auto
+          deploymentName: {{deploymentName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
           managedCertificate: {{managedCertificate}}
@@ -218,14 +219,15 @@ template: |
     - script: |
             cd {{helm_chart_path}} ;
             cat values.yaml;
-            helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
+            helm upgrade --install -f values.yaml {{deploymentName}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
       displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             cd {{helm_chart_path}} ;
             helm list;
-            helm uninstall {{deploymentName}}-{{environment}};
+            helm uninstall {{deploymentName}};
       displayName: "Helm Uninstall {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% endif %}
+  {% endif %}

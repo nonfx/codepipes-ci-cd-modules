@@ -156,6 +156,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/basic-aks" %}
+  {% if deploymentName|length < 64 %}
 
   steps:
     - task: HelmInstaller@0
@@ -181,6 +182,7 @@ template: |
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
+          deploymentName: {{deploymentName}} #auto
           deploy:
             replicaCount: 1
             strategy: RollingUpdate
@@ -260,7 +262,7 @@ template: |
       workingDirectory: {{ workingDir }}
     - script: |
             cd {{helm_chart_path}} ;
-            helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+            helm upgrade --install -f values.yaml {{deploymentName}} . --atomic --timeout {{deployment_timeout}}
       displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% if ports %}
@@ -282,3 +284,4 @@ template: |
       displayName: "Pipeline Summary for {{deploymentName}}"
       workingDirectory: {{ workingDir }}
       {% endif %}
+  {% endif %}

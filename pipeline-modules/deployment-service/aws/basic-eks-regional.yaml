@@ -174,7 +174,7 @@ template: |
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
-
+  {% if deploymentName|length < 64 %}
   version: 0.2
   phases:
     install:
@@ -210,7 +210,7 @@ template: |
           echo "applicationName: {{applicationName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
-
+          deploymentName: {{deploymentName}} #auto
           deploy:
             replicaCount: 1
             strategy: RollingUpdate
@@ -307,7 +307,7 @@ template: |
           name=${line%%=*}
           printf '  %s: %s\n' "$name" "$value" >> values.yaml
           done;
-        - helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+        - helm upgrade --install -f values.yaml {{deploymentName}} . --atomic --timeout {{deployment_timeout}}
 
     post_build:
       commands:
@@ -352,5 +352,6 @@ template: |
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
         - cat summary.txt
       {% else %}
-        - helm uninstall {{deploymentName}}-{{environment}}
+        - helm uninstall {{deploymentName}}
       {% endif %}
+  {% endif %}

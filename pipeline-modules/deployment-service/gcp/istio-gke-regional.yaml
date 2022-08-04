@@ -313,6 +313,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
+  {% if deploymentName|length < 64 %}
 
   steps:
   - id: 'gcloud container setup'
@@ -363,6 +364,7 @@ template: |
       applicationName: {{applicationName}} #auto
       environment:  {{environment}} #auto
       project: {{project}} #auto
+      deploymentName: {{deploymentName}} #auto
       {% if istioInjection %}
       istioInjection: enabled
       {% else %}
@@ -496,7 +498,7 @@ template: |
     - '-c'
     - |
       cd {{helm_chart_path}} ;
-      helm upgrade --install -f values.yaml {{deploymentName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+      helm upgrade --install -f values.yaml {{deploymentName}} . --atomic --timeout {{deployment_timeout}}
   - id: 'Extract summary vars'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -536,5 +538,6 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm list;
-      helm uninstall {{deploymentName}}-{{environment}};
+      helm uninstall {{deploymentName}};
+  {% endif %}
   {% endif %}
