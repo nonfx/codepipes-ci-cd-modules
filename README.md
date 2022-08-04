@@ -55,9 +55,13 @@ inputs:
 ```
 This will render only `X` & `Y` on UI form not `a` & `b`
 
-### Template field
+### Template
 
 The template field defines the cloud native build template.
 This template can also make use of the module inputs defined into the input section by the means of Django 1.7 syntax such that it renders into the cloud native template format.
 
 We use [Pongo2](https://github.com/flosch/pongo2) to render the templates which is based on [Django 1.7](https://django.readthedocs.io/en/1.7.x/topics/templates.html)
+
+For Django built-in filters, refer this: https://django.readthedocs.io/en/1.7.x/ref/templates/builtins.html#ref-templates-builtins-filters
+
+We also have custom filters for available for the template. our custom filter have `cpi_` prefix. And the documentation can be found here: https://github.com/cldcvr/vanguard-api/blob/master/pkg/pipeline/custom_filters.md
