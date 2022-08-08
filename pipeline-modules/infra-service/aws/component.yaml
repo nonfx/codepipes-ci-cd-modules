@@ -129,6 +129,7 @@ template: |
                     output "{{ component.label }}_{{ output.name }}" {
                     {% if not output.expression %}
                     value = module.{{ component.label }}[*].{{ output.name }}
+                    sensitive = true
                     {% else %}
                     value = {{ output.expression }}
                     {% endif %}
