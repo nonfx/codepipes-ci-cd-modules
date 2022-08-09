@@ -168,8 +168,8 @@ template: |
       cd "{{ local_code_path }}"
       # copy pre-existing terraform state to the working directory
       test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }}
-      # terraform init
-      terraform init >> {{ logger('init') }}
+      # terraform init -upgrade
+      terraform init -upgrade >> {{ logger('init') }}
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {{ upload_log('init') }}
       {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}

@@ -201,7 +201,7 @@ template: |
     entrypoint: sh
     args:
       - -c
-      - 'terraform init >> {{ logger('init') }} || {{ set_fail_flag('terraform init') }}'
+      - 'terraform init -upgrade >> {{ logger('init') }} || {{ set_fail_flag('terraform init') }}'
     dir: {{ local_code_path }}
   {{ upload_log('init') }}
   {{ fail_on_flag() }}

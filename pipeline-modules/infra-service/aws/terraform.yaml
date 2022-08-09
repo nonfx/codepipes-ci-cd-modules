@@ -156,7 +156,7 @@ template: |
         # copy pre-existing terraform state to the working directory
         - test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }}
         # terraform init
-        - terraform init >> {{ logger('init') }}
+        - terraform init -upgrade >> {{ logger('init') }}
       finally:
         - {{ upload_log_cmd('init') }}
     build:
