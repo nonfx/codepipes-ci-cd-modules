@@ -163,6 +163,7 @@ template: |
           az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
       displayName: "Get AKS Kubecofing"
       workingDirectory: {{ workingDir }}
+    {% if job_type == 'deploy' %}
     - script: |
           export PATH="{{workspace}}/bin:$$PATH";
           cp {{pipeline_env_file}} {{helm_chart_path}} 2>/dev/null || :;
@@ -277,3 +278,11 @@ template: |
       displayName: "Pipeline Summary for {{applicationName}}"
       workingDirectory: {{ workingDir }}
       {% endif %}
+    {% else %}
+    - script: |
+            cd {{helm_chart_path}} ;
+            helm list;
+            helm uninstall {{applicationName}}-{{environment}};
+      displayName: "Helm Uninstall {{applicationName}}"
+      workingDirectory: {{ workingDir }}
+    {% endif %}
