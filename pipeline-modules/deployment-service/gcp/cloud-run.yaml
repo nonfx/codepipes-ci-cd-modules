@@ -142,9 +142,9 @@ template: |
         printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{application_name}}-$name" >>  app.yaml
       done;
       cat app.yaml
-      gcloud run services replace app.yaml --region {{region}}
+      gcloud run services replace app.yaml --region {{region}} {% if vpcConnector %}--vpc-connector {{vpcConnector}} {% endif %}
       {% if domain %}
-      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet {% if vpcConnector %}--vpc-connector vpcConnector {% endif %} || true
+      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet || true
       {% endif %}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
