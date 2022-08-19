@@ -63,6 +63,11 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
+    vpcConnector:
+      title: VPC Connector
+      description: Name of the VPC Connector
+      type: string
+      default: ""
   required:
     - region
   internal:
@@ -139,7 +144,7 @@ template: |
       cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
       {% if domain %}
-      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet || true
+      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet {% if vpcConnector %}--vpc-connector vpcConnector {% endif %} || true
       {% endif %}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
