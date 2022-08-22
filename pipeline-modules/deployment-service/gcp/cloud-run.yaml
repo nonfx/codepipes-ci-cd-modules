@@ -63,6 +63,11 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
+    vpcConnector:
+      title: VPC Connector
+      description: Name of the VPC Connector
+      type: string
+      default: ""
   required:
     - region
   internal:
@@ -118,6 +123,10 @@ template: |
             labels:
               codepipes-project: {{project}}
               codepipes-environment: {{environment}}
+            {%- if vpcConnector %}
+            annotations:
+              run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}
+            {%- endif %}
           spec:
             serviceAccountName: $$client_email
             containers:
