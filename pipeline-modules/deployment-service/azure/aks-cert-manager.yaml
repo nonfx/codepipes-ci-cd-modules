@@ -132,6 +132,10 @@ inputs:
       description: Name of the Azure DNS Hosted Zone for CertManager for which certificate is required
       type: string
       default: ""
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string       
   required:
     - cluster
     - resourceGroup
@@ -141,6 +145,7 @@ inputs:
     - repository
     - tag
     - applicationName
+    - deploymentName
     - environment
     - job_type
     - pipeline_summary_var
@@ -151,7 +156,6 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/cert-manager" %}
-
   steps:
     - task: HelmInstaller@0
       inputs:
@@ -178,6 +182,7 @@ template: |
           rm -f values.yaml;
           echo "projectName: {{projectName}}
           applicationName: {{applicationName}} #auto
+          deploymentName: {{deploymentName}} #auto
           environment:  {{environment}} #auto
           project: {{project}} #auto
           managedCertificate: {{managedCertificate}}
@@ -213,14 +218,14 @@ template: |
     - script: |
             cd {{helm_chart_path}} ;
             cat values.yaml;
-            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
-      displayName: "Helm Deploy {{applicationName}}"
+            helm upgrade --install -f values.yaml {{deploymentName}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
+      displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             cd {{helm_chart_path}} ;
             helm list;
-            helm uninstall {{applicationName}}-{{environment}};
-      displayName: "Helm Uninstall {{applicationName}}"
+            helm uninstall {{deploymentName}};
+      displayName: "Helm Uninstall {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

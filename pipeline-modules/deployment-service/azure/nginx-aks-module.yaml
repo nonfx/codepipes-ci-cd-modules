@@ -42,6 +42,10 @@ inputs:
       title: Public IP
       description: This is Public IP to be alloted to the Load Balancer
       type: string
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of Application
+      type: string   
   required:
     - cluster
     - resourceGroup
@@ -50,6 +54,7 @@ inputs:
     - app_env
     - files
     - job_type
+    - deploymentName
 
 template: |
   {% set workspace = '' %}   {# has to be a persistent volume #}
@@ -75,13 +80,13 @@ template: |
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
           helm install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace $NAMESPACE --set controller.service.loadBalancerIP={{publicIP}} --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}}
-      displayName: "Helm Deploy {{applicationName}}"
+      displayName: "Helm Deploy {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             NAMESPACE={{namespace}}
             helm uninstall nginx-ingress --namespace {{namespace}};
             kubectl delete ns {{namespace}};
-      displayName: "Helm Uninstall {{applicationName}}"
+      displayName: "Helm Uninstall {{deploymentName}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

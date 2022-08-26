@@ -7,6 +7,8 @@ environment: staging
 project: vanguard-20200519
 istioInjection: enabled
 serviceAccount: true
+deploymentName: api-service2
+
 
 deploy:
   replicaCount: 1

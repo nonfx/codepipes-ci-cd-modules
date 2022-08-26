@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 projectName: strato
 applicationName: api-service2
+deploymentName: api-service2 
 environment: staging
 project: vanguard-20200519
 istioInjection: enabled

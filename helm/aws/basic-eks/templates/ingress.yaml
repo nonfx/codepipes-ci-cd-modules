@@ -3,8 +3,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $.Values.applicationName }}-ingress
-  namespace: {{ $.Values.applicationName }}
+  name: {{ $.Values.deploymentName }}-ingress
+  namespace: {{ $.Values.deploymentName }}
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -18,7 +18,7 @@ metadata:
     alb.ingress.kubernetes.io/tags: createdBy=codepipes
     alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
     {{- if $.Values.ingress.bucketName }}
-    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,access_logs.s3.enabled=true,access_logs.s3.bucket={{ $.Values.ingress.bucketName }},access_logs.s3.prefix={{ $.Values.applicationName }}
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,access_logs.s3.enabled=true,access_logs.s3.bucket={{ $.Values.ingress.bucketName }},access_logs.s3.prefix={{ $.Values.deploymentName }}
     {{- end}}
     {{- end}}
     {{- end}}
@@ -27,7 +27,7 @@ spec:
 {{- if eq $len 1 }}
   defaultBackend:
     service:
-      name: {{ $.Values.applicationName }}
+      name: {{ $.Values.deploymentName }}
       {{- range  $index,$port := $.Values.ports }}
       {{- if eq $index  0}}
       port:
@@ -48,7 +48,7 @@ spec:
       - path: /{{$port.name}}/*
         backend:
           service:
-            name: {{ $.Values.applicationName }}
+            name: {{ $.Values.deploymentName }}
             port: 
               number: {{ $port.containerPort}}
       {{- end}}

@@ -3,6 +3,8 @@ applicationName: test-cert-manager #auto
 environment: Testing #auto
 project: azure #auto
 managedCertificate: true
+deploymentName: test-cert-manager 
+
 
 azure:
     clientID: "$(ARM_CLIENT_ID)"
