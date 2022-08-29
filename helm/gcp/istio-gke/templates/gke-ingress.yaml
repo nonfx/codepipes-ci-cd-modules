@@ -1,4 +1,5 @@
 {{- if .Values.ingress }}
+{{- $apiV := .Capabilities.APIVersions -}}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
 {{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
@@ -23,16 +24,23 @@ spec:
     http:
       paths:
       - path: /*
+        {{- if  $apiV.Has "networking.k8s.io/v1" }}
         pathType: Prefix
+        backend:
+          service:
+            name: istio-ingressgateway
+            port:
+              number: 80
+        {{- else }}
         backend:
           # In this case we don't go directly to app-specific services,
           # but first to the Istio ingress-gateway
           # We use port 80 because it is the "ingress-like" port of the ingress-gateway
-          service:
-            name: istio-ingressgateway
-            port: 
-              number: 80
+          serviceName: istio-ingressgateway
+          servicePort: 80
+        {{- end}}  
   {{- end }}
+
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
