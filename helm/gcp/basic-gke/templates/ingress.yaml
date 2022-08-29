@@ -1,4 +1,10 @@
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
 kind: Ingress
 metadata:
   name: {{ .Values.applicationName }}-ingress
@@ -23,8 +29,11 @@ spec:
       paths:
       {{- range $index,$port := .Values.ports }}
       - path: /{{$port.name}}/*
+        pathType: Prefix 
         backend:
-          serviceName: {{ $.Values.applicationName }}
-          servicePort: {{ $port.name}}
+          service:
+            name: {{ $.Values.applicationName }}
+            port: 
+              number: {{ $port.name}}
       {{- end}}
 {{- end }}
