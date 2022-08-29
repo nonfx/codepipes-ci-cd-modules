@@ -1,4 +1,11 @@
+{{- $apiV := .Capabilities.APIVersions -}}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
 kind: Ingress
 metadata:
   name: {{ .Values.applicationName }}-ingress
@@ -10,21 +17,42 @@ metadata:
 spec:
 {{- $len := len .Values.ports }}
 {{- if eq $len 1 }}
+  {{- if  .Capabilities.APIVersions.Has "networking.k8s.io/v1" }}
+  defaultBackend:
+    service:
+      name: {{ $.Values.applicationName }}
+      {{- range  $index,$port := .Values.ports }}
+      {{- if eq $index  0}}
+      port:
+        number: {{ int $port.containerPort }}
+      {{- end}}
+      {{- end}}      
+  {{- else }}
   backend:
     serviceName: {{ .Values.applicationName }}
     {{- range  $index,$port := .Values.ports }}
     {{- if eq $index  0}}
-    servicePort: {{$port.name}}
+    servicePort: {{ int $port.containerPort }}
     {{- end}}
     {{- end}}
+  {{- end}}  
 {{- else}}
   rules:
   - http:
       paths:
       {{- range $index,$port := .Values.ports }}
       - path: /{{$port.name}}/*
+        {{- if  $apiV.Has "networking.k8s.io/v1" }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $.Values.applicationName }}
+            port:
+              number: {{ int $port.containerPort}}
+        {{- else }}
         backend:
           serviceName: {{ $.Values.applicationName }}
-          servicePort: {{ $port.name}}
+          servicePort: {{ $port.containerPort }}
+        {{- end}}  
       {{- end}}
 {{- end }}
