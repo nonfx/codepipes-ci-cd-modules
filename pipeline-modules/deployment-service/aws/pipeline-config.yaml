@@ -63,6 +63,22 @@ inputs:
       title: Pipeline module git repo revision
       description: git revision for cloning the pipeline module repo.
       type: string
+    repository:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
+    tag:
+      title: Tag of either container or artifact
+      description: git revision for cloning the pipeline module repo.
+      type: string
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    git_repo:
+      title: Git repo
+      description:  Git repository
+      type: string
   internal:
     - pipeline_logs_bucket
     - pipeline_env
@@ -70,10 +86,15 @@ inputs:
     - privileged_mode
     - pipeline_module_git
     - pipeline_module_git_rev
+    - repository
+    - tag
+    - repo_dir
+    - git_repo
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
 
   artifacts:
     type: "NO_ARTIFACTS"
@@ -133,7 +154,13 @@ template: |
             - mkdir {{workspace}}/bin && mv jq-linux64 {{workspace}}/bin/jq
             - chmod +x {{workspace}}/bin/jq
             - export PATH="{{workspace}}/bin:$PATH"
-
+            - |
+              echo "$git_repo"
+              if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
+                  mkdir -p {{source_code_path}}
+                  git clone $git_repo --branch {{tag}} --single-branch {{source_code_path}}
+                  ls {{source_code_path}}/{{repo_dir}}/
+              fi
             # Preparing environment variables file...
             - |
               for name in ${__VG_EXPORTED_ENV_NAMES}
