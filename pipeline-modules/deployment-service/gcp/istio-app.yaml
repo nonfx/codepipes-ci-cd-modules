@@ -34,6 +34,11 @@ inputs:
       description: Istio Argument
       type: string
       default: install --set profile=default
+    enable_istio_access_log:
+      title: Istio-proxy Access kog
+      description: This is to create deployment
+      type: boolean
+      default: true   
 
   required:
     - cluster
@@ -61,3 +66,26 @@ template: |
       istioctl {{istio_args}} -y;
     env:
     - 'ISTIO_VERSION={{istio_version}}'
+  - id: 'Istio Access Log Enable'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      #Set kubernetes config
+      gcloud container clusters get-credentials testing --region us-central1
+      {% if enable_istio_access_log %}
+      echo "
+      apiVersion: telemetry.istio.io/v1alpha1
+      kind: Telemetry
+      metadata:
+        name: mesh-default
+        namespace: istio-system
+      spec:
+        accessLogging:
+          - providers:
+            - name: envoy " >> enable_istio_access_log.yaml
+      kubectl apply -f enable_istio_access_log.yaml
+      {% endif %}
+
+
