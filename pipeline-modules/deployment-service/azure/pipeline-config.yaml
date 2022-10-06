@@ -72,7 +72,7 @@ template: |
   trigger: none
   steps:
   - script: |
-
+      set -e
       # installing jq v1.6
       curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
       jq --version
