@@ -1,0 +1,129 @@
+provisioner: gcp
+name: private-helm
+version: 1
+revision: 1
+displayName: Deploy a private helm chart setup in k8s using git repo
+description: The template is used for deploying a helm chart in kubernetes cluster
+target: "deployment-template"
+keywords:
+  - helm
+  - private
+author: CloudCover
+meta:
+  inputArtifactType:
+    - GitCode
+inputs:
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    cluster:
+      title: Cluster Name
+      description: Cluster name in which deployment will happen
+      type: string
+    namespace:
+      title: namespace
+      description: K8s namespace to deploy
+      type: string
+      default: "default"
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    deployment_timeout:
+      title: Deployment Timeout
+      description: Time to wait for pods to be ready before terming deployment as unsuccessful
+      type: string
+      default: 300s
+    helm_chart_path:
+      title: Helm Chart Path
+      description: Path to your helm chart
+      type: string
+    helm_values_path:
+      title: Helm Chart Values Path
+      description: Path to your helm chart values including values file name
+      type: string
+  required:
+    - cluster
+    - region
+    - helm_values_path
+    - helm_chart_path
+  internal:
+    - app_env
+    - applicationName
+    - environment
+    - project
+    - job_type
+
+template: |
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+
+  steps:
+  - id: 'gcloud container setup'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+  - id: 'Install helm'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
+      cd cloud-builders-community/helm;
+      docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
+  {% if job_type == 'deploy' %}
+  - id: 'Install Application'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      {% if namespace != 'default' %}
+      kubectl create ns {{namespace}}
+      {% endif %}
+      cd {{source_code_path}}/{{helm_chart_path}} ;
+      helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}}
+  - id: 'Extract summary vars'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      cat summary.txt;
+  {% else %}
+  - id: 'Uninstall application'
+    name: 'gcr.io/$PROJECT_ID/helm'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      cd {{source_code_path}}/{{helm_chart_path}} ;
+      helm uninstall {{applicationName}}-{{environment}} --namespace {{namespace}};
+  {% endif %}
