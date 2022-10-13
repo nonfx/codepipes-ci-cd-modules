@@ -33,10 +33,6 @@ template: |
   {% set git_config_path = '$(System.DefaultWorkingDirectory)/.gitconfig' %}
   steps:
   - script: |
-      echo "installing jq v1.6"
-      curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-      mv jq-linux64 /usr/bin/jq && chmod +x /usr/bin/jq
-
       git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'
       git config --file {{ git_config_path }} credential.useHttpPath true
       git config --file {{ git_config_path }} credential.interactive never
