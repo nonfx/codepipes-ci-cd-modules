@@ -113,11 +113,22 @@ template: |
   {% set tf_var_name_prefix = 'VG_TF_VAR_' %}
   {% set tf_var_file_path = '/tmp/vg_tf_var_values.tfvars' %}
   {% set tf_var_name_dash_placeholder = '___' %}
+  {% set local_error_sentinel_path = '$(System.DefaultWorkingDirectory)/_fail' %}
 
   {# redirects shell command output to a log file #}
   {%- macro logger(name, stdout=true) -%}
   {{ local_artifact_path }}/{{ get_log_name(name) }}{% if stdout %} 2>&1{% endif %}
   {%- endmacro -%}
+
+  {# shell command to set a sentinel file signaling failure #}
+  {%- macro set_fail_flag(operation) -%}
+  echo "{{ operation }}" > {{ local_error_sentinel_path }}
+  {%- endmacro -%}
+
+  {# shell command to fail pipeline if there are failures in terraform #}
+  {%- macro fail_on_flag() -%}
+  set -e;! test -f {{ local_error_sentinel_path }} || (echo "Following operation has failed: $(cat {{ local_error_sentinel_path }})"; exit 1); set +e;
+  {%- endmacro %}
 
   {# generates a standard log name from action and name suffix #}
   {% macro get_log_name(suffix) %}{{ tf_action }}_terraform_{{ suffix }}.log{% endmacro %}
@@ -169,15 +180,17 @@ template: |
       # copy pre-existing terraform state to the working directory
       test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }}
       # terraform init
-      terraform init >> {{ logger('init') }}
+      terraform init >> {{ logger('init') }} || {{ set_fail_flag('terraform init') }}
       az account set --subscription $(ARM_SUBSCRIPTION_ID)
       {{ upload_log('init') }}
+      {{ fail_on_flag() }}
       {% if tf_action == 'plan' || tf_action == 'plan-destroy' %}
       # terraform plan
-      terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'plan-destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }}
+      terraform plan -var-file={{ tf_var_file_path }} {% if tf_action == 'plan-destroy' %}-destroy{% endif %} -out={{ local_artifact_path }}/{{ tf_plan_file }} -state={{ local_artifact_path }}/{{ tf_state_file }} > {{ logger('plan') }} || {{ set_fail_flag('terraform plan') }}
       # terraform show
-      terraform show -json {{ local_artifact_path }}/{{ tf_plan_file }} 1> {{ local_artifact_path }}/{{ tf_plan_json_file }} 2>> {{ logger('plan', false) }}
+      terraform show -json {{ local_artifact_path }}/{{ tf_plan_file }} 1> {{ local_artifact_path }}/{{ tf_plan_json_file }} 2>> {{ logger('plan', false) }} || {{ set_fail_flag('terraform plan') }}
       {{ upload_log('plan') }}
+      {{ fail_on_flag() }}
       {{ upload_artifact(tf_plan_file) }}
       {{ upload_artifact(tf_plan_json_file) }}
       {% elif tf_action == 'apply' %}
@@ -193,3 +206,4 @@ template: |
       {{ upload_artifact(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
       {% endif %}
       az logout
+
