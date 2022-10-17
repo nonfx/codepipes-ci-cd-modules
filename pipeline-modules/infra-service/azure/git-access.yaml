@@ -29,7 +29,7 @@ inputs:
     - git_remote_path
     - git_login
 template: |
-  {% set git_creds_path = '$(System.DefaultWorkingDirectory)/.git-credentials' %}
+  {% set git_creds_path = '$(HOME)/.git-credentials' %}
   {% set git_config_path = '$(System.DefaultWorkingDirectory)/.gitconfig' %}
   steps:
   - script: |
