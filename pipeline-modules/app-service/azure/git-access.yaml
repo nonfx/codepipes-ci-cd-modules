@@ -29,12 +29,13 @@ inputs:
     - git_remote_path
     - git_login
 template: |
-  {% set git_creds_path = '$(HOME)/.git-credentials' %}
+  {% set git_creds_path = '$(System.DefaultWorkingDirectory)/.git-credentials' %}
   {% set git_config_path = '$(System.DefaultWorkingDirectory)/.gitconfig' %}
   steps:
   - script: |
       git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'
       git config --file {{ git_config_path }} credential.useHttpPath true
       git config --file {{ git_config_path }} credential.interactive never
+      git config --global url."https://{{ git_login }}:$(GIT_PASSWORD)@github.com/".insteadOf "https://github.com/"
       echo "https://{{ git_login }}:$(GIT_PASSWORD)@{{ git_remote_path }}" >> {{ git_creds_path }}
     displayName: 'Git Access'
