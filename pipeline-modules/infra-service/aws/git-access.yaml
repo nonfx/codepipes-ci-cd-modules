@@ -33,11 +33,17 @@ template: |
   {% set git_config_path = '$HOME/.gitconfig' %}
   version: 0.2
   phases:
+    install:
+      commands:
+        # installing jq v1.6
+        - curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+        - mv jq-linux64 /usr/bin/jq && chmod +x /usr/bin/jq
+        - jq --version
+
     pre_build:
       commands:
+        # git config
         - git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'
         - git config --file {{ git_config_path }} credential.useHttpPath true
         - git config --file {{ git_config_path }} credential.interactive never
-        - git config --global url."https://{{ git_login }}:$GIT_PASSWORD@github.com/".insteadOf "https://github.com/"
-        - git config --global url."https://{{ git_login }}:$GIT_PASSWORD@gitlab.com/".insteadOf "https://gitlab.com/"
-        - echo "https://{{ git_login }}:$GIT_PASSWORD@{{ git_remote_path }}" >> {{ git_creds_path }}
+        - echo "https://{{ git_login }}:$(printf %s $GIT_PASSWORD | jq -sRr @uri)@{{ git_remote_path }}" >> {{ git_creds_path }}
