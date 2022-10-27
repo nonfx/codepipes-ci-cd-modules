@@ -4,7 +4,7 @@
 projectName: strato
 applicationName: api-service2
 environment: staging
-project: vanguard-20200519
+project: vanguard-staging
 istioInjection: enabled
 serviceAccount: true
 manageCertificate: true
@@ -32,7 +32,7 @@ env:
     value: staging
 
 image:
-  repository: gcr.io/vanguard-20200519/identity-service
+  repository: gcr.io/vanguard-staging/identity-service
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
