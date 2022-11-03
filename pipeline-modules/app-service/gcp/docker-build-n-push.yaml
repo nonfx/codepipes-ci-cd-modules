@@ -5,6 +5,7 @@ revision: 1
 displayName: Docker Build
 description: This plugin is for Docker build & push
 target: ""
+category: containerise
 keywords:
   - Docker
   - Push

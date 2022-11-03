@@ -5,6 +5,7 @@ revision: 1
 displayName: Sonatype nexus IQ
 description: Sonatype nexus IQ server integration
 target: ""
+category: code analysis
 keywords:
   - nexusIQ
   - sonatype

@@ -5,6 +5,7 @@ revision: 1
 displayName: Sonar Cloud
 description: Analyze source code using Sonar Cloud
 target: ""
+category: code analysis
 keywords:
   - Analyze Code
 author: CloudCover

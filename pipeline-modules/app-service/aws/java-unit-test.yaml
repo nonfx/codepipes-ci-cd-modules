@@ -5,6 +5,7 @@ revision: 1
 displayName: Java UnitTest with Maven
 description: run Java unit test with Maven
 target: ""
+category: unit test
 keywords:
   - java
   - unit-test

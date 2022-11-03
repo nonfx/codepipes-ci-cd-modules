@@ -5,6 +5,7 @@ revision: 1
 displayName: Git clone
 description: Clone remote Git repository and checkout a given commit if specified.
 target: ""
+category: git
 keywords:
   - git
   - clone

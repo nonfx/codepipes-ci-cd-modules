@@ -5,6 +5,7 @@ revision: 1
 displayName: Git access
 description: Configure access to a remote Git repository.
 target: ""
+category: git
 keywords:
   - git
   - access

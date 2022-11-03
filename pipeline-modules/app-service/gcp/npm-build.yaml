@@ -5,6 +5,7 @@ revision: 1
 displayName: NPM Build
 description: This plugin is for node builds
 target: ""
+category: build
 keywords:
   - NPM
   - Install

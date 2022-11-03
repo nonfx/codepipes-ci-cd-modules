@@ -5,6 +5,7 @@ revision: 1
 displayName: Go Scan
 description: Scans go code for vulnarabilities using gosec and golint
 target: ""
+category: security
 keywords:
   - Go
   - Scan
