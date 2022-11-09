@@ -5,6 +5,7 @@ revision: 1
 displayName: Build JARs (Maven)
 description: Runs maven install command on working directory
 target: ""
+category: build
 keywords:
   - java
   - build

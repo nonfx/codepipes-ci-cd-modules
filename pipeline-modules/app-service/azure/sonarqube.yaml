@@ -5,6 +5,7 @@ revision: 1
 displayName: Sonar Qube
 description: Analyze source code using Sonar Qube
 target: ""
+category: code analysis
 keywords:
   - Analyze Code
 author: CloudCover

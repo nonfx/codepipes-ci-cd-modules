@@ -5,6 +5,7 @@ revision: 1
 displayName: Self hosted Fortify
 description: Scans java code for vulnarabilities
 target: ""
+category: security
 keywords:
   - java
   - fortify

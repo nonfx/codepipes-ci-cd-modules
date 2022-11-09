@@ -5,6 +5,7 @@ revision: 1
 displayName: Sonar maven
 description: Analyze java source code using SonarCloud/SonarQube
 target: ""
+category: code analysis
 keywords:
   - Analyze Code
 author: CloudCover

@@ -5,6 +5,7 @@ revision: 1
 displayName: Go Build
 description: Build source code using Golang
 target: ""
+category: build
 keywords:
   - Go
   - Install
