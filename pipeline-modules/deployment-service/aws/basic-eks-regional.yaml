@@ -9,7 +9,7 @@ keywords: ["bash", "linux"]
 author: "CloudCover"
 meta:
   inputArtifactType:
-    - ContainerImage
+- ContainerImage
   requiredResources:
     - aws_eks_cluster
 inputs:
