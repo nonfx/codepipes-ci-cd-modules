@@ -103,7 +103,7 @@ stages:
             GC_GOOGLE_CLIENT_SECRET: $(GC_GOOGLE_CLIENT_SECRET)
             GC_AZUREAD_KEY: $(GC_AZUREAD_KEY)
             GC_AZUREAD_SECRET: $(GC_AZUREAD_SECRET)
-            VG_PIPELINE_MODULE_GIT_REV: $[replace(variables['Build.SourceBranch'], 'refs/heads/', '')]
+            VG_PIPELINE_MODULE_GIT_REV: $(Build.SourceBranch)
         - task: replacetokens@3
           displayName: "Token Replace .env.tests"
           inputs:
