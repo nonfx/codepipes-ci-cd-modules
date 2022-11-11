@@ -26,6 +26,7 @@ parameters:
 
 variables:
   devbranch: ${{ parameters.devbranch }}
+  testbranch: ${{ parameters.testbranch }}
 
 resources:
   repositories:
@@ -68,6 +69,7 @@ stages:
       timeoutInMinutes: 600
       steps:
         - checkout: vanguardApi
+          persistCredentials: true
         - checkout: vanguardAutomation
           persistCredentials: true
         - task: GoTool@0
