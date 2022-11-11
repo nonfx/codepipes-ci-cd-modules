@@ -27,6 +27,7 @@ parameters:
 variables:
   devbranch: ${{ parameters.devbranch }}
   testbranch: ${{ parameters.testbranch }}
+  pipelinemodulebranch: $[replace(variables['Build.SourceBranch'], 'refs/heads/', '')]
 
 resources:
   repositories:
@@ -103,7 +104,7 @@ stages:
             GC_GOOGLE_CLIENT_SECRET: $(GC_GOOGLE_CLIENT_SECRET)
             GC_AZUREAD_KEY: $(GC_AZUREAD_KEY)
             GC_AZUREAD_SECRET: $(GC_AZUREAD_SECRET)
-            VG_PIPELINE_MODULE_GIT_REV: $[replace(variables['Build.SourceBranch'], 'refs/heads/', '')]
+            VG_PIPELINE_MODULE_GIT_REV: $(pipelinemodulebranch)
         - task: replacetokens@3
           displayName: "Token Replace .env.tests"
           inputs:
