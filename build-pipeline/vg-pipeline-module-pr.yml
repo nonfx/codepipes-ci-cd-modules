@@ -154,6 +154,7 @@ stages:
             skip_dev=1 make init
             make docker-run
             cd ..
+            docker ps
           env:
             PM_GIT_TOKEN: $(PM_GIT_TOKEN)
             GIT_TOKEN: $(GIT_TOKEN)
@@ -164,7 +165,7 @@ stages:
             ls -a
             cd vanguard-api-automation
             make start-selenium
-            TEST_REGEX=^TestSelfLogin_Smoke TEST_ENV=${ENVIRONMENT} TEST_USER=${TEST_USER} TEST_PASSWORD=${TEST_PASSWORD} TEST_TAG=${TEST_TAG} TEST_AZURE_BUILD_BRANCH=$(Build.SourceBranch) TEST_AZURE_BUILD_URL='$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&_a=summary' make test-identity-app-deployment-validation
+            TEST_REGEX=^TestGetAppDeploymentWithValidData TEST_ENV=${ENVIRONMENT} TEST_USER=${TEST_USER} TEST_PASSWORD=${TEST_PASSWORD} TEST_TAG=${TEST_TAG} TEST_AZURE_BUILD_BRANCH=$(Build.SourceBranch) TEST_AZURE_BUILD_URL='$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&_a=summary' make test-identity-app-deployment-validation
           env:
             PM_GIT_TOKEN: $(PM_GIT_TOKEN)
             GIT_TOKEN: $(GIT_TOKEN)
