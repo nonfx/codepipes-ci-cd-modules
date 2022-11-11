@@ -1,0 +1,204 @@
+name: $(Build.DefinitionName)_${{ replace(replace(variables['Build.SourceBranch'],'refs/heads/',''),'/','_') }}_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+pr:
+  branches:
+    include:
+      - master
+      - refs/tags/v*
+  paths:
+    exclude:
+    - pipeline/*
+
+parameters:
+- name: devbranch
+  displayName: Dev Branch
+  type: string
+  default: master
+- name: goVersion
+  displayName: GO_VERSION
+  type: string
+  default: '1.17.8'
+
+variables:
+  devbranch: ${{ parameters.devbranch }}
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: cldcvr/product-build-tools
+    endpoint: Github-CldCvr
+    trigger: none
+  - repository: vanguard-iac
+    type: github
+    endpoint: Github-CldCvr
+    name: cldcvr/vanguard-iac
+  - repository: vanguardApi
+    type: github
+    endpoint: Github-CldCvr
+    name: cldcvr/vanguard-api
+    ref: $(devbranch)
+
+pool:
+  vmImage: "ubuntu-18.04"
+
+stages:
+  - stage: Test
+    displayName: Run Tests
+    variables:
+      - group: Vanguard-API-Automation-Staging
+      - group: Api-Automation-Env
+      - group: Test-Env-CI-Staging-Docker
+      - group: Common-Dev
+      - name: VG_DEFAULT_EVENT_TOPIC
+        value: "event_$(Build.BuildId)"
+    jobs:
+    - job: Run_Tests
+      displayName: Run Test
+      timeoutInMinutes: 600
+      steps:
+        - checkout: self
+        - checkout: vanguardApi
+          persistCredentials: true
+        - task: GoTool@0
+          displayName: "Go Tool Install"
+          inputs:
+            version: '${{ parameters.goVersion }}'
+        - task: DockerInstaller@0
+          displayName: "Docker Install"
+          inputs:
+            dockerVersion: '19.03.12'
+        - task: replacetokens@3
+          displayName: "Token Replace .env.docker"
+          inputs:
+            targetFiles: './vanguard-api/.env.docker'
+            encoding: 'auto'
+            writeBOM: true
+            actionOnMissing: 'warn'
+            keepToken: false
+            tokenPrefix: '#{'
+            tokenSuffix: '}#'
+            useLegacyPattern: false
+            enableTransforms: false
+            enableTelemetry: true
+          env:
+            PGPASSWORD: $(PGPASSWORD)
+            POSTGRES_PASSWORD: $(POSTGRES_PASSWORD)
+            VG_PGPASSWORD: $(VG_PGPASSWORD)
+            GC_GITHUB_CLIENT_ID: $(GC_GITHUB_CLIENT_ID)
+            GC_GITHUB_CLIENT_SECRET: $(GC_GITHUB_CLIENT_SECRET)
+            GC_GOOGLE_CLIENT_ID: $(GC_GOOGLE_CLIENT_ID)
+            GC_GOOGLE_CLIENT_SECRET: $(GC_GOOGLE_CLIENT_SECRET)
+            GC_AZUREAD_KEY: $(GC_AZUREAD_KEY)
+            GC_AZUREAD_SECRET: $(GC_AZUREAD_SECRET)
+        - task: replacetokens@3
+          displayName: "Token Replace .env.tests"
+          inputs:
+            targetFiles: './vanguard-api-automation/.env.tests'
+            encoding: 'auto'
+            writeBOM: true
+            actionOnMissing: 'warn'
+            keepToken: false
+            tokenPrefix: '#{'
+            tokenSuffix: '}#'
+            useLegacyPattern: false
+            enableTransforms: false
+            enableTelemetry: true
+        - task: Docker@2
+          displayName: Docker Login
+          inputs:
+            containerRegistry: 'Docker-Hub'
+            command: 'login'
+        - script: |
+            mkdir /home/vsts/.config/gcloud
+            mkdir /home/vsts/api
+          displayName: "Create mount directories"
+        - task: mattlabrum.build-task.custom-build-task.downloadsSecureFile@0
+          displayName: 'Download Secure File Cloud Cred'
+          inputs:
+            fileInput: 'vanguard-dev-297213-09d78f853f2b.json'
+            targetPath: '/home/vsts/.config/gcloud/'
+            targetName: 'application_default_credentials.json'
+        - task: mattlabrum.build-task.custom-build-task.downloadsSecureFile@0
+          displayName: 'Download Secure File Cloud Cred'
+          inputs:
+            fileInput: 'vanguard-staging-b1c22baf575c.json'
+            targetPath: '/home/vsts/api/'
+            targetName: 'application_default_credentials.json'
+        - bash:  echo "##vso[task.setvariable variable=shellopts]errexit"
+          displayName: "Force exit on error (bash)"
+        - script: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            cd vanguard-api
+            mv .env.docker .env
+            cat .env
+            go env -w GO111MODULE=on
+            go env -w GOPRIVATE=github.com/cldcvr/*
+            skip_dev=1 make init
+            make docker-run
+          env:
+            PM_GIT_TOKEN: $(PM_GIT_TOKEN)
+            GIT_TOKEN: $(GIT_TOKEN)
+            token: $(GIT_TOKEN)
+          displayName: Start Vanguard
+        - script: |
+            cd vanguard-api-automation
+            make start-selenium
+            TEST_REGEX=$(TEST_REGEX) TEST_ENV=${ENVIRONMENT} TEST_REGEX=${TEST_REGEX} TEST_USER=${TEST_USER} TEST_PASSWORD=${TEST_PASSWORD} TEST_TAG=${TEST_TAG} TEST_AZURE_BUILD_BRANCH=$(Build.SourceBranch) TEST_AZURE_BUILD_URL='$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&_a=summary' make -j test-parallel
+          env:
+            PM_GIT_TOKEN: $(PM_GIT_TOKEN)
+            GIT_TOKEN: $(GIT_TOKEN)
+          displayName: Run Test Suite
+        - task: PublishBuildArtifacts@1
+          condition: always()
+          inputs:
+            PathtoPublish: "$(Build.SourcesDirectory)/vanguard-api-automation/report"
+            ArtifactName: "reports"
+            publishLocation: "Container"
+        - script: |
+            docker logs notification-service >& notification_service.log
+            docker logs installer-service >& installer_service.log
+            docker logs app-service >& app_service.log
+            docker logs infra-service >& infra_service.log
+            docker logs identity-service >& identity_service.log
+            docker logs validation-service >& validation_service.log
+            docker logs external-events-service >& external-events_service.log
+            docker logs deployment-service >& deployment-service.log
+            docker logs activity-service >& activity-service.log
+            docker logs goodcop >& goodcop.log
+          condition: succeededOrFailed()
+          workingDirectory: $(Build.ArtifactStagingDirectory)
+          displayName: "Gather Docker Logs"
+        - task: PublishBuildArtifacts@1
+          condition: succeededOrFailed()
+          inputs:
+            PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+            ArtifactName: "logfiles"
+            publishLocation: "Container"
+        - script: |
+            cd vanguard-api
+            make docker-stop
+          env:
+            PM_GIT_TOKEN: $(PM_GIT_TOKEN)
+            GIT_TOKEN: $(GIT_TOKEN)
+          displayName: Stop Vanguard
+  # - stage: AWS_Nuke
+  #   condition: always()
+  #   variables:
+  #     - group: QA_AWS_Account
+  #   jobs:
+  #     - job: AWS_Nuke
+  #       timeoutInMinutes: 600
+  #       displayName: AWS Nuke
+  #       steps:
+  #        - task: script-retryer@0
+  #          inputs:
+  #               targetInterperter: 'bash'
+  #               targetType: 'inline'
+  #               script: |
+  #                    docker run --rm -i -v $(System.DefaultWorkingDirectory)/aws-nuke.yml:/home/aws-nuke/config.yml quay.io/rebuy/aws-nuke:v2.15.0 --access-key-id $ACCESS_ID --secret-access-key $ACCESS_KEY --config /home/aws-nuke/config.yml --force --max-wait-retries $(MAX_RETRIES) --no-dry-run
+  #          env:
+  #            ACCESS_KEY: $(ACCESS_KEY)
+  #            ACCESS_ID: $(ACCESS_ID)
