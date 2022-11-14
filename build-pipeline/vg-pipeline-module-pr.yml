@@ -26,9 +26,9 @@ parameters:
 - name: TEST_COMMAND
   displayName: TEST_COMMAND
   type: string
-  default: test-docker-public-bundle
+  default: test-public-bundle
   values:
-    - test-docker-public-bundle
+    - test-public-bundle
 - name: goVersion
   displayName: GO_VERSION
   type: string
