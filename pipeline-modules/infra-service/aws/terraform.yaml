@@ -139,7 +139,7 @@ template: |
         # the file will exist only after first successful apply operation
         - '! aws --color=off --output=json s3 ls "s3://{{ artifact_root_path }}/{{ tf_state_file }}" || aws --color=off --output=json s3 cp --only-show-errors "s3://{{ artifact_root_path }}/{{ tf_state_file }}" "{{ local_artifact_path }}"'
         # IaC source clone
-        - git clone --no-checkout "https://{{ iac_checkout_src }}" "{{ local_checkout_path }}"
+        - git clone --no-checkout "{{ iac_checkout_src }}" "{{ local_checkout_path }}"
         # IaC revision checkout
         - cd "{{ local_checkout_path }}"
         - git checkout "{{ iac_checkout_target }}"

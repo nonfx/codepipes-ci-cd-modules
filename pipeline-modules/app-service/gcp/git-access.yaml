@@ -47,4 +47,4 @@ template: |
       git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'  && \
       git config --file {{ git_config_path }} credential.useHttpPath true && \
       git config --file {{ git_config_path }} credential.interactive never && \
-      echo "https://{{ git_login }}:$$(printf %s $$GIT_PASSWORD | jq -sRr @uri)@{{ git_remote_path }}" >> {{ git_creds_path }}
+      sed -e "s^//^//{{ git_login }}:$$(printf %s $$GIT_PASSWORD | jq -sRr @uri)@^" <<< {{ git_remote_path }} >> {{ git_creds_path }}

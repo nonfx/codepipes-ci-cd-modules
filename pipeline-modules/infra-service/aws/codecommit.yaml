@@ -1,0 +1,20 @@
+provisioner: aws
+name: codecommit
+version: 1
+revision: 1
+displayName: AWS codecommit access
+description: Configure access to a remote Git repository in AWS codecommit.
+target: ""
+keywords:
+  - git
+  - access
+  - credentials
+  - auth
+author: CloudCover
+meta: {}
+template: |
+  phases:
+    install:
+      commands:
+      # Install git-remote-codecommit python package
+      - pip3 install git-remote-codecommit
