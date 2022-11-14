@@ -6,8 +6,8 @@ displayName: Git access
 description: Configure access to a remote Git repository.
 target: ""
 keywords:
-- git
-- access
+  - git
+  - access
   - credentials
   - auth
 author: CloudCover
