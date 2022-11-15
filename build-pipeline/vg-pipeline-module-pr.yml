@@ -37,7 +37,7 @@ parameters:
 variables:
   devbranch: ${{ parameters.devbranch }}
   testbranch: ${{ parameters.testbranch }}
-  pipelinemodulebranch: $(System.PullRequest.SourceBranch)
+  pipelinemodulebranch: $['System.PullRequest.SourceBranch']
 
 resources:
   repositories:
