@@ -157,8 +157,8 @@ stages:
             cd vanguard-api
             mv .env.docker .env
             cat .env
-            echo $(System.PullRequest.SourceBranch)
-            echo $(System.PullRequest.PullRequestId)
+            echo brnch name $(System.PullRequest.SourceBranch)
+            echo pull request id $(System.PullRequest.PullRequestId)
             go env -w GO111MODULE=on
             go env -w GOPRIVATE=github.com/cldcvr/*
             skip_dev=1 make init
