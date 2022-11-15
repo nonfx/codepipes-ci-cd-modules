@@ -37,7 +37,10 @@ parameters:
 variables:
   devbranch: ${{ parameters.devbranch }}
   testbranch: ${{ parameters.testbranch }}
-  pipelinemodulebranch: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/') }}:
+    pipelinemodulebranch: $[ replace(variables['Build.SourceBranch'], 'refs/heads/', '') ]
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
+    pipelinemodulebranch: $[ replace(variables['System.PullRequest.SourceBranch'], 'refs/heads/', '') ]
 
 resources:
   repositories:
