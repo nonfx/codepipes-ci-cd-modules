@@ -1,24 +1,24 @@
 name: $(Build.DefinitionName)_${{ replace(replace(variables['Build.SourceBranch'],'refs/heads/',''),'/','_') }}_$(Date:yyyyMMdd)$(Rev:.r)
 
-trigger: none
+trigger:
+  branches:
+    include:
+      - master
+
 pr:
   branches:
     include:
       - master
 
-  paths:
-    exclude:
-    - pipeline/*
-
 parameters:
 - name: devbranch
   displayName: Dev Branch
   type: string
-  default: rajat/VAN-3197
+  default: master
 - name: testbranch
   displayName: Test Branch
   type: string
-  default: rajat/VAN-3197
+  default: master
 - name: TEST_REGEX
   displayName: TEST_REGEX
   type: string
@@ -157,8 +157,7 @@ stages:
             cd vanguard-api
             mv .env.docker .env
             cat .env
-            echo brnch name $(System.PullRequest.SourceBranch)
-            echo pull request id $(System.PullRequest.PullRequestId)
+            echo pull request branch name $(System.PullRequest.SourceBranch)
             go env -w GO111MODULE=on
             go env -w GOPRIVATE=github.com/cldcvr/*
             skip_dev=1 make init
