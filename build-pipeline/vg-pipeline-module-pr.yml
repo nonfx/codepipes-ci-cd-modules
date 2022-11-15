@@ -14,11 +14,11 @@ parameters:
 - name: devbranch
   displayName: Dev Branch
   type: string
-  default: master
+  default: rajat/VAN-3197
 - name: testbranch
   displayName: Test Branch
   type: string
-  default: master
+  default: rajat/VAN-3197
 - name: TEST_REGEX
   displayName: TEST_REGEX
   type: string
