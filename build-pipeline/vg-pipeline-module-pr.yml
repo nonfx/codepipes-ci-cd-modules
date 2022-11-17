@@ -212,21 +212,3 @@ stages:
             PM_GIT_TOKEN: $(PM_GIT_TOKEN)
             GIT_TOKEN: $(GIT_TOKEN)
           displayName: Stop Vanguard
-  # - stage: AWS_Nuke
-  #   condition: always()
-  #   variables:
-  #     - group: QA_AWS_Account
-  #   jobs:
-  #     - job: AWS_Nuke
-  #       timeoutInMinutes: 600
-  #       displayName: AWS Nuke
-  #       steps:
-  #        - task: script-retryer@0
-  #          inputs:
-  #               targetInterperter: 'bash'
-  #               targetType: 'inline'
-  #               script: |
-  #                    docker run --rm -i -v $(System.DefaultWorkingDirectory)/aws-nuke.yml:/home/aws-nuke/config.yml quay.io/rebuy/aws-nuke:v2.15.0 --access-key-id $ACCESS_ID --secret-access-key $ACCESS_KEY --config /home/aws-nuke/config.yml --force --max-wait-retries $(MAX_RETRIES) --no-dry-run
-  #          env:
-  #            ACCESS_KEY: $(ACCESS_KEY)
-  #            ACCESS_ID: $(ACCESS_ID)
