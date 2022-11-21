@@ -20,7 +20,7 @@ inputs:
     pipeline_disk_size_gb:
       title: Disk Size [GB]
       description: Amount of disk space in GB allocated for the pipeline.
-      type: number
+      type: integer
       default: 300
       maximum: 1000
     pipeline_env:
