@@ -1,0 +1,24 @@
+provisioner: azure
+name: codecommit
+version: 1
+revision: 1
+displayName: AWS codecommit access
+description: Configure access to a remote Git repository in AWS codecommit.
+target: ""
+keywords:
+  - git
+  - access
+  - credentials
+  - auth
+author: CloudCover
+meta: {}
+template: |
+  steps:
+  - script: |
+      set -e
+      sudo apt-get update
+      sudo apt-get install python3.8 python3-pip -y
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      unzip awscliv2.zip
+      sudo ./aws/install --update
+      pip3 install git-remote-codecommit
