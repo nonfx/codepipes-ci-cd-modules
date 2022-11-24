@@ -18,7 +18,7 @@ inputs:
     echo_int:
       title: Echo Integer value
       description: The integer to echo to the log.
-      type: number
+      type: integer
     echo_list:
       title: Echo List value
       description: The List to echo to the log.
