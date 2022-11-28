@@ -1,0 +1,9 @@
+{
+    "go.testEnvFile": "${workspaceFolder}/.env",
+    "go.testTags": "dbtest,mock",
+    // "go.buildTags": "dbtest,mock", // uncomment this only while working on unit-test
+    "go.testFlags": [
+      "-race",
+      "-v"
+    ],
+  }

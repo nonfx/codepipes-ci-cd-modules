@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+          "name": "Cpi module seed Service",
+          "type": "go",
+          "request": "launch",
+          "mode": "auto",
+          "program": "${workspaceFolder}/cpi-module-seed/main.go",
+          "envFile": "${workspaceFolder}/.env",
+          "env": {
+            "GO111MODULE": "on",
+          },
+          "args" : [
+              "run"
+          ]
+        },
+    ]
+}
