@@ -1,0 +1,52 @@
+provisioner: aws
+name: artifact-config
+version: 1
+revision: 1
+displayName: Artifact Configuration
+description: Configure settings for the deploy artifact
+target: config
+category: config
+keywords:
+  - config
+  - configuration
+  - cp-internal
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    repository:
+      title: Artifact repository
+      description: Artifact repository (docker repo for containerImage or Git repo for GitCode)
+      type: string
+    tag:
+      title: Tag of either container or artifact
+      description: git revision for cloning the pipeline module repo.
+      type: string
+    repo_dir:
+      title: Repo Dir
+      description: Repo Dir
+      type: string
+    artifact_type:
+      title: Artifact type
+      description: Type of artifact
+      type: string
+  internal:
+    - repository
+    - tag
+    - repo_dir
+    - artifact_type
+template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}
+  {% set source_code_path = workspace|add:'/src' %}
+  {% set git_creds_path = '$HOME/.git-credentials' %}
+  {% set git_config_path = '$HOME/.gitconfig' %}
+
+  version: 0.2
+  phases:	
+    pre_build:	
+      commands:
+        - echo "Artifact configuration"
+        {% if artifact_type == 'GitCode' %}
+        - git-config.sh ${git_username} ${git_password} {{ repository }} {{ git_config_path }} {{ git_creds_path }}
+        - git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+        {% endif %}

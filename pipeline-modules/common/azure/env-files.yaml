@@ -1,0 +1,22 @@
+provisioner: azure
+name: env-files
+version: 1
+revision: 1
+displayName: Create .env and .secret.env files
+description: Create local .env files in the pipeline from the exported environment variables
+target: config
+keywords:
+  - env
+  - environment
+  - cp_internal
+author: CloudCover
+meta: {}
+template: |
+  {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+
+  steps:
+  - script: |
+      create-env-file.sh {{ pipeline_env_file }} $(__VG_EXPORTED_ENV_NAMES)
+      create-env-file.sh {{ pipeline_secret_file }} $(__VG_EXPORTED_SECRET_ENV_NAMES)

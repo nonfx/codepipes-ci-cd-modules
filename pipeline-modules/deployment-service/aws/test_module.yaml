@@ -8,9 +8,7 @@ target: "test"
 keywords:
   - test
 author: CloudCover
-meta:
-  inputArtifactType:
-    - ContainerImage
+meta: {}
 
 inputs:
   properties:
@@ -43,10 +41,6 @@ inputs:
     - echo_map
     - echo_list
 template: |
-  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
-  {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-
   version: 0.2
   phases:
     build:

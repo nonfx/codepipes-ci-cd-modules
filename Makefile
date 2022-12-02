@@ -22,7 +22,11 @@ ifneq (${GIT_TOKEN},)
 endif
 
 db-update:
+	./cpi-module-seed/create-common-links.sh
 	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed run
 
 help-seed:
 	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed help
+
+clean:
+	find pipeline-modules -type l -name "cmn-*.yaml" -delete

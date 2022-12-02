@@ -32,19 +32,18 @@ inputs:
     - git_remote_path
     - git_login
 template: |
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set git_creds_path = '$$HOME/.git-credentials' %}
   {% set git_config_path = '$$HOME/.gitconfig' %}
+
   steps:
   - name: 'gcr.io/cloud-builders/git'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      echo "installing jq v1.6"
-      curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-      mv jq-linux64 /usr/bin/jq && chmod +x /usr/bin/jq
+      {{ common_scripts_path }}/install-jq.sh
 
-      git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'  && \
-      git config --file {{ git_config_path }} credential.useHttpPath true && \
-      git config --file {{ git_config_path }} credential.interactive never && \
-      sed -e "s^//^//{{ git_login }}:$$(printf %s $$GIT_PASSWORD | jq -sRr @uri)@^" <<< {{ git_remote_path }} >> {{ git_creds_path }}
+      {{ common_scripts_path }}/git-config.sh {{ git_login }} $$GIT_PASSWORD {{ git_remote_path }} {{ git_config_path }} {{ git_creds_path }}
