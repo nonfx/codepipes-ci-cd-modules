@@ -8,9 +8,7 @@ target: "test"
 keywords:
   - test
 author: CloudCover
-meta:
-  inputArtifactType:
-    - ContainerImage
+meta: {}
 
 inputs:
   properties:

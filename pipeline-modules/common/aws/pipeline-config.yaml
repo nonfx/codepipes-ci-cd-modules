@@ -55,30 +55,6 @@ inputs:
       description: "When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon"
       type: string
       default: "false"
-    pipeline_module_git:
-      title: Pipeline module git repo url
-      description: git url for cloning the pipeline module repo.
-      type: string
-    pipeline_module_git_rev:
-      title: Pipeline module git repo revision
-      description: git revision for cloning the pipeline module repo.
-      type: string
-    repository:
-      title: Pipeline module git repo revision
-      description: git revision for cloning the pipeline module repo.
-      type: string
-    tag:
-      title: Tag of either container or artifact
-      description: git revision for cloning the pipeline module repo.
-      type: string
-    repo_dir:
-      title: Repo Dir
-      description:  Repo Dir
-      type: string
-    git_repo:
-      title: Git repo
-      description:  Git repository
-      type: string
     vpc_config:
       title: VPC Config
       description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
@@ -104,6 +80,15 @@ inputs:
           description: "The ID of the Amazon VPC."
           type: string
           default: ""
+    pipeline_module_git:
+      title: Pipeline module git repo url
+      description: git url for cloning the pipeline module repo.
+      type: string
+    pipeline_module_git_rev:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
+
   internal:
     - pipeline_logs_bucket
     - pipeline_env
@@ -111,15 +96,10 @@ inputs:
     - privileged_mode
     - pipeline_module_git
     - pipeline_module_git_rev
-    - repository
-    - tag
-    - git_repo
-    - repo_dir
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
-  {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set source_code_path = workspace|add:'/source_code' %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
   artifacts:
     type: "NO_ARTIFACTS"
@@ -134,7 +114,10 @@ template: |
     computetype: "{{ pipeline_compute_type }}"
     environmentvariables:
     - name: "__VG_EXPORTED_ENV_NAMES"
-      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
+      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}"
+      type: "PLAINTEXT"
+    - name: "__VG_EXPORTED_SECRET_ENV_NAMES"
+      value: "{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
       type: "PLAINTEXT"
     {% for env_key, env_value in pipeline_env %}
     - name: {{ env_key|cpi_quote }}
@@ -174,32 +157,11 @@ template: |
       phases:
         pre_build:
           commands:
-            # installing jq v1.6
-            - curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-            - mkdir {{workspace}}/bin && mv jq-linux64 {{workspace}}/bin/jq
-            - chmod +x {{workspace}}/bin/jq
-            - export PATH="{{workspace}}/bin:$PATH"
-            - |
-              echo "$git_repo: {{tag}}"
-              if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
-                  mkdir -p {{source_code_path}}
-                  git clone $git_repo --single-branch {{source_code_path}}
-                  cd {{source_code_path}}
-                  git fetch $git_repo {{tag}}
-                  git checkout FETCH_HEAD
-                  ls {{source_code_path}}/{{repo_dir}}/
-              fi
-            # Preparing environment variables file...
-            - |
-              for name in ${__VG_EXPORTED_ENV_NAMES}
-              do
-                printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
-                printf "Exporting variable '$name'\n"
-              done
-
-            # Cloning the pipeline modules...
+            - echo "Cloning the pipeline modules..."
             - mkdir -p {{pipeline_modules_path}}
             - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
+            - export PATH={{ common_scripts_path }}:$PATH
+            - install-jq.sh
     gitclonedepth: null
     gitsubmodulesconfig: null
     insecuressl: null

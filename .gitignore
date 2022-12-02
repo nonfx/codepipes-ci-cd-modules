@@ -1,2 +1,9 @@
+### macOS ###
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
 .env
 cpi-module-seed/cpi-module-seed
+cmn-*.yaml

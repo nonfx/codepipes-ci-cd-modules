@@ -103,6 +103,9 @@ template: |
     certificate: null
     computetype: "{{ pipeline_compute_type }}"
     environmentvariables:
+    - name: "__VG_EXPORTED_ENV_NAMES"
+      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
+      type: "PLAINTEXT"
     {% for env_key, env_value in pipeline_env %}
     - name: {{ env_key|cpi_quote }}
       value: {{ env_value|cpi_quote }}
