@@ -65,3 +65,43 @@ We use [Pongo2](https://github.com/flosch/pongo2) to render the templates which 
 For Django built-in filters, refer this: https://django.readthedocs.io/en/1.7.x/ref/templates/builtins.html#ref-templates-builtins-filters
 
 We also have custom filters for available for the template. our custom filter have `cpi_` prefix. And the documentation can be found here: https://github.com/cldcvr/vanguard-api/blob/master/pkg/pipeline/custom_filters.md
+
+## Seed script
+
+The seed script pushes all the modules into the DB.
+
+It utilizes following environment variables with following default values:
+```sh
+VG_PGHOST=localhost
+VG_PGPORT=5432
+VG_PGSSLMODE=disable
+VG_PGUSER=postgres
+VG_PGPASSWORD=*****
+
+# directory where all service pipeline modules are stored.
+# service specific directories are expected inside the given directory
+# if not explicitly defined, make script updates this variable
+VG_PIPELINE_MODULE_DIR=<current-dir>/pipeline-modules
+
+# if not explicitly defined, make script updates this variable
+VG_PIPELINE_MODULE_GIT_REV=<commit hash of HEAD>
+```
+
+To run the script, use these commands:
+```sh
+make help-seed
+make db-update
+```
+
+### Behavior
+
+The seed script uses the following algorithm
+
+- If DB is empty, it copies all modules into DB
+- If a module with same version and revision is already present
+    - IF the module has updates
+        - Update the module in DB on same row.
+    - IF the module doesn't have any change
+        - skip the module. (keep it unchanged in DB)
+- If a module version is present but the revision is not same
+    - then insert the new revision and mark new revision as latest instead of the old one.

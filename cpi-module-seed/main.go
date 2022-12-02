@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	appDB "github.com/cldcvr/vanguard-api/app-service/storage/db"
@@ -27,10 +28,6 @@ const (
 var helpText string
 
 type cmdFlag map[string]string
-
-type dbInstanceInit interface {
-	NewPostgresFromEnv(context.Context) (*db.DB, error)
-}
 
 func main() {
 	configuration.LoadDefaults()
@@ -86,6 +83,7 @@ func cmdHelp(scriptName string, _ string, _ string, _ cmdFlag) {
 		{name: "pguser"},
 		{name: "pgpassword", sensitive: true},
 		{name: "pipeline_module_dir"},
+		{name: "pipeline_module_git_rev"},
 	}
 
 	for _, v := range configvars {
@@ -93,7 +91,7 @@ func cmdHelp(scriptName string, _ string, _ string, _ cmdFlag) {
 		if !v.sensitive {
 			currentvalue = viper.GetString(v.name)
 		}
-		varName := strings.Join([]string{configuration.EnvPrefix, v.name}, "_")
+		varName := fmt.Sprintf("%s_%s", configuration.EnvPrefix, v.name)
 		varName = strings.ToUpper(varName)
 		fmt.Printf("%s=%s\n", varName, currentvalue)
 	}
@@ -116,40 +114,28 @@ func seed(service string, baseModuleDir string) {
 		da  *db.DB
 	)
 
-	success := false
 	ctx := context.Background()
-	moduleDirConfigKey := strings.Join([]string{configuration.EnvPrefix, "pipeline_module_dir"}, "_")
-	moduleDirConfigKey = strings.ToUpper(moduleDirConfigKey)
+	moduleDirConfigKey := fmt.Sprintf("%s_PIPELINE_MODULE_DIR", configuration.EnvPrefix)
 
 	switch service {
 	case infraService:
-		modulePath := strings.Join([]string{baseModuleDir, infraService}, "/")
+		modulePath := path.Join(baseModuleDir, infraService)
 		os.Setenv(moduleDirConfigKey, modulePath)
 		da, err = infraDB.NewPostgresFromEnv(ctx)
+		mustNotFail(err)
 	case appService:
-		modulePath := strings.Join([]string{baseModuleDir, appService}, "/")
+		modulePath := path.Join(baseModuleDir, appService)
 		os.Setenv(moduleDirConfigKey, modulePath)
 		da, err = appDB.NewPostgresFromEnv(ctx)
+		mustNotFail(err)
 	case deploymentService:
-		modulePath := strings.Join([]string{baseModuleDir, deploymentService}, "/")
+		modulePath := path.Join(baseModuleDir, deploymentService)
 		os.Setenv(moduleDirConfigKey, modulePath)
 		da, err = depDB.NewPostgresFromEnv(ctx)
+		mustNotFail(err)
 	}
 
-	mustNotFail(err)
-	txCtx := da.NewContext(ctx)
-	err = da.Begin(txCtx)
-	mustNotFail(err)
-
-	defer func() {
-		// rollback db transaction on failure
-		if !success {
-			da.Rollback(txCtx)
-		}
-	}()
-
-	_ = pipeline.NewManager(ctx, da)
-	success = true
+	pipeline.NewManager(ctx, da)
 }
 
 func mustNotFail(err error) {
