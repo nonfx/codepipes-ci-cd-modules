@@ -1,0 +1,42 @@
+provisioner: azure
+name: pipeline-config
+version: 1
+revision: 1
+displayName: Configure Pipeline
+description: Configure global pipeline options and environment.
+target: config
+keywords:
+  - cp_internal
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    pipeline_env:
+      title: Global Environment
+      description: Mapping of globally available variables to values.
+      type: object
+      default: {}
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available variables to encrypted values.
+      type: object
+      default: {}
+  internal:
+    - pipeline_env
+    - pipeline_secret_env
+template: |
+  {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+  steps:
+  - script: |
+      echo "Writing env file at  {{pipeline_env_file}}"
+
+      {%- for env_key in pipeline_env %}
+        export {{env_key}}="$({{env_key}})"
+        printf "{{env_key}}=%s\n" "$(printf "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}
+      {% endfor %}
+      {%- for env_key in pipeline_secret_env %}
+        export {{env_key}}="$({{env_key}})"
+        printf "{{env_key}}=%s\n" "$(printf "${{env_key}}" | jq -aRs .)" >> {{pipeline_secret_file}}
+      {% endfor %}

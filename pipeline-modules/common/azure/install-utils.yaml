@@ -1,0 +1,38 @@
+provisioner: azure
+name: pipeline-config
+version: 1
+revision: 1
+displayName: Configure Pipeline
+description: Configure global pipeline options and environment.
+target: config
+keywords:
+  - cp_internal
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    pipeline_module_git:
+      title: Pipeline module git repo url
+      description: git url for cloning the pipeline module repo.
+      type: string
+      default: https://github.com/cldcvr/codepipes-ci-cd-modules
+    pipeline_module_git_rev:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
+      default: master
+  internal:
+    - pipeline_module_git
+    - pipeline_module_git_rev
+template: |
+  {% set workspace = '$(Pipeline.Workspace)' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set pipeline_assets_path = pipeline_modules_path|add:'/assets' %}
+  steps:
+  - script: |
+      echo "Cloning the pipeline modules..."
+      mkdir -p {{pipeline_modules_path}}
+      git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
+      echo '##vso[task.prependpath]{{pipeline_assets_path}}/scripts'
+      export PATH={{pipeline_assets_path}}/scripts:$PATH
+

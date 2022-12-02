@@ -1,0 +1,19 @@
+provisioner: azure
+name: git-access
+version: 1
+revision: 1
+displayName: Git access
+description: Configure access to a remote Git repository.
+target: ""
+keywords:
+  - git
+  - access
+  - credentials
+  - auth
+  - cp_internal
+author: CloudCover
+meta: {}
+template: |
+  steps: 
+  - script: |
+      git_config.sh

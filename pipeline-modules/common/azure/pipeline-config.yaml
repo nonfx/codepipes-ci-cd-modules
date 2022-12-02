@@ -1,0 +1,57 @@
+provisioner: azure
+name: pipeline-config
+version: 1
+revision: 1
+displayName: Configure Pipeline
+description: Configure global pipeline options and environment.
+target: config
+keywords:
+  - env
+  - environment
+  - secret
+  - config
+  - configuration
+  - cp_internal
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    variable_group_name:
+      title: Secret Variables Group
+      description: Keeps all secret variables available to pipeline.
+      type: string
+      default: ""
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    pipeline_env:
+      title: Global Environment
+      description: Mapping of globally available variables to values.
+      type: object
+      default: {}
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available variables to encrypted values.
+      type: object
+      default: {}
+  internal:
+    - variable_group_name
+    - pipeline_env
+    - pipeline_secret_env
+template: |
+  pool:
+  {% if pool_name %}
+    name: {{ pool_name }}
+  {% else %}
+    vmImage: ubuntu-latest
+  {% endif %}
+  name: '$(Date:yyyyMMdd)$(Rev:.r)'
+  trigger: none
+  variables:
+    - group: {{ variable_group_name }}
+    - name: __VG_EXPORTED_ENV_NAMES
+      value: {% for env_key in pipeline_env %} {{env_key}} {% endfor %}
+    - name: __VG_EXPORTED_SECRET_ENV_NAMES
+      value: {% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}
