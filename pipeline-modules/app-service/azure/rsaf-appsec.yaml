@@ -1,0 +1,102 @@
+provisioner: azure
+name: rsaf-appsec
+version: 1
+revision: 1
+displayName: RSAF best practice
+description: RSAF best practice app sec scanning
+target: ""
+category: scan
+keywords:
+  - Pulish
+  - Build
+  - Scan
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    applicationName:
+      title: Application name
+      description: Codepipes application name
+      type: string
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    fortify_application_id:
+      title: Fortify application id
+      description: Fortify application identifier
+      type: string
+      default: ""
+    nexus_application_id:
+      title: Nexus Application ID
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    working_dir:
+      title: Code Directory Path
+      description: Directory Path where the code is located.
+      type: string
+  internal:
+    - git_local_path
+    - working_dir
+    - applicationName
+template: |
+  {% set scancentral = '/home/azureuser/client/bin/scancentral' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  steps:
+    - task: UseDotNet@2
+      displayName: 'Use DotNet 3.x'
+      inputs:
+        version: 3.x
+        includePreviewVersions: true
+    - task: UseDotNet@2
+      displayName: 'Use DotNet 6.x'
+      inputs:
+        version: 6.x
+        includePreviewVersions: true
+    - script: |
+          cd {{working_dir}}
+          dotnet publish -c Release -o $(System.DefaultWorkingDirectory)/publish_output
+    - task: ArchiveFiles@2
+      displayName: "Archive files"
+      inputs:
+        rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
+        includeRootFolder: false
+        archiveFile: "$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+    - task: NexusIqPipelineTask@1
+      inputs:
+        nexusIqService: $(CPI__nexus_service_connection)
+        organizationId: $(CPI__nexus_organization_id)
+        applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
+        stage: 'Build'
+        scanTargets: $(System.DefaultWorkingDirectory)/build$(sha_tag).zip
+    - script: |
+        # because sonar needs the base branch fetched for comparison
+        git fetch --all
+      displayName: 'Git fetch base'
+      workingDirectory: {{ git_local_path }}
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: $(CPI__sonar_qube_service_connection)
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: $(CPI__sonar_qube_project_key)
+        cliSources: {{working_dir}}
+    - task: SonarQubeAnalyze@5
+    - task: SonarQubePublish@5
+    - task: UniversalPackages@0
+      inputs:
+        command: 'publish'
+        publishDirectory: '$(System.DefaultWorkingDirectory)'
+        feedsToUsePublish: 'internal'
+        vstsFeedPublish: '$(CPI__artifact_feed)'
+        vstsFeedPackagePublish: 'build$(sha_tag).zip'
+        packagePublishDescription: '$(sha_tag)'
+        versionOption: 'minor'
+        publishedPackageVar: 'codepipes'

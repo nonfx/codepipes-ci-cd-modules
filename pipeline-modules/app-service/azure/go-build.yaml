@@ -31,6 +31,11 @@ inputs:
       description: The version of Golang to use
       type: string
       default: "1.15.15"
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
 template: |
   steps:
   - task: GoTool@0

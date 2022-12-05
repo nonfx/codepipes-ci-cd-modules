@@ -1,0 +1,56 @@
+provisioner: azure
+name: dotnet-build
+version: 1
+revision: 1
+displayName: dotnet-build
+description: This plugin is for dotnet build and publish artifact
+target: ""
+category: build
+keywords:
+  - Pulish
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    working_dir:
+      title: Code Directory Path
+      description: Directory Path where the code is located.
+      type: string
+  internal:
+    - git_local_path
+    - working_dir
+template: |
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use DotNet 3.x'
+    inputs:
+      version: 3.x
+      includePreviewVersions: true
+  - task: UseDotNet@2
+    displayName: 'Use DotNet 6.x'
+    inputs:
+      version: 6.x
+      includePreviewVersions: true
+  - script: |
+        cd {{working_dir}}
+        dotnet publish -c Release -o $(System.DefaultWorkingDirectory)/publish_output
+  - task: ArchiveFiles@2
+    displayName: "Archive files"
+      inputs:
+        rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
+        includeRootFolder: false
+        archiveFile: "$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+  - script: |
+      scan_art="$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+      echo "##vso[task.setvariable variable=scan_art]$scan_art"

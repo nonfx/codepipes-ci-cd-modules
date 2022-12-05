@@ -19,16 +19,39 @@ inputs:
       type: string
     application_id:
       title: NexusIQ Application ID
-      description: NexusIQ Application ID
+      description: NexusIQ application id
       type: string
+    organization_id:
+      title: NexusIQ Organization_id ID
+      description: NexusIQ organization id
+      type: string
+    scanTargets : 
+      title: Scan targets
+      description: Paths of the zip file
+      type: string
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
   required:
     - nexus_service_connection
     - application_id
+    - organization_id
+    - scanTargets
+  internal:
+    - git_local_path
 template: |
   steps:
-  - task: NexusIqPipelineTask@1
-    inputs:
-      nexusIqService: '{{nexus_service_connection}}'
-      applicationId: '{{application_id}}'
-      stage: 'Build'
-      scanTargets: '**/*.jar'
+    - task: NexusIqPipelineTask@1
+      inputs:
+        nexusIqService: '{{nexus_service_connection}}'
+        organizationId: '{{organization_id}}'
+        applicationId: '{{application_id}}'
+        stage: 'Build'
+        scanTargets: '{{scanTargets}}'

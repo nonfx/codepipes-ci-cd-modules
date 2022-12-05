@@ -206,4 +206,5 @@ template: |
       {{ upload_artifact(tf_state_file) }}  {# upload the state even if the TF action failed as it may have already been modified #}
       {% endif %}
       az logout
+    timeoutInMinutes: 300
 

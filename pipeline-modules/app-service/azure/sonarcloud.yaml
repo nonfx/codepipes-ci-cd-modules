@@ -40,6 +40,11 @@ inputs:
       description: Optionally, use a config file in the repo to setup sonar properties
       type: string
       default: ""
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
   required:
     - sonar_cloud_service_connection
     - sonar_cloud_org

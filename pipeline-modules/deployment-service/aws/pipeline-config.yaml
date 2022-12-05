@@ -113,8 +113,8 @@ inputs:
     - pipeline_module_git_rev
     - repository
     - tag
-    - repo_dir
     - git_repo
+    - repo_dir
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -180,7 +180,7 @@ template: |
             - chmod +x {{workspace}}/bin/jq
             - export PATH="{{workspace}}/bin:$PATH"
             - |
-              echo "$git_repo"
+              echo "$git_repo: {{tag}}"
               if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
                   mkdir -p {{source_code_path}}
                   git clone $git_repo --branch {{tag}} --single-branch {{source_code_path}}

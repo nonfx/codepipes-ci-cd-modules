@@ -1,0 +1,98 @@
+provisioner: azure
+name: azure-web-app
+version: 1
+revision: 1
+displayName: "Azure web app deployment with code"
+description: "Deploy web app"
+target: "deployment-template"
+keywords: ["serverless","web-app"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - GitCode
+inputs:
+  type: object
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application environment variables
+      type: object
+      default: {}
+    applicationName:
+      title: Application name
+      description: A Code Pipes application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: A Code Pipes environment name
+      type: string
+      default: dev
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    web_app_name:
+      title: Web App Name
+      description: Web App Name, to link this variable to a terraform output use this syntax ${terraform.webapp_name.value} where webapp_name is output variable key.
+      type: string
+      tfOutputRegex: "^func"
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required: ["web_app_name"]
+  internal:
+    - app_env
+    - applicationName
+    - environment
+    - job_type
+    - repo_dir
+template: |
+  {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+  steps:
+  - script: |
+        cat {{pipeline_env_file}} | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            echo "-$name $value " >> config.txt
+        done;
+        config_var="$(cat config.txt | tr -d '\n')"
+        echo "##vso[task.setvariable variable=config_map]$config_var"
+        cd {{source_code_path}}/{{repo_dir}}
+        git log --format="%H" -n 1
+        sha_tag=$(git log --format="%H" -n 1);
+        echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
+  - task: UniversalPackages@0
+    inputs:
+      command: 'download'
+      downloadDirectory: '$(System.DefaultWorkingDirectory)'
+      feedsToUse: 'internal'
+      vstsFeed: '$(CPI__artifact_feed)'
+      vstsFeedPackage: 'build$(sha_tag).zip'
+      vstsPackageVersion: '*'
+      publishedPackageVar: 'codepipes'
+  {% if job_type == 'deploy' %}
+  - task: AzureWebApp@1
+    displayName: 'Deploy azure func'
+    inputs:
+      azureSubscription: $(CPI__azure_subscription)
+      appType: webApp
+      appName: {{ web_app_name }}
+      package: $(System.DefaultWorkingDirectory)/build$(sha_tag).zip
+      appSettings: '$(CONFIG_MAP)'
+      deploymentMethod: 'auto'
+  {% else %}
+  - script: |
+        echo "Please update the IAC to remove web-app" 
+  {% endif %}
+
+
