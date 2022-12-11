@@ -60,6 +60,31 @@ inputs:
       description: "When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon"
       type: string
       default: "false"
+    vpc_config:
+      title: VPC Config
+      description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
+      type: object
+      default: {}
+      properties:
+        securityGroupIds:
+          title: Security Group IDs
+          description: "A list of one or more security groups IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        subnets:
+          title: Subnet IDs
+          description: "A list of one or more subnet IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        vpcId:
+          title: VPC ID
+          description: "The ID of the Amazon VPC."
+          type: string
+          default: ""
   internal:
     - pipeline_logs_bucket
     - pipeline_env
@@ -125,4 +150,8 @@ template: |
     value: "{{ tag_value }}"
   {% endfor %}
   timeoutinminutes: {{ pipeline_run_timeout_min }}
+  {% if (not vpc_config) or vpc_config|length == 0 %}
   vpcconfig: null
+  {% else %}
+  vpcconfig: {{ vpc_config|cpi_json }}
+  {% endif %}
