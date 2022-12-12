@@ -145,7 +145,7 @@ template: |
     value: "{{ tag_value }}"
   {% endfor %}
   timeoutinminutes: {{ pipeline_run_timeout_min }}
-  {% if (not vpc_config) or vpc_config|length == 0 %}
+  {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
   vpcconfig: null
   {% else %}
   vpcconfig: {{ vpc_config|cpi_json }}
