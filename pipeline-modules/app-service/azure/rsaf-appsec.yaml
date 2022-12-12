@@ -90,13 +90,27 @@ template: |
         cliSources: {{working_dir}}
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
-    - task: UniversalPackages@0
-      inputs:
-        command: 'publish'
-        publishDirectory: '$(System.DefaultWorkingDirectory)'
-        feedsToUsePublish: 'internal'
-        vstsFeedPublish: '$(CPI__artifact_feed)'
-        vstsFeedPackagePublish: 'build$(sha_tag).zip'
-        packagePublishDescription: '$(sha_tag)'
-        versionOption: 'minor'
-        publishedPackageVar: 'codepipes'
+    - script: |
+          scanToken=$({{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) start -bt none -upload -application {% if fortify_application_id %} {{ fortify_application_id }}{% else %}{{ applicationName }}{% endif %} -version 1.0 -b $(Build.BuildId) -uptoken $(CPI__UP_TOKEN) -bf *.csproj)
+          token=$( echo $scanToken |  grep -Eo 'token: [a-zA-Z0-9-]+' | cut -d' ' -f2)
+          {{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) retrieve -block -f worker.fpr -token $token
+          curl -X POST "$(CPI__SSC_ASSETS_URL)" -H "accept: application/json" -H "Authorization: FortifyToken $(CPI__FORTIFY_TOKEN)" -H "Content-Type: multipart/form-data" -F "file=@worker.fpr"
+          curl -k -X GET "$(CPI__SSC_URL)" -H "accept: application/json" -H "Authorization: FortifyToken $(CPI__FORTIFY_TOKEN)" > $(Build.BinariesDirectory)/out/output.log
+          cat $(Build.BinariesDirectory)/out/output.log
+          critical_count=$(cat $(Build.BinariesDirectory)/out/output.log | jq '.data[].friority' | grep "Critical" | wc -l)
+          if [ $critical_count -gt 0 ]; then
+            # Print an error message andset pipeline fail variable
+            echo "Error: There are 'critical' severity vulnerabilities in the code."
+            failPipeline=true
+          fi
+          high_count=$(cat $(Build.BinariesDirectory)/out/output.log | jq '.data[].friority' | grep "High" | wc -l)
+          if [ $high_count -gt 0 ]; then
+            # Print an error message and set pipeline fail variable
+            echo "Error: There are 'high' severity vulnerabilities in the code.."
+            failPipeline=true
+          fi
+          # Check if the pipeline fail variable is true
+          if [ $failPipeline = true ]; then
+              echo "There are $critical_count Critical and $high_count High Vulnerabilites. Therefore, failing the Build. Please fix the vulnerability and run the build again. "
+              exit 124
+          fi
