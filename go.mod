@@ -3,7 +3,7 @@ module github.com/cldcvr/codepipes-ci-cd-modules/cpi-module-seed
 go 1.18
 
 require (
-	github.com/cldcvr/vanguard-api v0.24.1-0.20221125210432-bc8b40e99bcb
+	github.com/cldcvr/vanguard-api v0.24.1-0.20221211154702-8221d7066096
 	github.com/spf13/viper v1.12.0
 )
 
