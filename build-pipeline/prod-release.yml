@@ -1,0 +1,27 @@
+name: $(Build.DefinitionName)_${{ replace(replace(variables['Build.SourceBranch'],'refs/heads/',''),'/','_') }}_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - refs/tags/v*
+pr: none
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: cldcvr/product-build-tools
+      endpoint: Github-CldCvr
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: Common-Dev
+  - group: CodePipes-Production-DB
+
+steps:
+  - template: templates/ci-cd-modules-release.yml@templates
+    parameters:
+      gcpSACreds: $(GCP_SA_CREDS)
+      DBInstanceConnectionName: $(DB_INSTANCE_CONNECTION_NAME)
