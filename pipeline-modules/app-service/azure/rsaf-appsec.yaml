@@ -68,14 +68,14 @@ template: |
       inputs:
         rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
         includeRootFolder: false
-        archiveFile: "$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+        archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}.zip"
     - task: NexusIqPipelineTask@1
       inputs:
         nexusIqService: $(CPI__nexus_service_connection)
         organizationId: $(CPI__nexus_organization_id)
         applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
         stage: 'Build'
-        scanTargets: $(System.DefaultWorkingDirectory)/build$(sha_tag).zip
+        scanTargets: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
     - script: |
         # because sonar needs the base branch fetched for comparison
         git fetch --all
@@ -114,3 +114,13 @@ template: |
               echo "There are $critical_count Critical and $high_count High Vulnerabilites. Therefore, failing the Build. Please fix the vulnerability and run the build again. "
               exit 124
           fi
+    - task: UniversalPackages@0
+      inputs:
+        command: 'publish'
+        publishDirectory: '$(System.DefaultWorkingDirectory)'
+        feedsToUsePublish: 'internal'
+        vstsFeedPublish: '$(CPI__artifact_feed)'
+        vstsFeedPackagePublish: '{{applicationName}}.zip'
+        packagePublishDescription: '$(sha_tag)'
+        versionOption: 'minor'
+        publishedPackageVar: 'codepipes'
