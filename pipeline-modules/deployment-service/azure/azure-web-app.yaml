@@ -77,7 +77,7 @@ template: |
       downloadDirectory: '$(System.DefaultWorkingDirectory)'
       feedsToUse: 'internal'
       vstsFeed: '$(CPI__artifact_feed)'
-      vstsFeedPackage: 'build$(sha_tag).zip'
+      vstsFeedPackage: '{{applicationName}}.zip'
       vstsPackageVersion: '*'
       publishedPackageVar: 'codepipes'
   {% if job_type == 'deploy' %}
@@ -87,7 +87,7 @@ template: |
       azureSubscription: $(CPI__azure_subscription)
       appType: webApp
       appName: {{ web_app_name }}
-      package: $(System.DefaultWorkingDirectory)/build$(sha_tag).zip
+      package: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
       appSettings: '$(CONFIG_MAP)'
       deploymentMethod: 'auto'
   {% else %}
