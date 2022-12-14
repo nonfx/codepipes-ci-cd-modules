@@ -119,13 +119,3 @@ template: |
               echo "There are $critical_count Critical and $high_count High Vulnerabilites. Therefore, failing the Build. Please fix the vulnerability and run the build again. "
               exit 124
           fi
-    - task: UniversalPackages@0
-      inputs:
-        command: 'publish'
-        publishDirectory: '$(System.DefaultWorkingDirectory)'
-        feedsToUsePublish: 'internal'
-        vstsFeedPublish: '$(CPI__artifact_feed)'
-        vstsFeedPackagePublish: '{{applicationName}}.zip'
-        packagePublishDescription: '$(sha_tag)'
-        versionOption: 'minor'
-        publishedPackageVar: 'codepipes'
