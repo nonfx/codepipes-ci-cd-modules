@@ -106,13 +106,13 @@ template: |
           if [ $critical_count -gt 0 ]; then
             # Print an error message andset pipeline fail variable
             echo "Error: There are 'critical' severity vulnerabilities in the code."
-            failPipeline=true
+            failPipeline=false
           fi
           high_count=$(cat $(Build.BinariesDirectory)/out/output.log | jq '.data[].friority' | grep "High" | wc -l)
           if [ $high_count -gt 0 ]; then
             # Print an error message and set pipeline fail variable
             echo "Error: There are 'high' severity vulnerabilities in the code.."
-            failPipeline=true
+            failPipeline=false
           fi
           # Check if the pipeline fail variable is true
           if [ $failPipeline = true ]; then
