@@ -24,7 +24,7 @@ inputs:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
       type: string
-      default: ""
+      default: "AppSec Pool"
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
