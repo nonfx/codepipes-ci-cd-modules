@@ -35,9 +35,14 @@ inputs:
       default: ""
     nexus_application_id:
       title: Nexus Application ID
-      description: Use selfhosted agent by proving agent pool name.
+      description: Nexus application identifier
       type: string
       default: ""
+    sonarQube_application_id:
+      title: SonarQube Application ID
+      description: SonarQube application identifier
+      type: string
+      default: ""   
     working_dir:
       title: Code Directory Path
       description: Directory Path where the code is located.
@@ -86,7 +91,7 @@ template: |
         SonarQube: $(CPI__sonar_qube_service_connection)
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: $(CPI__sonar_qube_project_key)
+        cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
         cliSources: {{working_dir}}
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
