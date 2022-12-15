@@ -52,7 +52,7 @@ inputs:
     - working_dir
     - applicationName
 template: |
-  {% set scancentral = 'scancentral' %}
+  {% set scancentral = '/home/azureuser/client/bin/scancentral' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   steps:
     - task: UseDotNet@2
@@ -104,10 +104,9 @@ template: |
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
     - script: |
-          source  /home/azureuser/.bashrc
           scanToken=$({{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) start -bt none -upload -application {% if fortify_application_id %} {{ fortify_application_id }}{% else %}{{ applicationName }}{% endif %} -version 1.0 -b $(Build.BuildId) -uptoken $CPI__UP_TOKEN -bf *.csproj)
           token=$( echo $scanToken |  grep -Eo 'token: [a-zA-Z0-9-]+' | cut -d' ' -f2)
-          {{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) retrieve -block -f worker.fpr -token $token
+          {{scancentral}} -url $CPI__SCAN_CONTROLLER_URL retrieve -block -f worker.fpr -token $token
           projDetails=$(curl 'https://ssc.nxplatform.io/ssc/api/v1/projects?fields=id,name,description&start=0&limit=10&orderby=name&includeInactive=false&myAssignedIssues=false') -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN")
           id=$(echo $projDetails | jq ".data[] | select(.name == \"{{ applicationName }}\") | .id")
           curl -X POST "https://ssc.nxplatform.io/ssc/api/v1/projectVersions/${id}/artifacts" -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN" -H "Content-Type: multipart/form-data" -F "file=@worker.fpr"
