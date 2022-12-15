@@ -18,6 +18,12 @@ inputs:
       description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""
+    applicationName:
+      title: Application name
+      description: Codepipes application name
+      type: string
+  internal:
+    - applicationName
 template: |-
   steps:
   - task: UniversalPackages@0
