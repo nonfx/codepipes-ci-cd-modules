@@ -93,6 +93,9 @@ template: |
         configMode: 'manual'
         cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
         cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
+        extraProperties: |
+            sonar.exclusions=**/*.bin
+            sonar.scm.exclusions.disabled=true
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
     - script: |
