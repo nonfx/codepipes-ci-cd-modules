@@ -50,6 +50,10 @@ inputs:
     - sonar_qube_project_key
 template: |
   steps:
+    - task: NodeTool@0
+      inputs:
+        versionSource: 'spec'
+        versionSpec: '16.x')
     - script: |
         # because sonar needs the base branch fetched for comparison
         git fetch --all
