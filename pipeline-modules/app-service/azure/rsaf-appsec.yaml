@@ -65,6 +65,10 @@ template: |
       inputs:
         version: 6.x
         includePreviewVersions: true
+    - task: NodeTool@0
+      inputs:
+        versionSource: 'spec'
+        versionSpec: '16.x')
     - script: |
           cd {{working_dir}}
           dotnet publish -c Release -o $(System.DefaultWorkingDirectory)/publish_output
