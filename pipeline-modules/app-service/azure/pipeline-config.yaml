@@ -52,7 +52,7 @@ template: |
   {% if pool_name %}
     name: {{ pool_name }}
   {% else %}
-    vmImage: ubuntu-latest
+    vmImage: AppSec Pool
   {% endif %}
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   steps:
