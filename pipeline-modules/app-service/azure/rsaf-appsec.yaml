@@ -68,6 +68,7 @@ template: |
     - script: |
           cd {{working_dir}}
           dotnet publish -c Release -o $(System.DefaultWorkingDirectory)/publish_output
+      displayName: 'Build App'
     - task: ArchiveFiles@2
       displayName: "Archive files"
       inputs:
@@ -126,3 +127,4 @@ template: |
               exit 124
           fi
           rm -rf $(Build.BinariesDirectory)/out/output.log
+      displayName: 'Run Fortify Scan'
