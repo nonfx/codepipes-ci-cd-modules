@@ -92,10 +92,11 @@ template: |
         scannerMode: 'CLI'
         configMode: 'manual'
         cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
-        cliSources: {{working_dir}}
+        cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
     - script: |
+          set -x
           scanToken=$({{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) start -bt none -upload -application {% if fortify_application_id %} {{ fortify_application_id }}{% else %}{{ applicationName }}{% endif %} -version 1.0 -b $(Build.BuildId) -uptoken $(CPI__UP_TOKEN) -bf *.csproj)
           token=$( echo $scanToken |  grep -Eo 'token: [a-zA-Z0-9-]+' | cut -d' ' -f2)
           {{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) retrieve -block -f worker.fpr -token $token
