@@ -104,12 +104,14 @@ template: |
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5
     - script: |
-          if [[ -z $(SKIP_FORTIFY) ]]; then
+          if [[ "$SKIP_FORTIFY" = true ]]; then
+            echo "Skipping Fortify as requested"
+          else
             scanToken=$({{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) start -bt none -upload -application {% if fortify_application_id %} {{ fortify_application_id }}{% else %}{{ applicationName }}{% endif %} -version 1.0 -b $(Build.BuildId) -uptoken $CPI__UP_TOKEN -bf *.csproj)
             token=$( echo $scanToken |  grep -Eo 'token: [a-zA-Z0-9-]+' | cut -d' ' -f2)
             {{scancentral}} -url $CPI__SCAN_CONTROLLER_URL retrieve -block -f worker.fpr -token $token
             projDetails=$(curl 'https://ssc.nxplatform.io/ssc/api/v1/projects?fields=id,name,description&start=0&limit=10&orderby=name&includeInactive=false&myAssignedIssues=false') -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN")
-            id=$(echo $projDetails | jq ".data[] | select(.name == \"{{ applicationName }}\") | .id")
+            id=$(echo $projDetails | jq ".data[] | select(.name == \"{{ applicationName }}\" | .id")
             curl -X POST "https://ssc.nxplatform.io/ssc/api/v1/projectVersions/${id}/artifacts" -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN" -H "Content-Type: multipart/form-data" -F "file=@worker.fpr"
             curl -k -X GET "https://ssc.nxplatform.io/ssc/api/v1/projectVersions/${id}/issues?start=0&limit=200&fields=friority&showhidden=false&showremoved=false&showsuppressed=false&showshortfilenames=false" -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN" > $(Build.BinariesDirectory)/out/output.log
             cat $(Build.BinariesDirectory)/out/output.log
@@ -131,7 +133,5 @@ template: |
                 exit 124
             fi
             rm -rf $(Build.BinariesDirectory)/out/output.log
-          else
-            echo "Skipping Fortify as requested"
           fi
       displayName: 'Run Fortify Scan'
