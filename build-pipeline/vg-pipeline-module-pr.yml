@@ -32,7 +32,7 @@ parameters:
 - name: goVersion
   displayName: GO_VERSION
   type: string
-  default: '1.17.8'
+  default: '1.18.9'
 
 variables:
   devbranch: ${{ parameters.devbranch }}
@@ -82,6 +82,7 @@ stages:
       displayName: Run Test
       timeoutInMinutes: 600
       steps:
+        - checkout: self
         - checkout: vanguardApi
           persistCredentials: true
         - checkout: vanguardAutomation
@@ -97,7 +98,7 @@ stages:
         - task: replacetokens@3
           displayName: "Token Replace .env.docker"
           inputs:
-            targetFiles: './vanguard-api/.env.docker'
+            targetFiles: './vanguard-api/.env.docker => .env'
             encoding: 'auto'
             writeBOM: true
             actionOnMissing: 'warn'
@@ -131,6 +132,21 @@ stages:
             useLegacyPattern: false
             enableTransforms: false
             enableTelemetry: true
+        - task: replacetokens@3
+          displayName: "Token Replace .env.tmpl"
+          inputs:
+            targetFiles: './codepipes-ci-cd-modules/.env.tmpl => .env'
+            encoding: 'auto'
+            writeBOM: true
+            actionOnMissing: 'warn'
+            keepToken: false
+            tokenPrefix: '#{'
+            tokenSuffix: '}#'
+            useLegacyPattern: false
+            enableTransforms: false
+            enableTelemetry: true
+          env:
+            VG_PGPASSWORD: $(VG_PGPASSWORD)
         - task: Docker@2
           displayName: Docker Login
           inputs:
@@ -158,12 +174,13 @@ stages:
             sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
             cd vanguard-api
-            mv .env.docker .env
             cat .env
             echo pull request branch name $(System.PullRequest.SourceBranch)
             go env -w GO111MODULE=on
             go env -w GOPRIVATE=github.com/cldcvr/*
             skip_dev=1 make init
+            git status
+            make docker-pull
             make docker-run
             cd ..
           env:
@@ -171,6 +188,13 @@ stages:
             GIT_TOKEN: $(GIT_TOKEN)
             token: $(GIT_TOKEN)
           displayName: Start Vanguard
+        - script: |
+            cd codepipes-ci-cd-modules
+            go env -w GO111MODULE=on
+            go env -w GOPRIVATE=github.com/cldcvr/*
+            make db-update
+            cd ..
+          displayName: Execute DB update
         - script: |
             cd vanguard-api-automation
             make start-selenium
