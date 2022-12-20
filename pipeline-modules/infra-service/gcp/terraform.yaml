@@ -56,7 +56,7 @@ inputs:
       title: Terraform Version
       description: Version of Terraform to be used to deploy the infrastructure.
       type: string
-      default: 0.13.6
+      default: 1.3.6
     tf_log_level:
       title: Terraform Log Level
       description: Terraform log verbosity.
