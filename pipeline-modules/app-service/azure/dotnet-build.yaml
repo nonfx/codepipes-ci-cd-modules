@@ -50,7 +50,7 @@ template: |
       inputs:
         rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
         includeRootFolder: false
-        archiveFile: "$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+        archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}.zip"
   - script: |
-      scan_art="$(System.DefaultWorkingDirectory)/build$(sha_tag).zip"
+      scan_art="$(System.DefaultWorkingDirectory)/{{applicationName}}.zip"
       echo "##vso[task.setvariable variable=scan_art]$scan_art"
