@@ -32,6 +32,7 @@ inputs:
       title: SonarQube Application ID
       description: If not provided codepipes application name will be used
       type: string
+      default: ""
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.

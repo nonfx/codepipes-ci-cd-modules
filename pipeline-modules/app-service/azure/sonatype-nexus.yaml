@@ -20,6 +20,7 @@ inputs:
       title: NexusIQ Application ID
       description: NexusIQ application id
       type: string
+      default: ""
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.

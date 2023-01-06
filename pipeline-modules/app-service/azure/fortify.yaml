@@ -26,6 +26,7 @@ inputs:
       title: Fortify Application ID
       description: If not provided codepipes application name will be used
       type: string
+      default: ""
     applicationName:
       title: Application name
       description: Codepipes application name
