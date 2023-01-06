@@ -3,7 +3,7 @@ name: sonatype-nexus-iq
 version: 1
 revision: 1
 displayName: Sonatype nexus IQ
-description: Sonatype nexus IQ server integration
+description: This template assumes that application zip is present at DefaultWorkingDirectory
 target: ""
 category: code analysis
 keywords:
@@ -11,47 +11,32 @@ keywords:
   - sonatype
 author: CloudCover
 meta: {}
+env:
+  - CPI__NEXUS_SERVICE_CONNECTION
+  - CPI__NEXUS_ORG_ID
 inputs:
   properties:
-    nexus_service_connection:
-      title: NexusIQ Service Connection
-      description:  NexusIQ Service Connection Name
-      type: string
-    application_id:
+    nexus_application_id:
       title: NexusIQ Application ID
       description: NexusIQ application id
       type: string
-    organization_id:
-      title: NexusIQ Organization_id ID
-      description: NexusIQ organization id
-      type: string
-    scanTargets : 
-      title: Scan targets
-      description: Paths of the zip file
-      type: string
-    git_local_path:
-      title: Local Clone Directory
-      description: The name of a new directory to clone into.
-      type: string
-      default: repo
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""
-  required:
-    - nexus_service_connection
-    - application_id
-    - organization_id
-    - scanTargets
+    applicationName:
+      title: Application name
+      description: Codepipes application name
+      type: string
   internal:
-    - git_local_path
+    - applicationName
 template: |
   steps:
     - task: NexusIqPipelineTask@1
       inputs:
-        nexusIqService: '{{nexus_service_connection}}'
-        organizationId: '{{organization_id}}'
-        applicationId: '{{application_id}}'
+        nexusIqService: $(CPI__NEXUS_SERVICE_CONNECTION)
+        organizationId: $(CPI__NEXUS_ORG_ID)
+        applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
         stage: 'Build'
-        scanTargets: '{{scanTargets}}'
+        scanTargets: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip

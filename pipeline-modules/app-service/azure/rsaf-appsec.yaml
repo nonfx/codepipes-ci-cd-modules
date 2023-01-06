@@ -1,9 +1,9 @@
 provisioner: azure
-name: rsaf-appsec
+name: best-practise-appsec
 version: 1
 revision: 1
-displayName: RSAF security scanning module
-description: RSAF best practice applcation security scanning
+displayName: Security scanning module
+description: Best practice applcation security scanning
 target: ""
 category: scan
 keywords:
