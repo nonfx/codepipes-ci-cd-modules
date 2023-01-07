@@ -24,7 +24,7 @@ inputs:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
       type: string
-      default: "AppSec Pool"
+      default: ""
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
@@ -52,11 +52,12 @@ template: |
   {% if pool_name %}
     name: {{ pool_name }}
   {% else %}
-    vmImage: AppSec Pool
+    vmImage: ubuntu-latest
   {% endif %}
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   steps:
   - script: |
+      {{ pool_name }}
       {% for env_key in pipeline_env %}
       export {{env_key}}="$({{env_key}})"
       printf "{{env_key}}=%s\n" "$(printf "%s" "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}

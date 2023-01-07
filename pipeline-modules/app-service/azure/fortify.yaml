@@ -24,12 +24,12 @@ inputs:
       default: ""
     fortify_application_id:
       title: Fortify Application ID
-      description: If not provided codepipes application name will be used
+      description: If not provided Code Pipes application name will be used
       type: string
       default: ""
     applicationName:
       title: Application name
-      description: Codepipes application name
+      description: Code Pipes application name
       type: string
   internal:
     - applicationName

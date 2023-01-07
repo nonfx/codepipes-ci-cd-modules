@@ -21,8 +21,8 @@ inputs:
       type: boolean
       default: false
     projectName:
-      title: CodePipes Project Name
-      description: CodePipes Project Name
+      title: Code Pipes Project Name
+      description: Code Pipes Project Name
       type: string
       default: "codepipes"
     domains:

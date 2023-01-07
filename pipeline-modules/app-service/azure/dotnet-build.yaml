@@ -24,7 +24,7 @@ inputs:
       type: string
     applicationName:
       title: Application name
-      description: Codepipes application name
+      description: Code Pipes application name
       type: string
   internal:
     - working_dir

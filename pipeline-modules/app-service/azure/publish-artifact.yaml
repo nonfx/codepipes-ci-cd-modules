@@ -20,7 +20,7 @@ inputs:
       default: ""
     applicationName:
       title: Application name
-      description: Codepipes application name
+      description: Code Pipes application name
       type: string
   internal:
     - applicationName

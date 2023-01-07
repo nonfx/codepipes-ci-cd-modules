@@ -17,7 +17,7 @@ inputs:
   properties:
     applicationName:
       title: Application name
-      description: Codepipes application name
+      description: Code Pipes application name
       type: string
     git_local_path:
       title: Local Clone Directory
@@ -30,7 +30,7 @@ inputs:
       type: string
     sonarQube_application_id:
       title: SonarQube Application ID
-      description: If not provided codepipes application name will be used
+      description: If not provided, Code Pipes application name will be used
       type: string
       default: ""
     pool_name:

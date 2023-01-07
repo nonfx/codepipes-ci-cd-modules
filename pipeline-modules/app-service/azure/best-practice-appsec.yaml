@@ -1,5 +1,5 @@
 provisioner: azure
-name: best-practise-appsec
+name: best-practice-appsec
 version: 1
 revision: 1
 displayName: Security scanning module
@@ -21,13 +21,12 @@ inputs:
       default: repo
     applicationName:
       title: Application name
-      description: Codepipes application name
+      description: Code Pipes application name
       type: string
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
       type: string
-      default: "AppSec Pool"
     fortify_application_id:
       title: Fortify application id
       description: Fortify application identifier
@@ -51,6 +50,8 @@ inputs:
     - git_local_path
     - working_dir
     - applicationName
+  required:
+    - pool_name
 template: |
   {% set scancentral = '/home/azureuser/client/bin/scancentral' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
