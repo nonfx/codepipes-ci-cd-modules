@@ -37,8 +37,8 @@ inputs:
       type: string
       default: deploy
     projectName:
-      title: CodePipes Project Name
-      description: CodePipes Project Name
+      title: Code Pipes Project Name
+      description: Code Pipes Project Name
       type: string
       default: "codepipes"
     lb_type:

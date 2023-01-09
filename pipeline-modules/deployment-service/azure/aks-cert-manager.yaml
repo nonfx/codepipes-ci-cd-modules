@@ -16,8 +16,8 @@ meta:
 inputs:
   properties:
     projectName:
-      title: CodePipes Project Name
-      description: CodePipes Project Name
+      title: Code Pipes Project Name
+      description: Code Pipes Project Name
       type: string
       default: "codepipes"
     domains:

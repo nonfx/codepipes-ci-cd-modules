@@ -57,6 +57,7 @@ template: |
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   steps:
   - script: |
+      {{ pool_name }}
       {% for env_key in pipeline_env %}
       export {{env_key}}="$({{env_key}})"
       printf "{{env_key}}=%s\n" "$(printf "%s" "${{env_key}}" | jq -aRs .)" >> {{pipeline_env_file}}

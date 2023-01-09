@@ -23,9 +23,6 @@ inputs:
       title: Repository URL
       description: The repository to configure access to.
       type: string
-  required:
-    - git_remote_path
-    - git_login
   internal:
     - git_remote_path
     - git_login
@@ -37,6 +34,7 @@ template: |
       git config --file {{ git_config_path }} credential.helper 'store --file {{ git_creds_path }}'
       git config --file {{ git_config_path }} credential.useHttpPath true
       git config --file {{ git_config_path }} credential.interactive never
+      rm -rf ~/.gitconfig 
       git config --global url."https://{{ git_login }}:$(GIT_PASSWORD)@github.com/".insteadOf "https://github.com/"
-      sed -e "s^//^//{{ git_login }}:$(GIT_PASSWORD))@^" <<< {{ git_remote_path }} >> {{ git_creds_path }}
+      sed -e "s^//^//{{ git_login }}:$(GIT_PASSWORD)@^" <<< {{ git_remote_path }} >> {{ git_creds_path }}
     displayName: 'Git Access'

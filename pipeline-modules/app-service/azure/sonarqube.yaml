@@ -7,44 +7,47 @@ description: Analyze source code using Sonar Qube
 target: ""
 category: code analysis
 keywords:
-  - Analyze Code
+  - analyze
+  - quality gate
 author: CloudCover
 meta: {}
+env:
+  - CPI__SONARQUBE_SERVICE_CONNECTION
 inputs:
   properties:
-    git_checkout_target:
-      title: Checkout Target
-      description: Git branch, tag or commit hash to checkout.
+    applicationName:
+      title: Application name
+      description: Code Pipes application name
       type: string
-      default: ""
     git_local_path:
       title: Local Clone Directory
       description: The name of a new directory to clone into.
       type: string
       default: repo
-    sonar_qube_service_connection:
-      title: Sonar service connection
-      description: Azure DevOps service connection for Sonar Qube. Create it from project settings > service connection. Use sonar token from account > security
+    working_dir:
+      title: Code Directory Path
+      description: Directory Path where the code is located.
       type: string
-    sonar_qube_org:
-      title: Sonar Organization Key
-      description: Sonar organization key found in project information section of sonar qube web console
-      type: string
-    sonar_qube_project_key:
-      title: Sonar Project Key
-      description: Sonar project key found in project information section of sonar qube web console. This is required if sonar_config_file is not set
-      type: string
-    sonar_config_file:
-      title: Sonar config file name
-      description: Optionally, use a config file in the repo to setup sonar properties
+    sonarQube_application_id:
+      title: SonarQube Application ID
+      description: If not provided, Code Pipes application name will be used
       type: string
       default: ""
-  required:
-    - sonar_qube_service_connection
-    - sonar_qube_org
-    - sonar_qube_project_key
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+  internal:
+    - git_local_path
+    - working_dir
+    - applicationName
 template: |
   steps:
+    - task: NodeTool@0
+      inputs:
+        versionSource: 'spec'
+        versionSpec: '16.x')
     - script: |
         # because sonar needs the base branch fetched for comparison
         git fetch --all
@@ -52,21 +55,13 @@ template: |
       workingDirectory: {{ git_local_path }}
     - task: SonarQubePrepare@5
       inputs:
-        SonarQube: {{ sonar_qube_service_connection }}
-        organization: {{ sonar_qube_org }}
+        SonarQube: $(CPI__SONARQUBE_SERVICE_CONNECTION)
         scannerMode: 'CLI'
-        {% if sonar_config_file -%}
-        configMode: 'file'
-        configFile: {{ git_local_path }}/{{ sonar_config_file }}
-        {% else -%}
         configMode: 'manual'
-        cliProjectKey: {{ sonar_qube_project_key }}
-        {%- endif %}
+        cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
+        cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
         extraProperties: |
-          sonar.projectBaseDir={{ git_local_path }}
-          {% if git_checkout_target -%}
-          sonar.scm.revision={{ git_checkout_target }}
-          sonar.branch.name={{ git_checkout_target }}
-          {%- endif %}
+            sonar.exclusions=**/*.bin
+            sonar.scm.exclusions.disabled=true
     - task: SonarQubeAnalyze@5
     - task: SonarQubePublish@5

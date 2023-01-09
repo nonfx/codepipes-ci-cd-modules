@@ -48,6 +48,18 @@ inputs:
       description: Name of a KMS key used to encrypt secret values.
       type: string
       default: ""
+    repository:
+      title: repository
+      description:  Git repository
+      type: string
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    tag:
+      title: Tag of either container or artifact
+      description: git revision for cloning the pipeline module repo.
+      type: string
   required:
     - variable_group_name
   internal:
@@ -57,11 +69,16 @@ inputs:
     - pipeline_secret_env_key
     - pipeline_module_git
     - pipeline_module_git_rev
+    - repo_dir
+    - repository
+    - tag
 template: |
   {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+
   pool:
   {% if pool_name %}
     name: {{ pool_name }}
@@ -71,6 +88,10 @@ template: |
   name: '$(Date:yyyyMMdd)$(Rev:.r)'
   trigger: none
   steps:
+  - script: |
+      rm -rf ~/.gitconfig 
+      git config --global url."https://$(git_username):$(GIT_PASSWORD)@github.com/".insteadOf "https://github.com/"
+    displayName: 'Git Access'
   - script: |
       set -e
       # installing jq v1.6
@@ -93,6 +114,13 @@ template: |
       echo "Cloning the pipeline modules..."
       mkdir -p {{pipeline_modules_path}}
       git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
+
+      echo "{{repository}}: {{tag}} /{{repo_dir}}"
+      if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
+          mkdir -p {{source_code_path}}
+          git clone $git_repo --branch {{tag}} --single-branch {{source_code_path}}
+          ls {{source_code_path}}/{{repo_dir}}/
+      fi
   variables:
     - group: {{ variable_group_name }}
     - name: __VG_EXPORTED_ENV_NAMES

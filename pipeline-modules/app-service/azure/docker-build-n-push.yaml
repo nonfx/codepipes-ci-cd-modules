@@ -35,6 +35,11 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
   internal:
     - container_repository
     - container_tag

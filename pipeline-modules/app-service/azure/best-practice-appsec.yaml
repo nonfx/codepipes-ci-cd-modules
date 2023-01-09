@@ -1,0 +1,138 @@
+provisioner: azure
+name: best-practice-appsec
+version: 1
+revision: 1
+displayName: Security scanning module
+description: Best practice applcation security scanning
+target: ""
+category: scan
+keywords:
+  - Pulish
+  - Build
+  - Scan
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    applicationName:
+      title: Application name
+      description: Code Pipes application name
+      type: string
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+    fortify_application_id:
+      title: Fortify application id
+      description: Fortify application identifier
+      type: string
+      default: ""
+    nexus_application_id:
+      title: Nexus Application ID
+      description: Nexus application identifier
+      type: string
+      default: ""
+    sonarQube_application_id:
+      title: SonarQube Application ID
+      description: SonarQube application identifier
+      type: string
+      default: ""   
+    working_dir:
+      title: Code Directory Path
+      description: Directory Path where the code is located.
+      type: string
+  internal:
+    - git_local_path
+    - working_dir
+    - applicationName
+  required:
+    - pool_name
+template: |
+  {% set scancentral = '/home/azureuser/client/bin/scancentral' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  steps:
+    - task: UseDotNet@2
+      displayName: 'Use DotNet 3.x'
+      inputs:
+        version: 3.x
+        includePreviewVersions: true
+    - task: UseDotNet@2
+      displayName: 'Use DotNet 6.x'
+      inputs:
+        version: 6.x
+        includePreviewVersions: true
+    - task: NodeTool@0
+      inputs:
+        versionSource: 'spec'
+        versionSpec: '16.x'
+    - script: |
+          cd {{working_dir}}
+          dotnet publish -c Release -o $(System.DefaultWorkingDirectory)/publish_output
+      displayName: 'Build App'
+    - task: ArchiveFiles@2
+      displayName: "Archive files"
+      inputs:
+        rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
+        includeRootFolder: false
+        archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}.zip"
+    - task: NexusIqPipelineTask@1
+      inputs:
+        nexusIqService: $(CPI__nexus_service_connection)
+        organizationId: $(CPI__nexus_organization_id)
+        applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
+        stage: 'Build'
+        scanTargets: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
+    - script: |
+        # because sonar needs the base branch fetched for comparison
+        git fetch --all
+      displayName: 'Git fetch base'
+      workingDirectory: {{ git_local_path }}
+    - task: SonarQubePrepare@5
+      inputs:
+        SonarQube: $(CPI__sonar_qube_service_connection)
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
+        cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
+        extraProperties: |
+            sonar.exclusions=**/*.bin
+            sonar.scm.exclusions.disabled=true
+    - task: SonarQubeAnalyze@5
+    - task: SonarQubePublish@5
+    - script: |
+          if [[ "$SKIP_FORTIFY" = true ]]; then
+            echo "Skipping Fortify as requested"
+          else
+            scanToken=$({{scancentral}} -url $(CPI__SCAN_CONTROLLER_URL) start -bt none -upload -application {% if fortify_application_id %} {{ fortify_application_id }}{% else %}{{ applicationName }}{% endif %} -version 1.0 -b $(Build.BuildId) -uptoken $CPI__UP_TOKEN -bf *.csproj)
+            token=$( echo $scanToken |  grep -Eo 'token: [a-zA-Z0-9-]+' | cut -d' ' -f2)
+            {{scancentral}} -url $CPI__SCAN_CONTROLLER_URL retrieve -block -f worker.fpr -token $token
+            projDetails=$(curl 'https://ssc.nxplatform.io/ssc/api/v1/projects?fields=id,name,description&start=0&limit=10&orderby=name&includeInactive=false&myAssignedIssues=false' -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN")
+            id=$(echo $projDetails | jq ".data[] | select(.name == \"{{ applicationName }}\" | .id")
+            curl -X POST "https://ssc.nxplatform.io/ssc/api/v1/projectVersions/${id}/artifacts" -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN" -H "Content-Type: multipart/form-data" -F "file=@worker.fpr"
+            curl -k -X GET "https://ssc.nxplatform.io/ssc/api/v1/projectVersions/${id}/issues?start=0&limit=200&fields=friority&showhidden=false&showremoved=false&showsuppressed=false&showshortfilenames=false" -H "accept: application/json" -H "Authorization: FortifyToken $CPI__FORTIFY_TOKEN" > $(Build.BinariesDirectory)/out/output.log
+            cat $(Build.BinariesDirectory)/out/output.log
+            critical_count=$(cat $(Build.BinariesDirectory)/out/output.log | jq '.data[].friority' | grep "Critical" | wc -l)
+            if [ $critical_count -gt 0 ]; then
+              # Print an error message andset pipeline fail variable
+              echo "Error: There are 'critical' severity vulnerabilities in the code."
+              failPipeline=false
+            fi
+            high_count=$(cat $(Build.BinariesDirectory)/out/output.log | jq '.data[].friority' | grep "High" | wc -l)
+            if [ $high_count -gt 0 ]; then
+              # Print an error message and set pipeline fail variable
+              echo "Error: There are 'high' severity vulnerabilities in the code.."
+              failPipeline=false
+            fi
+            # Check if the pipeline fail variable is true
+            if [ $failPipeline = true ]; then
+                echo "There are $critical_count Critical and $high_count High Vulnerabilites. Therefore, failing the Build. Please fix the vulnerability and run the build again. "
+                exit 124
+            fi
+            rm -rf $(Build.BinariesDirectory)/out/output.log
+          fi
+      displayName: 'Run Fortify Scan'
