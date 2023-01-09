@@ -12,6 +12,7 @@ resources:
       type: github
       name: cldcvr/product-build-tools
       endpoint: Github-CldCvr
+      ref: doug/debug
 
 pool:
   vmImage: ubuntu-latest
