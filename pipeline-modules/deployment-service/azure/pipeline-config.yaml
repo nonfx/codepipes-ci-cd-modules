@@ -121,7 +121,7 @@ template: |
           git clone $git_repo --single-branch {{source_code_path}}
           cd {{source_code_path}}
           git fetch $git_repo {{tag}}
-          git checkout {{tag}}
+          git checkout FETCH_HEAD
           ls {{source_code_path}}/{{repo_dir}}/
       fi
   variables:
