@@ -183,7 +183,10 @@ template: |
               echo "$git_repo: {{tag}}"
               if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
                   mkdir -p {{source_code_path}}
-                  git clone $git_repo --branch {{tag}} --single-branch {{source_code_path}}
+                  git clone $git_repo --single-branch {{source_code_path}}
+                  cd {{source_code_path}}
+                  git fetch $git_repo {{tag}}
+                  git checkout FETCH_HEAD
                   ls {{source_code_path}}/{{repo_dir}}/
               fi
             # Preparing environment variables file...
