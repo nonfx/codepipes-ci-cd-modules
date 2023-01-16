@@ -98,7 +98,6 @@ template: |
       commands:
         - echo pushing to repo
         # update the following line with the URI of your own ECR repository
-        - docker push {{repository}}:{{tag}}
         - echo Writing image definitions file...
         - printf '{"ImageURI":"%s"}' {{repository}}:{{tag}} > imageDetail.json
   artifacts:
