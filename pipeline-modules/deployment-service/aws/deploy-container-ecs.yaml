@@ -32,16 +32,6 @@ inputs:
       description: Tagged container will deploy
       type: string
       default: latest
-    ecr_role:
-      title: ECR IAM Role
-      description: Role to pull image from private ECR
-      type: string
-      default: ""
-    instance_role:
-      title: Instance IAM Role
-      description: Role to be used by app runnner to interact with other AWS services
-      type: string
-      default: ""
     applicationName:
       title: Application name
       description: This is vanguard application name
