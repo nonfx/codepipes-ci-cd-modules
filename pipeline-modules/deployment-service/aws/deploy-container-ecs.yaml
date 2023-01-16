@@ -1,0 +1,107 @@
+provisioner: aws
+name: deploy-container-ecs
+version: 1
+revision: 1
+displayName: "App ECS deployment"
+description: "AWS ECS Deployment template"
+target: "deployment-template"
+keywords: ["bash", "linux"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - ContainerImage
+inputs:
+  type: object
+  properties:
+    region:
+      title: Region name
+      description: region name for cluster
+      type: string
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    ecr_role:
+      title: ECR IAM Role
+      description: Role to pull image from private ECR
+      type: string
+      default: ""
+    instance_role:
+      title: Instance IAM Role
+      description: Role to be used by app runnner to interact with other AWS services
+      type: string
+      default: ""
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required: ["region"]
+  internal:
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - job_type
+template: |
+  ########################################################################################################################################################
+  # The module creates json config file for source configuration and instance configuration                                                              #
+  # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+  # So we don't have to worry about character escaping in this module.                                                                                   #
+  ########################################################################################################################################################
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  
+  version: 0.2
+  phases:
+    install:
+      runtime-versions:
+        docker: latest
+      commands:
+        - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2&
+        - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+    pre_build:
+      {% if job_type == 'deploy' %}
+      commands:
+        - echo Logging in to Amazon ECR....
+        - aws --version
+        # update the following line with your own region
+        - aws ecr get-login --no-include-email --region {{region}}
+    build:
+      commands:
+        - echo pushing to repo
+        # update the following line with the URI of your own ECR repository
+        - docker push {{repository}}:{{tag}}
+        - echo Writing image definitions file...
+        - printf '{"ImageURI":"%s"}' {{repository}}:{{tag}} > imageDetail.json
+  artifacts:
+    files:
+      - imageDetail.json
+      {% endif %}    
