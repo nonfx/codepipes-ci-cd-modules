@@ -5,7 +5,7 @@ revision: 1
 displayName: "App ECS deployment"
 description: "AWS ECS Deployment template"
 target: "deployment-template"
-keywords: ["bash", "linux"]
+keywords: ["bash", "linux" , "ecs aws container"]
 author: "CloudCover"
 meta:
   inputArtifactType:
