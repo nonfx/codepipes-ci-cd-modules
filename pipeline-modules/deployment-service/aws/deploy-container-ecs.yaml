@@ -73,12 +73,12 @@ inputs:
         host_port:
           title: Host Port
           description: "The ECS Port to use."
-          type: string
+          type: integer
           default: 80
         container_port:
           title: Container Port
           description: "The Container Port to use."
-          type: string
+          type: integer
           default: 80
     vpc_config:
       title: VPC Config
