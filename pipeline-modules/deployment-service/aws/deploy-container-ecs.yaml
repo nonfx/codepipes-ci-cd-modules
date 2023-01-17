@@ -72,6 +72,11 @@ inputs:
       title: Image Name
       description: The container image name to be deployed
       type: string
+    vpc_config:
+      description: VPC Config to run Deployment on
+      title: VPC Config
+      type: string
+      default: null
   required: ["region","task_name","service_name","cluster_name","account_id","image_name"]
   internal:
     - repository
@@ -112,8 +117,3 @@ template: |
         - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment)
         - echo "done"
         - echo "${TASK_NAME}, Revision: ${NEW_REVISION_DATA}"
-  {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
-  vpcconfig: null
-  {% else %}
-  vpcconfig: {{ vpc_config|cpi_json }}
-  {% endif %}
