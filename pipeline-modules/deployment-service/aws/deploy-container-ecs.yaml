@@ -112,7 +112,6 @@ template: |
         - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment)
         - echo "done"
         - echo "${TASK_NAME}, Revision: ${NEW_REVISION_DATA}"
-      {% endif %}
   {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
   vpcconfig: null
   {% else %}
