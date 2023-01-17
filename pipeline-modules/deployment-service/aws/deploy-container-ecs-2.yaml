@@ -126,38 +126,13 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - echo '[
-                  {
-                    "name": "{{service_name}} ",
-                    "image":"{{repository}}:{{tag}}",
-                    "cpu": 1024,
-                    "memory": 2048,
-                    "portMappings": [
-                      {
-                        "containerPort": "{{port_mapping.container_port}}",
-                        "hostPort": {{port_mapping.host_port}},
-                        "protocol": "tcp"
-                      }
-                    ],
-                    "essential": true,
-                    "environment": [' >> containerDef.json
-                    cat {{pipeline_env_file}} | while IFS= read -r line; do
-                      value=${line#*=}
-                      name=${line%%=*}
-                    printf '{\n %s: %s \n},' "$name" "$value" >> containerDef.json
-                    echo '],
-                    "mountPoints": [],
-                    "volumesFrom": [],
-                    "logConfiguration": {
-                      "logDriver": "awslogs",
-                      "options": {
-                        "awslogs-group": "/fargate/service/swiftevent-web",
-                        "awslogs-region": "ap-southeast-1",
-                        "awslogs-stream-prefix": "ecs"
-                      }
-                    }
-                  }
-                ]' >> containerDef.json
+        - echo '[{"name":"{{service_name}}","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":"{{port_mapping.container_port}}","hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
+        - |
+          cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf "{\n %s: %s \n},"" "$name" "$value" >> containerDef.json
+        - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment) 
