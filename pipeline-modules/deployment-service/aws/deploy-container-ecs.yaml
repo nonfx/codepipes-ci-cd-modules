@@ -102,7 +102,7 @@ template: |
         - CLUSTER_NAME={{cluster_name}}
         - REGION={{region}}
         - VERSION=1.0
-        - ACCOUNT_NUMBER={{account_name}}
+        - ACCOUNT_NUMBER={{account_id}}
         - NEW_IMAGE={{image_name}}
         - echo Updating ECS
         - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_NAME" --region "$REGION")
