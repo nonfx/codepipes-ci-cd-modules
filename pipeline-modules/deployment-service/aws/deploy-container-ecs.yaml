@@ -52,7 +52,27 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-  required: ["region"]
+    task_name:
+      title: Task Name
+      description: The ECS Task Name to update
+      type: string
+    service_name:
+      title: Service Name
+      description: The ECS Service Name to deploy to
+      type: string
+    cluster_name:
+      title: Cluster Name
+      description: The ECS Cluster Name to Deploy to
+      type: string
+    account_id:
+      title: Account ID
+      description: The AWS Account ID where ECS is
+      type: string
+    image_name:
+      title: Image Name
+      description: The container image name to be deployed
+      type: string
+  required: ["region","task_name","service_name","cluster_name","account_id","image_name"]
   internal:
     - repository
     - tag
@@ -74,20 +94,27 @@ template: |
     install:
       commands:
         - aws configure set region {{region}}
-    pre_build:
-      {% if job_type == 'deploy' %}
-      commands:
-        - echo Logging in to Amazon ECR....
-        - aws --version
-        # update the following line with your own region
-        - aws ecr get-login --no-include-email --region {{region}}
     build:
       commands:
-        - echo pushing to repo
-        # update the following line with the URI of your own ECR repository
-        - echo Writing image definitions file...
-        - printf '{"ImageURI":"%s"}' {{repository}}:{{tag}} > imageDetail.json
-  artifacts:
-    files:
-      - imageDetail.json
-      {% endif %}    
+        - echo Setting configurations
+        - TASK_NAME={{task_name}}
+        - SERVICE_NAME={{service_name}}
+        - CLUSTER_NAME={{cluster_name}}
+        - REGION={{region}}
+        - VERSION=1.0
+        - ACCOUNT_NUMBER={{account_name}}
+        - NEW_IMAGE={{image_name}}
+        - echo Updating ECS
+        - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_NAME" --region "$REGION")
+        - NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+        - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json "$NEW_TASK_DEFINITION")
+        - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision')
+        - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment)
+        - echo "done"
+        - echo "${TASK_NAME}, Revision: ${NEW_REVISION_DATA}"
+      {% endif %}
+  {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
+  vpcconfig: null
+  {% else %}
+  vpcconfig: {{ vpc_config|cpi_json }}
+  {% endif %}
