@@ -23,12 +23,9 @@ template: |
   env:
     shell: bash
   phases:
-    install:
-      commands:
-        - apt-get update
-        - python3 -m pip install semgrep
     build:
       commands:
         - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
+        - python3 -m pip install semgrep
+        - semgrep -h
         - semgrep ci
-
