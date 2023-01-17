@@ -13,10 +13,10 @@ meta:
 inputs:
   type: object
   properties:
-    region:
-      title: Region name
-      description: region name for cluster
-      type: string
+    # region:
+    #   title: Region name
+    #   description: region name for cluster
+    #   type: string
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -64,14 +64,22 @@ inputs:
       title: Cluster Name
       description: The ECS Cluster Name to Deploy to
       type: string
-    account_id:
-      title: Account ID
-      description: The AWS Account ID where ECS is
-      type: string
-    image_name:
-      title: Image Name
-      description: The container image name to be deployed
-      type: string
+    port_mapping:
+      title: Port Mapping
+      description: "Port Mapping maps host port to container port"
+      type: object
+      default: {}
+      properties:
+        host_port:
+          title: Host Port
+          description: "The ECS Port to use."
+          type: string
+          default: 80
+        container_port:
+          title: Container Port
+          description: "The Container Port to use."
+          type: string
+          default: 80
     vpc_config:
       title: VPC Config
       description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
@@ -97,7 +105,7 @@ inputs:
           description: "The ID of the Amazon VPC."
           type: string
           default: ""
-  required: ["region","task_name","service_name","cluster_name","account_id","image_name"]
+  required: ["task_name","service_name","cluster_name"]
   internal:
     - repository
     - tag
@@ -105,6 +113,7 @@ inputs:
     - environment
     - project
     - job_type
+    - region
 template: |
   ########################################################################################################################################################
   # The module creates json config file for source configuration and instance configuration                                                              #
@@ -127,12 +136,16 @@ template: |
         - export CLUSTER_NAME={{cluster_name}} 
         - export REGION={{region}} 
         - export VERSION=1.0 
-        - export ACCOUNT_NUMBER={{account_id}} 
-        - export NEW_IMAGE={{image_name}} 
+        - export NEW_IMAGE="{{repository}}:{{tag}}"
         - echo "Updating ECS" 
         - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_NAME" --region "$REGION") 
-        - NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)') 
+        - NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+        {% if port_mapping %}
+        - UPDATE_TASK_DEFINITION=$(echo $NEW_TASK_DEFINITION | jq --arg container_port "$NEW_CONTAINER_PORT" --arg host_port "$NEW_HOST_PORT" '(.[0].portMappings[0].containerPort) = $container_port | (.[0].portMappings[0].hostPort) = 3000')
+        - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json "$UPDATE_TASK_DEFINITION") 
+        {% else %}
         - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json "$NEW_TASK_DEFINITION") 
+        {% endif %}
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment) 
         - echo "done" 
