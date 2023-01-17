@@ -1,0 +1,169 @@
+provisioner: aws
+name: container-deploy-ecs
+version: 1
+revision: 1
+displayName: "ECS App deployment"
+description: "AWS ECS App Deployment template"
+target: "deployment-template"
+keywords: ["bash", "linux" , "ecs aws container"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - ContainerImage
+inputs:
+  type: object
+  properties:
+    # region:
+    #   title: Region name
+    #   description: region name for cluster
+    #   type: string
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    task_name:
+      title: Task Name
+      description: The ECS Task Name to update
+      type: string
+    service_name:
+      title: Service Name
+      description: The ECS Service Name to deploy to
+      type: string
+    cluster_name:
+      title: Cluster Name
+      description: The ECS Cluster Name to Deploy to
+      type: string
+    port_mapping:
+      title: Port Mapping
+      description: "Port Mapping maps host port to container port"
+      type: object
+      default: {}
+      properties:
+        host_port:
+          title: Host Port
+          description: "The ECS Port to use."
+          type: integer
+          default: 80
+        container_port:
+          title: Container Port
+          description: "The Container Port to use."
+          type: integer
+          default: 80
+    vpc_config:
+      title: VPC Config
+      description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
+      type: object
+      default: {}
+      properties:
+        securityGroupIds:
+          title: Security Group IDs
+          description: "A list of one or more security groups IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        subnets:
+          title: Subnet IDs
+          description: "A list of one or more subnet IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        vpcId:
+          title: VPC ID
+          description: "The ID of the Amazon VPC."
+          type: string
+          default: ""
+  required: ["task_name","service_name","cluster_name"]
+  internal:
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - job_type
+template: |
+  ########################################################################################################################################################
+  # The module creates json config file for source configuration and instance configuration                                                              #
+  # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+  # So we don't have to worry about character escaping in this module.                                                                                   #
+  ########################################################################################################################################################
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - aws configure set region $AWS_DEFAULT_REGION
+    build:
+      commands:
+        - echo "Setting configurations" 
+        - echo "[
+                  {
+                    "name": "{{service_name}} ",
+                    "image":"{{repository}}:{{tag}}",
+                    "cpu": 1024,
+                    "memory": 2048,
+                    "portMappings": [
+                      {
+                        "containerPort": "{{port_mapping.container_port}}",
+                        "hostPort": {{port_mapping.host_port}},
+                        "protocol": "tcp"
+                      }
+                    ],
+                    "essential": true,
+                    "environment": [" >> containerDef.json
+                    cat {{pipeline_env_file}} | while IFS= read -r line; do
+                      value=${line#*=}
+                      name=${line%%=*}
+                    printf '{\n %s: %s \n},' "$name" "$value" >> containerDef.json
+                    echo "],
+                    "mountPoints": [],
+                    "volumesFrom": [],
+                    "logConfiguration": {
+                      "logDriver": "awslogs",
+                      "options": {
+                        "awslogs-group": "/fargate/service/swiftevent-web",
+                        "awslogs-region": "ap-southeast-1",
+                        "awslogs-stream-prefix": "ecs"
+                      }
+                    }
+                  }
+                ]" >> containerDef.json
+        - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json file://containerDef.json) 
+        - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
+        - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment) 
+        - echo "done" 
+        - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
