@@ -13,10 +13,6 @@ meta:
 inputs:
   type: object
   properties:
-    # region:
-    #   title: Region name
-    #   description: region name for cluster
-    #   type: string
     app_env:
       title: Application Environment
       description: Application Related Envs

@@ -13,10 +13,6 @@ meta:
 inputs:
   type: object
   properties:
-    # region:
-    #   title: Region name
-    #   description: region name for cluster
-    #   type: string
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -130,7 +126,7 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - echo "[
+        - echo '[
                   {
                     "name": "{{service_name}} ",
                     "image":"{{repository}}:{{tag}}",
@@ -144,12 +140,12 @@ template: |
                       }
                     ],
                     "essential": true,
-                    "environment": [" >> containerDef.json
+                    "environment": [' >> containerDef.json
                     cat {{pipeline_env_file}} | while IFS= read -r line; do
                       value=${line#*=}
                       name=${line%%=*}
                     printf '{\n %s: %s \n},' "$name" "$value" >> containerDef.json
-                    echo "],
+                    echo '],
                     "mountPoints": [],
                     "volumesFrom": [],
                     "logConfiguration": {
@@ -161,7 +157,7 @@ template: |
                       }
                     }
                   }
-                ]" >> containerDef.json
+                ]' >> containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment) 
