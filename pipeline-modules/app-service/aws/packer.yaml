@@ -1,0 +1,42 @@
+provisioner: aws
+name: packer
+version: 1
+revision: 1
+displayName: Build a packer image
+description: Create AMIs using hashicorp packer
+target: ""
+category: VM
+keywords:
+  - packer
+  - VM
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    packer_template_path:
+      title: Packer Template Path
+      description: Path to packer HCL/json template file
+      type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute the bash script from
+      type: string
+      default: repo
+  required:
+    - packer_template_path
+template: |
+  version: 0.2
+  env:
+    shell: bash
+  phases:
+    pre_build:
+      commands:
+        - echo "Installing HashiCorp Packer..."
+        - curl -qL -o packer.zip https://releases.hashicorp.com/packer/0.12.3/packer_0.12.3_linux_amd64.zip && unzip packer.zip
+        - echo "Installing jq..."
+        - curl -qL -o jq https://stedolan.github.io/jq/download/linux64/jq && chmod +x ./jq
+        - echo "Validating amazon-linux_packer-template.json"
+        - ./packer validate amazon-linux_packer-template.json
+    build:
+      commands:
+        - ./packer version 
