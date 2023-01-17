@@ -73,10 +73,30 @@ inputs:
       description: The container image name to be deployed
       type: string
     vpc_config:
-      description: VPC Config to run Deployment on
       title: VPC Config
-      type: string
-      default: null
+      description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
+      type: object
+      default: {}
+      properties:
+        securityGroupIds:
+          title: Security Group IDs
+          description: "A list of one or more security groups IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        subnets:
+          title: Subnet IDs
+          description: "A list of one or more subnet IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        vpcId:
+          title: VPC ID
+          description: "The ID of the Amazon VPC."
+          type: string
+          default: ""
   required: ["region","task_name","service_name","cluster_name","account_id","image_name"]
   internal:
     - repository
