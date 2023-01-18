@@ -2,7 +2,7 @@ provisioner: aws
 name: container-deploy-ecs
 version: 1
 revision: 1
-displayName: "ECS App deployment"
+displayName: "Under Testing ECS App deployment"
 description: "AWS ECS App Deployment template"
 target: "deployment-template"
 keywords: ["bash", "linux" , "ecs aws container"]
@@ -126,7 +126,7 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - echo '[{"name":"{{service_name}}","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":"{{port_mapping.container_port}}","hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
+        - echo '[{"name":"{{service_name}}","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
         - cat {{pipeline_env_file}} 
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
