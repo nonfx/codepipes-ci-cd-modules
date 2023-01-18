@@ -134,7 +134,7 @@ template: |
           name=${line%%=*}
           printf "{\n \"%s\": %s \n}," "$name" "$value" >> containerDef.json
           done
-        - sed 's/.$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
+        - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
