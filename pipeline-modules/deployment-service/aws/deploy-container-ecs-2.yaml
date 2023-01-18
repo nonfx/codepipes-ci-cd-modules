@@ -2,7 +2,7 @@ provisioner: aws
 name: container-deploy-ecs
 version: 1
 revision: 1
-displayName: "Under Testing ECS App deployment"
+displayName: "App deployment"
 description: "AWS ECS App Deployment template"
 target: "deployment-template"
 keywords: ["bash", "linux" , "ecs aws container"]
@@ -132,7 +132,7 @@ template: |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
           value=${line#*=}
           name=${line%%=*}
-          printf "{\n \"%s\": %s \n}," "$name" "$value" >> containerDef.json
+          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
