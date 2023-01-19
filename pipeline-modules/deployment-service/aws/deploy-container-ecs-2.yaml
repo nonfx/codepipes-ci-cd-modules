@@ -131,7 +131,9 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - echo '[{"name":"{{service_name}}","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
+        - aws ecs describe-task-definition --task-definition swiftevent-app-task-definition > taskDef.json
+        - containerDefName=$(cat taskDef.json| jq '.taskDefinition.containerDefinitions[].name')
+        - echo '[{"name":"$(containerDefName)","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
         - cat {{pipeline_env_file}} 
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
@@ -141,10 +143,11 @@ template: |
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
-        - cat containerDef.json
-        - NEW_REVISION=$(aws ecs register-task-definition --family {{task_name}} --container-definitions file://containerDef.json) 
+        - conatinerDef=$(cat containerDef.json)
+        - jq '.taskDefinition.containerDefinitions=$conatinerDef | del(.taskDefinition.taskDefinitionArn) | del(.taskDefinition.revision) | del(.taskDefinition.status) | del(.taskDefinition.requiresAttributes) | del(.taskDefinition.compatibilities) | del(.taskDefinition.registeredAt) | del(.taskDefinition.registeredBy)' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
+        - jq '.taskDefinition.compatibilities = []' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
+        - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://taskDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
-        - aws ecs update-task-definition --task-definition {{task_name}} --launch-type FARGATE
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
