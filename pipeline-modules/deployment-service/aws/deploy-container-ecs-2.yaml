@@ -101,6 +101,11 @@ inputs:
           description: "The ID of the Amazon VPC."
           type: string
           default: ""
+        launch_type:
+          title: ECS Launch Type
+          description: "Launch Type for ECS."
+          type: string
+          default: "FARGATE"
   required: ["task_name","service_name","cluster_name"]
   internal:
     - repository
@@ -139,6 +144,7 @@ template: |
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --family {{task_name}} --container-definitions file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
+        - aws ecs update-task-definition --task-definition {{task_name}} --launch-type FARGATE
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
