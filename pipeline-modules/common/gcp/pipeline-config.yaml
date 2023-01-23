@@ -100,12 +100,11 @@ inputs:
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set google_credentials_path = workspace|add:'/codepipes-user-sa.json' %}
 
   steps:
   - id: 'Switch gcloud auth'
-    name: 'gcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/vanguard-dev-297213/cpi-gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
@@ -120,7 +119,7 @@ template: |
       gcloud auth activate-service-account --key-file $$GOOGLE_APPLICATION_CREDENTIALS
 
   - id: 'Init setup'
-    name: 'gcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/vanguard-dev-297213/cpi-gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
@@ -129,8 +128,6 @@ template: |
       echo "Cloning the pipeline modules..."
       mkdir -p {{pipeline_modules_path}}
       git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
-
-      {{ common_scripts_path }}/install-jq.sh
 
   timeout: {{ pipeline_timeout_sec }}s
   {% if pipeline_logs_bucket %}logsBucket: 'gs://{{ pipeline_logs_bucket }}'{% endif %}

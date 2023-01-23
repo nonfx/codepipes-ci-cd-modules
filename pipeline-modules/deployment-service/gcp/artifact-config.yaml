@@ -37,21 +37,19 @@ inputs:
     - artifact_type
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set source_code_path = workspace|add:'/src' %}
   {% set git_creds_path = '$$HOME/.git-credentials' %}
   {% set git_config_path = '$$HOME/.gitconfig' %}
 
   steps:
   - id: "Artifact Configuration"
-    name: 'gcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/vanguard-dev-297213/cpi-gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
       echo "Artifact configuration"
       {% if artifact_type == 'GitCode' %}
-      {{ common_scripts_path }}/git-config.sh $$git_username $$git_password {{ repository }} {{ git_config_path }} {{ git_creds_path }}
-      {{ common_scripts_path }}/git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+      git-config.sh $$git_username $$git_password {{ repository }} {{ git_config_path }} {{ git_creds_path }}
+      git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
       {% endif %}

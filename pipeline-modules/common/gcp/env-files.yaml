@@ -13,17 +13,15 @@ author: CloudCover
 meta: {}
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
 
   steps:
   - id: 'Setup env files'
-    name: 'gcr.io/cloud-builders/gcloud'
+    name: 'gcr.io/vanguard-dev-297213/cpi-gcloud'
     entrypoint: 'bash'
     args:
     - '-c'
     - |
-      {{ common_scripts_path }}/create-env-file.sh {{ pipeline_env_file }} $(__VG_EXPORTED_ENV_NAMES)
-      {{ common_scripts_path }}/create-env-file.sh {{ pipeline_secret_file }} $(__VG_EXPORTED_SECRET_ENV_NAMES)
+      create-env-file.sh {{ pipeline_env_file }} $(__VG_EXPORTED_ENV_NAMES)
+      create-env-file.sh {{ pipeline_secret_file }} $(__VG_EXPORTED_SECRET_ENV_NAMES)
