@@ -39,7 +39,7 @@ template: |
       commands:
         - echo Installing Golang v{{ go_version }}
         - goenv install {{ go_version }}
-        - goenv local {{ go_version }}
+        - goenv local $(goenv versions | grep -m 1 {{ go_version }} | awk '{ print $1 }')
         - CGO_ENABLED=${CGO_ENABLED:-0}
         - go version
         - echo Building the Go code...
