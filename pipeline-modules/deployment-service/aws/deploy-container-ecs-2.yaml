@@ -138,6 +138,7 @@ template: |
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
+        - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"my-log-group","awslogs-region":"us-west-2","awslogs-stream-prefix":"my-stream-prefix"}}}],"requiresCompatibilities":["FARGATE"],"cpu":"1024","memory":"2048"}' >> containerDef.json
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
