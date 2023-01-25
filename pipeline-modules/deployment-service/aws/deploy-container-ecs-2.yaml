@@ -75,7 +75,7 @@ inputs:
           title: Container Port
           description: "The Container Port to use."
           type: integer
-          default: 2000
+          default: 3000
     vpc_config:
       title: VPC Config
       description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
