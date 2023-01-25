@@ -70,12 +70,12 @@ inputs:
           title: Host Port
           description: "The ECS Port to use."
           type: integer
-          default: 80
+          default: 2000
         container_port:
           title: Container Port
           description: "The Container Port to use."
           type: integer
-          default: 80
+          default: 2000
     vpc_config:
       title: VPC Config
       description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
