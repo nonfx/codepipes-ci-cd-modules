@@ -131,23 +131,37 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - aws ecs describe-task-definition --task-definition swiftevent-app-task-definition > taskDef.json
-        - containerDefName=$(cat taskDef.json| jq '.taskDefinition.containerDefinitions[].name')
-        - echo '[{"name":"$(containerDefName)","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
-        - cat {{pipeline_env_file}} 
+        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::{{account_id}}:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::{{account_id}}:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"{{task_name}}","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
           value=${line#*=}
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
-        - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
-        - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
-        - conatinerDef=$(cat containerDef.json)
-        - jq '.taskDefinition.containerDefinitions=$conatinerDef | del(.taskDefinition.taskDefinitionArn) | del(.taskDefinition.revision) | del(.taskDefinition.status) | del(.taskDefinition.requiresAttributes) | del(.taskDefinition.compatibilities) | del(.taskDefinition.registeredAt) | del(.taskDefinition.registeredBy)' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
-        - jq '.taskDefinition.compatibilities = []' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
+        -  echo '],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"my-log-group","awslogs-region":"us-west-2","awslogs-stream-prefix":"my-stream-prefix"}}}],"requiresCompatibilities":["FARGATE"],"cpu":"1024","memory":"2048"}'
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://taskDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
+        # - echo "Setting configurations" 
+        # - aws ecs describe-task-definition --task-definition swiftevent-app-task-definition > taskDef.json
+        # - containerDefName=$(cat taskDef.json| jq '.taskDefinition.containerDefinitions[].name')
+        # - echo '[{"name":"$(containerDefName)","image":"{{repository}}:{{tag}}","cpu":1024,"memory":2048,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"essential":true,"environment":['  >> containerDef.json
+        # - cat {{pipeline_env_file}} 
+        # - |
+        #   cat {{pipeline_env_file}} | while IFS= read -r line; do
+        #   value=${line#*=}
+        #   name=${line%%=*}
+        #   printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
+        #   done
+        # - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
+        # - echo '],"mountPoints":[],"volumesFrom":[],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/fargate/service/swiftevent-web","awslogs-region":"ap-southeast-1","awslogs-stream-prefix":"ecs"}}}]' >> containerDef.json
+        # - conatinerDef=$(cat containerDef.json)
+        # - jq '.taskDefinition.containerDefinitions=$conatinerDef | del(.taskDefinition.taskDefinitionArn) | del(.taskDefinition.revision) | del(.taskDefinition.status) | del(.taskDefinition.requiresAttributes) | del(.taskDefinition.compatibilities) | del(.taskDefinition.registeredAt) | del(.taskDefinition.registeredBy)' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
+        # - jq '.taskDefinition.compatibilities = []' taskDef.json  > taskDef.json.tmp && mv taskDef.json.tmp taskDef.json
+        # - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://taskDef.json) 
+        # - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
+        # - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
+        # - echo "done" 
+        # - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
