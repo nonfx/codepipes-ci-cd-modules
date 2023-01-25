@@ -11,6 +11,16 @@ keywords:
   - cp_internal
 author: CloudCover
 meta: {}
+inputs:
+  properties:
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available secret variable id.
+      type: object
+      default: {}
+internal:
+  - pipeline_secret_env
+
 template: |
   {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -20,3 +30,9 @@ template: |
   - script: |
       create-env-file.sh {{ pipeline_env_file }} $(__VG_EXPORTED_ENV_NAMES)
       create-env-file.sh {{ pipeline_secret_file }} $(__VG_EXPORTED_SECRET_ENV_NAMES)
+    {% if pipeline_secret_env %}
+    env:
+    {% for env_key in pipeline_secret_env %}
+      {{ env_key}}: $({{ env_key }})
+    {% endfor -%}
+    {% endif %}

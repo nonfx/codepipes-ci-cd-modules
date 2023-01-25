@@ -1,0 +1,58 @@
+provisioner: gcp
+name: make-target
+version: 1
+revision: 1
+displayName: Makefile Target
+description: Execute a target in a Makefile
+target: ""
+category: utility
+keywords:
+  - make
+  - linux
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The directory within the repo where the Makefile is located
+      type: string
+      default: repo
+    makefile_name:
+      title: Makefile name
+      description: Custom file name for Makefile
+      type: string
+      default: ""
+    targets:
+      title: Target definitions
+      description: The Makefile target to execute
+      type: array
+      default: []
+      items:
+        type: object
+        required:
+          - name
+        properties:
+          name:
+            title: Target name
+            description: Name of the target to execute
+            type: string
+          target_dir:
+            title: Target working directory
+            description: Working directory for this target
+            type: string
+            default: "."
+
+template: |
+  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+
+  steps:
+    {% for target in targets %}
+  - name: 'cldcvr/cpi-make'
+    dir: {{ workspace }}/{{ working_dir }}/{{ target.target_dir }}
+    args:
+      {% if makefile_name %}
+      - -f {{ makefile_name }}
+      {% endif %}
+      - '{{ target.name }}'
+    {% endfor %}

@@ -5,7 +5,7 @@ revision: 1
 displayName: Bash script
 description: Execute a bash script
 target: ""
-category: bash
+category: utility
 keywords:
   - bash
   - linux
@@ -34,7 +34,7 @@ template: |
     - task: Bash@3
       inputs:
         targetType: inline
-        working_dir: {{ working_dir }}
+        workingDirectory: {{ working_dir }}
         script: |
           set -x
           {{ bash_script }}
