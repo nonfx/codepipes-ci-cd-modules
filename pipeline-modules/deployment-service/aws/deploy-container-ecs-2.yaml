@@ -133,7 +133,7 @@ template: |
         - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
         - echo $taskDetails
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
-        - logConfiguration=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].logConfiguration)
+        - logConfiguration=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].logConfiguration')
         - echo $logConfiguration
         - echo $containerName
         - echo "Setting configurations" 
