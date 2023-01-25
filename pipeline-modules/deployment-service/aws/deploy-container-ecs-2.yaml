@@ -133,7 +133,7 @@ template: |
         - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
         - echo $taskDetails
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
-        - logConfiguration=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].logConfiguration')
+        - logConfiguration=$(echo $taskDetails | jq -r -c '.taskDefinition.containerDefinitions[].logConfiguration')
         - echo $logConfiguration
         - echo $containerName
         - echo "Setting configurations" 
@@ -145,7 +145,7 @@ template: |
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
-        - echo '],"logConfiguration":"'$logConfiguration'"}}],"requiresCompatibilities":[{{launch_type}}],"cpu":"1024","memory":"2048"}' >> containerDef.json
+        - echo '],"logConfiguration":'$logConfiguration'}}],"requiresCompatibilities":[{{launch_type}}],"cpu":"1024","memory":"2048"}' >> containerDef.json
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
