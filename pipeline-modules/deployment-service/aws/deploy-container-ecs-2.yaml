@@ -139,7 +139,7 @@ template: |
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - echo '],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"my-log-group","awslogs-region":"us-west-2","awslogs-stream-prefix":"my-stream-prefix"}}}],"requiresCompatibilities":["FARGATE"],"cpu":"1024","memory":"2048"}' >> containerDef.json
-        - echo containerDef.json
+        - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
