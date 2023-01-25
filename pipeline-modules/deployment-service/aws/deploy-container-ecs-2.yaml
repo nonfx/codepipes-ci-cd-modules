@@ -135,7 +135,7 @@ template: |
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
         - echo $containerName
         - echo "Setting configurations" 
-        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
+        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/swiftevent-ecs-iam-role-v2","taskRoleArn":"arn:aws:iam::887353307671:role/swiftevent-ecs-iam-role-v2","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
           value=${line#*=}
