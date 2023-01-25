@@ -133,6 +133,8 @@ template: |
         - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
         - echo $taskDetails
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
+        - logConfiguration=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].logConfiguration)
+        - echo $logConfiguration
         - echo $containerName
         - echo "Setting configurations" 
         - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/swiftevent-ecs-iam-role-v2","taskRoleArn":"arn:aws:iam::887353307671:role/swiftevent-ecs-iam-role-v2","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":{{port_mapping.container_port}},"hostPort":{{port_mapping.host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
@@ -143,7 +145,7 @@ template: |
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
-        - echo '],"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"my-log-group","awslogs-region":"us-west-2","awslogs-stream-prefix":"my-stream-prefix"}}}],"requiresCompatibilities":["FARGATE"],"cpu":"1024","memory":"2048"}' >> containerDef.json
+        - echo '],"logConfiguration":"'$logConfiguration'"}}],"requiresCompatibilities":[{{launch_type}}],"cpu":"1024","memory":"2048"}' >> containerDef.json
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
