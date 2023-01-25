@@ -131,7 +131,7 @@ template: |
     build:
       commands:
         - echo "Setting configurations" 
-        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::{{account_id}}:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::{{account_id}}:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"{{task_name}}","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":[' >> containerDef.json
+        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"{{task_name}}","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
           value=${line#*=}
