@@ -5,7 +5,7 @@ revision: 1
 displayName: Bash script
 description: The bash script to run
 target: ""
-category: bash
+category: utility
 keywords:
   - bash
   - linux
