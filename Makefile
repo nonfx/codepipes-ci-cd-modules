@@ -18,7 +18,7 @@ endif
 
 CLOUD_BUILDERS_DIR=cloud-builders
 CLOUD_BUILDER_NAMES=$(shell find $(CLOUD_BUILDERS_DIR) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-CLOUD_BUILDER_PLATFORMS="linux/arm/v8,linux/amd64"
+CLOUD_BUILDER_PLATFORMS="linux/arm64/v8,linux/amd64"
 CLOUD_BUILDER_REPOBASE="cldcvr/"
 CLOUD_BUILDER_REPO_PREFIX="cpi-"
 ifneq ($(TAG),)
