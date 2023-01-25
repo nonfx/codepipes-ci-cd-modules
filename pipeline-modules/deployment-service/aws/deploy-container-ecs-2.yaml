@@ -130,8 +130,10 @@ template: |
         - aws configure set region $AWS_DEFAULT_REGION
     build:
       commands:
+        - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
+        - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
         - echo "Setting configurations" 
-        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"{{task_name}}","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":[' >> containerDef.json
+        - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","taskRoleArn":"arn:aws:iam::887353307671:role/AWSServiceRoleForECS","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
           value=${line#*=}
