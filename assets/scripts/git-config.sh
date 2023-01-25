@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 sn=`basename $0`
 script_dir=`dirname $0`
 

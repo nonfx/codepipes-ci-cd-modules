@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-# set -x
 sn=`basename $0`
 
 [ $# -lt 2 ] && echo "$0: must supply at least 2 parameters - env_file_name, <list of exported variables>" && exit 1

@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 sn=`basename $0`
 
 [ $# -ne 3 ] && echo "$0: must supply 3 parameters - git_repo, git_ref, source_code_path" && exit 1
