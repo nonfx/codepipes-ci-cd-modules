@@ -15,7 +15,7 @@ inputs:
       title: Artifact Bucket
       description: Name of the bucket to store Terraform artifacts.
       type: string
-      format: regex
+      pattern: "[a-z0-9\\-_.]{3,63}" # see: https://cloud.google.com/storage/docs/naming-buckets
     artifact_dir:
       title: Artifact Directory
       description: Name of the root directory in the artifact bucket.
