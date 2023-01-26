@@ -25,7 +25,6 @@ inputs:
       title: Artifact Bucket
       description: Name of the bucket to store Terraform artifacts.
       type: string
-      format: regex
     artifact_dir:
       title: Artifact Directory
       description: Name of the root directory in the artifact bucket.
@@ -207,4 +206,3 @@ template: |
       {% endif %}
       az logout
     timeoutInMinutes: 300
-

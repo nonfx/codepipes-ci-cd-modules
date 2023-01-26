@@ -15,7 +15,7 @@ inputs:
       title: Artifact Bucket
       description: Name of the bucket to store Terraform artifacts.
       type: string
-      format: regex
+      pattern: "[a-z0-9\\-.]{3,63}" # see: https://docs.aws.amazon.com/AmazonS3/latest/userguide/BucketRestrictions.html
     artifact_dir:
       title: Artifact Directory
       description: Name of the root directory in the artifact bucket.
