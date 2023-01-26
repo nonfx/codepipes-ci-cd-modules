@@ -19,7 +19,6 @@ template: |
   steps:
   - id: 'Setup env files'
     name: 'cldcvr/cpi-config'
-    entrypoint: 'bash'
     args:
     - '-c'
     - |

@@ -33,17 +33,12 @@ inputs:
     - git_login
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set git_creds_path = '$$HOME/.git-credentials' %}
   {% set git_config_path = '$$HOME/.gitconfig' %}
 
   steps:
-  - name: 'gcr.io/cloud-builders/git'
-    entrypoint: 'bash'
+  - name: 'cldcvr/cpi-config'
     args:
     - '-c'
     - |
-      {{ common_scripts_path }}/install-jq.sh
-
-      {{ common_scripts_path }}/git-config.sh {{ git_login }} $$GIT_PASSWORD {{ git_remote_path }} {{ git_config_path }} {{ git_creds_path }}
+      git-config.sh {{ git_login }} $$GIT_PASSWORD {{ git_remote_path }} {{ git_config_path }} {{ git_creds_path }}

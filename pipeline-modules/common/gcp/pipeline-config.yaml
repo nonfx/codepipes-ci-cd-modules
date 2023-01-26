@@ -118,7 +118,6 @@ template: |
 
   - id: 'Init setup'
     name: 'cldcvr/cpi-config'
-    entrypoint: 'bash'
     args:
     - '-c'
     - |

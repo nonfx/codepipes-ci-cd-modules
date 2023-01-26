@@ -13,4 +13,4 @@ RUN curl -sLJO https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}
     mv jq-linux64 /usr/local/bin/jq
 
 ENV PATH=$CP_ASSETS_PATH:$PATH
-
+ENTRYPOINT [ "bash" ]

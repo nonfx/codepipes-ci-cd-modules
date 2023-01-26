@@ -44,7 +44,6 @@ template: |
   steps:
   - id: "Artifact Configuration"
     name: 'cldcvr/cpi-config'
-    entrypoint: 'bash'
     args:
     - '-c'
     - |
