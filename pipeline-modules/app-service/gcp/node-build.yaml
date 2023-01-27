@@ -1,0 +1,56 @@
+provisioner: gcp
+name: node-build
+version: 1
+revision: 1
+displayName: Node.js Build
+description: This plugin is for building or testng your app with Node.js
+target: ""
+category: build
+keywords:
+  - Node.js
+  - NPM
+  - Yarn
+  - Install
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    package_manager:
+      title: Package manager
+      description: Your package manager, either node or yarn
+      type: string
+      default: node
+      enum:
+        - node
+        - yarn
+    npm_build_args:
+      title: Package manager arguments
+      description: Arguments for your Package manager command
+      type: array
+      default: ["install"]
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    node_js_version:
+      title: Node.js Version
+      description: The version of Node.js being used (From https://hub.docker.com/_/node/)
+      type: string
+      default: 18.12.0-alpine
+  # For some reason required fields with default value is not allowed, this needs to be fixed before we uncomment the below fields
+  # required:
+  #   - package_manager
+  #   - npm_build_args
+template: |
+  steps:
+  {% for arg in npm_build_args %}
+  - id: '{{ package_manager }} {{ arg }}'
+    name: node:{{ node_js_version }}
+    entrypoint: {{ package_manager }}
+    args: ['{{ arg }}']
+    dir: {{ working_dir }}
+  {% endfor %}

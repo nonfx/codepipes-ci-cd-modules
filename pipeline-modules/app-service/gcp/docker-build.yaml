@@ -1,0 +1,37 @@
+provisioner: gcp
+name: docker-build
+version: 1
+revision: 1
+displayName: Docker Build
+description: This plugin only builds the Docker image, useful for running checks
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_build_args:
+      title: Docker Build Arguments
+      description: Arguments for the docker build command
+      type: array
+      default: [".", "--tag", "temp"]
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+template: |
+  steps:
+  - id: 'Docker Build'
+    name: 'gcr.io/cloud-builders/docker'
+    dir: {{ working_dir }}
+    args:
+    - build
+    {% for arg in docker_build_args %}
+    - {{ arg }}
+    {% endfor %}

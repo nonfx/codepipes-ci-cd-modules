@@ -1,0 +1,38 @@
+provisioner: aws
+name: docker-build
+version: 1
+revision: 1
+displayName: Docker Build
+description: This plugin only builds the Docker image, useful for running checks
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_build_args:
+      title: Docker Build Arguments
+      description: Arguments for the docker build command
+      type: array
+      default: []
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+template: |
+  version: 0.2
+
+  phases:
+    build:
+      commands:
+        - echo Build started on `date`
+        - echo Building the Docker image...
+        - docker build -t temp {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+        - echo Build completed on `date`
+
