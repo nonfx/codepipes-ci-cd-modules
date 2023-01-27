@@ -29,7 +29,6 @@ inputs:
     - sonar_cloud_project_key
     - sonar_login_token
 template: |
-  version: 0.1
   phases:
     install:
       commands:
@@ -41,6 +40,6 @@ template: |
       commands:
         - sonar-scanner -Dsonar.login={{sonar_login_token}} -Dsonar.host.url={{sonar_host}} -Dsonar.projectKey={{sonar_cloud_project_key}}
         - sleep 100
-        - curl -u {{sonar_login_token}}: {{sonar_host}}/api/qualitygates/project_status?projectKey={{sonar_cloud_project_key}} >result.json
+        - curl -u {{sonar_login_token}}: {{sonar_host}}/api/qualitygates/project_status?projectKey={{sonar_cloud_project_key}} > result.json
         - cat result.json
         - if [ $(jq -r '.projectStatus.status' result.json) = ERROR ] ; then $CODEBUILD_BUILD_SUCCEEDING -eq 0 ;fi
