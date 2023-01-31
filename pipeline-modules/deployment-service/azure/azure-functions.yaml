@@ -55,7 +55,7 @@ inputs:
     - job_type
     - repo_dir
 template: |
-  {% set workspace = '$BUILD_SOURCESDIRECTORY' %}
+  {% set workspace = '$(Build.SourcesDirectory)' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
   steps:
