@@ -46,7 +46,7 @@ inputs:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: deploy   
+      default: deploy
   required: ["function_app_name"]
   internal:
     - app_env

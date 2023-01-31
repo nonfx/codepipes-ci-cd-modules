@@ -29,7 +29,7 @@ inputs:
     artifact_type:
       title: Artifact type
       description: Type of artifact
-      type: string   
+      type: string 
   internal:
     - repository
     - tag
