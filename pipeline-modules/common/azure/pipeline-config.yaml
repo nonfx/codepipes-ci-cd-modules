@@ -52,7 +52,7 @@ inputs:
     - pipeline_module_git_rev
 
 template: |
-  {% set workspace = '$(Pipeline.Workspace)' %}
+  {% set workspace = '$(Build.SourcesDirectory)' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
