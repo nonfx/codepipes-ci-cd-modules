@@ -50,6 +50,7 @@ template: |
   phases:
     build:
       commands:
+        - cd {{working_dir}}
         - echo Installing Gosec
         - wget -O - -q https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s v{{gosec_version}}
         - ./bin/gosec --version
