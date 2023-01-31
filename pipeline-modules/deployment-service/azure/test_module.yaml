@@ -36,6 +36,12 @@ inputs:
       title: Echo String value
       description: The string to echo to the log.
       type: string
+    pool_name:
+      title: Pool Name
+      description: Use  Azure selfhosted agent by proving agent pool name.
+      type: string
+      default: ""      
+
   required:
     - echo_string
     - echo_int
