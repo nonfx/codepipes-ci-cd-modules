@@ -27,15 +27,15 @@ inputs:
       description: Istio Argument
       type: string
       default: install --set profile=default
+    enable_istio_access_log:
+      title: Istio-proxy Access Log
+      description: To enable Istio accessLogging
+      type: boolean
+      default: true         
     resourceGroup:
       title: Azure Resource Group
       description: Azure Resource Group where AKS Cluster is deployed
       type: string
-    job_type:
-      title: Job Type
-      description: This is to deploy or undeploy application
-      type: string
-      default: deploy
     projectName:
       title: Code Pipes Project Name
       description: Code Pipes Project Name
@@ -74,12 +74,17 @@ inputs:
       description: Use  Azure selfhosted agent by proving agent pool name.
       type: string
       default: ""      
-
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy      
   required:
     - cluster
     - resourceGroup
   internal:
     - job_type
+
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -100,6 +105,7 @@ template: |
           {% endif %}
           {% else %}
           istioctl x uninstall --purge --skip-confirmation
+          kubectl delete  ns istio-system --ignore-not-found=true
           {% endif %}
       displayName: "Istio {{job_type}}"
       env:
@@ -156,4 +162,38 @@ template: |
           {% endif %}
       displayName: "Ingress {{job_type}}"
     {% endif %}
+  {% if job_type == 'deploy' %}  
+  {% if enable_istio_access_log %}
+    - script: |
+          #Set kubernetes config
+          echo "
+          apiVersion: telemetry.istio.io/v1alpha1
+          kind: Telemetry
+          metadata:
+            name: mesh-default
+            namespace: istio-system
+          spec:
+            accessLogging:
+              - providers:
+                - name: envoy " >> enable_istio_access_log.yaml
+          kubectl apply -f enable_istio_access_log.yaml 
+      displayName: "Enabled istio Access Logging"
+  {% else %}
+    - script: |
+          #Set kubernetes config
+          echo "
+          apiVersion: telemetry.istio.io/v1alpha1
+          kind: Telemetry
+          metadata:
+            name: mesh-default
+            namespace: istio-system
+          spec:
+            accessLogging:
+              - providers:
+                - name: envoy " >> enable_istio_access_log.yaml
+          kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml  
+      displayName: "Disabled istio Access Logging"    
+  {% endif %}
+  {% endif %}
+    
 

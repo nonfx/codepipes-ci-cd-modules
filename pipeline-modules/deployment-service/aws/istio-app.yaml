@@ -22,6 +22,11 @@ inputs:
       title: Region name
       type: string
       description: region name for cluster
+    projectName:
+      title: project name
+      description: project name
+      type: string   
+      default: "codepipes"       
     istio_version:
       title: Istio Version
       description: Istio version to install
@@ -36,10 +41,62 @@ inputs:
       title: AWS Role ARN
       description: AWS Role ARN to be user
       type: string
+    enable_istio_access_log:
+      title: Istio-proxy Access Log
+      description: To enable Istio access logging
+      type: boolean
+      default: true  
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy 
+    ingress_install:
+      title: IngressInstall
+      type: boolean
+      default: false
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+            default: ""              
+    ingress:
+      title: Ingress
+      description: Ingress Details
+      type: array
+      default: []
+      items:
+        type: object
+        properties:               
+          certificateArn:
+            title: CertificateARN
+            type: string
+            default: ""
+          externalDNSenabled:
+            title: externalDNSenabled
+            type: string
+            default: "false"
+          bucketName:
+            title: S3BucketName
+            type: string
+            default: ""
+          lbFaceType:
+            title: AwsLoadBalancerFaceType
+            type: string
+            default: "internet-facing"  
   required:
     - cluster
     - region
     - roleArn
+  internal:
+    - job_type    
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -55,10 +112,235 @@ template: |
       - curl -sL https://istio.io/downloadIstioctl | sh -
       - export PATH=$PATH:$HOME/.istioctl/bin
       - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
-      - istioctl x precheck
+
+
     build:
       commands:
+        {% if job_type == 'deploy' %}
+        - istioctl x precheck
         - export PATH="{{workspace}}/bin:$PATH"
-        - istioctl {{istio_args}} -y
+        - istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.type=NodePort  -y
+        {% else %}
+        - istioctl x uninstall --purge --skip-confirmation
+        {% endif %}
+      
+      {% if job_type == 'deploy' %}
+        {% if enable_istio_access_log %}
+        - |
+          echo "
+          apiVersion: telemetry.istio.io/v1alpha1
+          kind: Telemetry
+          metadata:
+            name: mesh-default
+            namespace: istio-system
+          spec:
+            accessLogging:
+              - providers:
+                - name: envoy " >> enable_istio_access_log.yaml
+          kubectl apply -f enable_istio_access_log.yaml
+        {% else %}  
+        - |
+          echo "
+          apiVersion: telemetry.istio.io/v1alpha1
+          kind: Telemetry
+          metadata:
+            name: mesh-default
+            namespace: istio-system
+          spec:
+            accessLogging:
+              - providers:
+                - name: envoy " >> enable_istio_access_log.yaml
+          #kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml          
+        {% endif %}
+      {% endif %}  
 
 
+      {% if ingress_install %}
+        - |
+          echo "
+          apiVersion: networking.istio.io/v1alpha3
+          kind: Gateway
+          metadata:
+            name: {{ projectName | lower }}-httpbin-gateway
+          spec:
+            selector:
+              istio: ingressgateway # use Istio default gateway implementation
+            servers:
+            - port:
+                number: 80
+                name: http
+                protocol: HTTP
+              hosts:
+              - '*' "  >> istio_gateway.yaml ;
+          {% if job_type == 'deploy' %}
+          kubectl apply -f istio_gateway.yaml ;
+          {% else %} 
+          #kubectl delete --ignore-not-found=true -f istio_gateway.yaml ;
+          {% endif %}          
+
+        - |
+          echo "          
+          apiVersion: networking.istio.io/v1alpha3
+          kind: VirtualService
+          metadata:
+            name: health
+          spec:
+            gateways:
+            - {{ projectName | lower }}-httpbin-gateway
+            hosts:
+            - '*'
+            http:
+            - match:
+              - uri: 
+                  exact: /healthz/ready
+              route:
+              - destination:
+                  host: istio-ingressgateway.istio-system.svc.cluster.local
+                  port:
+                    number: 15021 " >> istio_healthcheck_vs.yaml ;
+              
+          {% if job_type == 'deploy' %}
+          kubectl apply -f istio_healthcheck_vs.yaml ;
+          {% else %} 
+          #kubectl delete --ignore-not-found=true -f istio_healthcheck_vs.yaml ;
+          {% endif %}
+
+          {% if ingress %}
+          {% for ing in ingress %} 
+
+        - |
+          echo "
+          apiVersion: networking.k8s.io/v1
+          kind: Ingress
+          metadata:
+            name: {{ projectName | lower }}-istio-ingress
+            namespace: istio-system
+            annotations:
+              kubernetes.io/ingress.class: 'alb'
+              alb.ingress.kubernetes.io/scheme: 'internet-facing'
+              alb.ingress.kubernetes.io/scheme: '{{ ing.lbFaceType }}'
+              alb.ingress.kubernetes.io/certificate-arn: '{{ ing.certificateArn }}'
+              {% if domains %}
+              {% for domain in domains %}
+              external-dns.alpha.kubernetes.io/hostname: '{{  domain.name }}'
+              {% endfor %}
+              {% endif %}
+              alb.ingress.kubernetes.io/healthcheck-path: '/healthz/ready'
+              alb.ingress.kubernetes.io/listen-ports: '[{\"HTTP\": 80}, {\"HTTPS\":443}]'
+              alb.ingress.kubernetes.io/ssl-redirect: '443'
+              external-dns.alpha.kubernetes.io/alias: 'true'
+              alb.ingress.kubernetes.io/tags: 'createdBy=codepipes'
+              alb.ingress.kubernetes.io/load-balancer-attributes: 'routing.http.drop_invalid_header_fields.enabled=true'
+              {% for ing in ingress %}
+              {% if ing.bucketName %}
+              alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,access_logs.s3.enabled=true,access_logs.s3.bucket="{{ ing.bucketName }}",access_logs.s3.prefix={{ projectName | lower }}-httpbin-gateway
+              {% endif %}
+              {% endfor %}                        
+
+          spec:
+            rules:
+            {% if domains %}
+            {% for domain in domains %}
+            - host: {{  domain.name }} 
+              http:
+                paths:
+                - path: /*
+                  pathType: ImplementationSpecific
+                  backend:
+                    service:
+                      name: istio-ingressgateway
+                      port:
+                        number: 80  
+            {% endfor %}            
+            {% endif %}   " >> ingress.yaml         
+          {% if job_type == 'deploy' %}
+          kubectl apply -f ingress.yaml ;
+          {% else %} 
+          kubectl delete --ignore-not-found=true -f ingress.yaml ;
+          {% endif %}
+        {% if ing.externalDNSenabled %}
+        - |
+          echo "
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: external-dns
+            # If you're using Amazon EKS with IAM Roles for Service Accounts, specify the following annotation.
+            # Otherwise, you may safely omit it.
+          #  annotations:
+              # Substitute your account ID and IAM service role name below.
+          #    eks.amazonaws.com/role-arn: arn:aws:iam::543332486884:role/test-eks-cluster-role-kcqu
+          ---
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRole
+          metadata:
+            name: external-dns
+          rules:
+          - apiGroups: ['']
+            resources: ['services','endpoints','pods']
+            verbs: ['get','watch','list']
+          - apiGroups: ['extensions','networking.k8s.io']
+            resources: ['ingresses']
+            verbs: ['get','watch','list']
+          - apiGroups: ['']
+            resources: ['nodes']
+            verbs: ['list','watch']
+          ---
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: external-dns-viewer
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: external-dns
+          subjects:
+          - kind: ServiceAccount
+            name: external-dns
+            namespace: default
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: external-dns
+          spec:
+            strategy:
+              type: Recreate
+            selector:
+              matchLabels:
+                app: external-dns
+            template:
+              metadata:
+                labels:
+                  app: external-dns
+                # If you're using kiam or kube2iam, specify the following annotation.
+                # Otherwise, you may safely omit it.
+              spec:
+                serviceAccountName: external-dns
+                {% if domains %}
+                {% for domain in domains %}                 
+                containers:
+                - name: external-dns
+                  image: k8s.gcr.io/external-dns/external-dns:v0.10.1
+                  args:
+                  - --source=service
+                  - --source=ingress
+                  - --domain-filter={{  domain.name }}	 # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+                  - --provider=aws
+                  - --policy=sync # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+                  - --aws-zone-type=public # only look at public hosted zones (valid values are public, private or no value for both)
+                  - --registry=txt
+                securityContext:
+                  fsGroup: 65534
+                {% endfor %}            
+                {% endif %}   " >> external-dns.yaml               
+          {% if job_type == 'deploy' %}
+          kubectl apply -f external-dns.yaml ;
+          {% else %} 
+          kubectl delete --ignore-not-found=true -f external-dns.yaml ;
+          {% endif %}                
+          
+          {% endif %}
+          {% endfor %}              
+          {% endif %}          
+        {% endif %}
