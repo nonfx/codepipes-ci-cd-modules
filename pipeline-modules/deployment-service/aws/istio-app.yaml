@@ -87,6 +87,10 @@ inputs:
             title: S3BucketName
             type: string
             default: ""
+          lbFaceType:
+            title: AwsLoadBalancerFaceType
+            type: string
+            default: "internet-facing"  
   required:
     - cluster
     - region
@@ -214,6 +218,7 @@ template: |
             annotations:
               kubernetes.io/ingress.class: 'alb'
               alb.ingress.kubernetes.io/scheme: 'internet-facing'
+              alb.ingress.kubernetes.io/scheme: '{{ ing.lbFaceType }}'
               alb.ingress.kubernetes.io/certificate-arn: '{{ ing.certificateArn }}'
               {% if domains %}
               {% for domain in domains %}
