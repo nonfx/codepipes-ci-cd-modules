@@ -98,6 +98,8 @@ inputs:
     - pipeline_module_git_rev
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
@@ -118,7 +120,7 @@ template: |
       type: "PLAINTEXT"
     - name: "__VG_EXPORTED_SECRET_ENV_NAMES"
       value: "{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
-      type: "PLAINTEXT"
+      type: "PLAINTEXT"      
     {% for env_key, env_value in pipeline_env %}
     - name: {{ env_key|cpi_quote }}
       value: {{ env_value|cpi_quote }}
@@ -157,7 +159,34 @@ template: |
       phases:
         pre_build:
           commands:
-            - echo "Cloning the pipeline modules..."
+            # installing jq v1.6
+            - curl -sLJO https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            - mkdir {{workspace}}/bin && mv jq-linux64 {{workspace}}/bin/jq
+            - chmod +x {{workspace}}/bin/jq
+            - export PATH="{{workspace}}/bin:$PATH"
+            - |
+              echo "$git_repo"
+              if [ ! -z "$git_repo" -a "$git_repo" != " " ]; then
+                  mkdir -p {{source_code_path}}
+                  git clone $git_repo --branch {{tag}} --single-branch {{source_code_path}}
+                  ls {{source_code_path}}/{{repo_dir}}/
+              fi
+            # Preparing environment variables file...
+            - |
+              for name in ${__VG_EXPORTED_ENV_NAMES}
+              do
+                printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_env_file}}
+                printf "Exporting variable '$name'\n"
+              done
+            # Preparing Secret environment variables file...
+            - |
+              for name in ${__VG_EXPORTED_SECRET_ENV_NAMES}
+              do
+                printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> {{pipeline_secret_file}}
+                printf "Exporting Secret variable '$name'\n"
+              done              
+
+            # Cloning the pipeline modules...
             - mkdir -p {{pipeline_modules_path}}
             - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
             - export PATH={{ common_scripts_path }}:$PATH

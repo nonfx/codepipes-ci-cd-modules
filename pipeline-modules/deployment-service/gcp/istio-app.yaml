@@ -35,14 +35,20 @@ inputs:
       type: string
       default: install --set profile=default
     enable_istio_access_log:
-      title: Istio-proxy Access kog
-      description: This is to create deployment
+      title: Istio-proxy Access Log
+      description: To enable Istio access logging
       type: boolean
       default: true   
-
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
   required:
     - cluster
     - region
+  internal:
+    - job_type
 
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
@@ -51,6 +57,7 @@ template: |
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
 
   steps:
+  {% if job_type == 'deploy' %}
   - id: 'Istio installation'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -58,7 +65,7 @@ template: |
     - '-c'
     - |
       #Set kubernetes config
-      gcloud container clusters get-credentials testing --region us-central1
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
       #Install Istio
       # Determines the operating system.
       curl -sL https://istio.io/downloadIstioctl | sh -
@@ -66,6 +73,7 @@ template: |
       istioctl {{istio_args}} -y;
     env:
     - 'ISTIO_VERSION={{istio_version}}'
+  {% if enable_istio_access_log %}
   - id: 'Istio Access Log Enable'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -73,8 +81,7 @@ template: |
     - '-c'
     - |
       #Set kubernetes config
-      gcloud container clusters get-credentials testing --region us-central1
-      {% if enable_istio_access_log %}
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
       echo "
       apiVersion: telemetry.istio.io/v1alpha1
       kind: Telemetry
@@ -86,6 +93,40 @@ template: |
           - providers:
             - name: envoy " >> enable_istio_access_log.yaml
       kubectl apply -f enable_istio_access_log.yaml
-      {% endif %}
+  {% else %}
+  - id: 'Istio Access Log Disable'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      #Set kubernetes config
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+      echo "
+      apiVersion: telemetry.istio.io/v1alpha1
+      kind: Telemetry
+      metadata:
+        name: mesh-default
+        namespace: istio-system
+      spec:
+        accessLogging:
+          - providers:
+            - name: envoy " >> enable_istio_access_log.yaml
+      kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml
+  {% endif %}
+  {% else %}
+  - id: 'Uninstall Istio'
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+      kubectl delete --ignore-not-found=true Telemetry  mesh-default -n istio-system
+      curl -sL https://istio.io/downloadIstioctl | sh -
+      export PATH=$$PATH:$$HOME/.istioctl/bin     
+      istioctl uninstall --purge -y
+      kubectl delete namespace istio-system
+  {% endif %}
 
 
