@@ -61,7 +61,7 @@ inputs:
       description: Path to your helm chart values including values file name
       type: string
     helm_values_set_var:
-      title: Helm Chart Values Path
+      title: Helm Set Values
       description: "Optional : Key1=Value1,Key2=Value , which override the value inside values.yaml"
       type: string
 
