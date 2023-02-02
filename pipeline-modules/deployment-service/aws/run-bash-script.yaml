@@ -1,0 +1,80 @@
+provisioner: aws
+name: run-bash-script
+version: 1
+revision: 1
+displayName: Execute a bash script
+description: Execute a bash script from file
+target: "deployment-template"
+keywords:
+  - bash
+  - linux
+author: CloudCover
+meta:
+  inputArtifactType:
+    - GitCode
+
+inputs:
+  properties:
+    bash_script:
+      title: Bash script
+      description: This the filename of the bash script to run
+      type: string
+    script_parameters:
+      title: Parameters to pass to the bash script
+      type: array
+      default: []
+      items:
+        type: string
+    repo_dir:
+      title: Repo Dir
+      description: Repo Dir
+      type: string
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        required: [Command, Name]
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+  required:
+    - bash_script
+  internal:
+    - pipeline_summary_var
+    - repo_dir
+    - job_type
+template: |
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+  version: 0.2
+  phases:
+    build:
+      commands:
+        - export CODEPIPES_DEPLOY_ACTION={{ job_type }}
+        - if [ -f {{ pipeline_env_file }} ]; then source {{ pipeline_env_file }}; fi
+        - if [ -f {{ pipeline_secret_env_file }} ]; then source {{ pipeline_secret_env_file }}; fi
+        - cd {{ source_code_path }}/{{ repo_dir }}
+        - ./{{ bash_script }} {% for param in script_parameters %}{{param}} {% endfor %}
+    post_build:
+      commands:
+        - echo "###pipeline-summary-start###" >> summary.txt 2>&1
+        {% if pipeline_summary_var %}
+        - {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+        {% endif %}
+        - echo "Completion Status=[bash script completed {{ job_type }} at $(date)]" >> summary.txt 2>&1
+        - echo "###pipeline-summary-end###" >> summary.txt 2>&1
+        - cat summary.txt
