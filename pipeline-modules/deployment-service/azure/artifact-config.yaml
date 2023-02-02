@@ -36,7 +36,7 @@ inputs:
     - repo_dir
     - artifact_type
 template: |
-  {% set workspace = '$(Pipeline.Workspace)' %}
+  {% set workspace = '$(Build.SourcesDirectory)' %}
   {% set source_code_path = workspace|add:'/source_code' %}
   {% set git_creds_path = '$HOME/.git-credentials' %}
   {% set git_config_path = '$HOME/.gitconfig' %}
