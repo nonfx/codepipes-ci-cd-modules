@@ -3,7 +3,7 @@ name: docker-compose-build-n-push
 version: 1
 revision: 1
 displayName: Docker Compose Build & Push docker images
-description: This plugin only use to Run docker compose  build  & push command
+description: This plugin only use to Run docker compose to   build  & push docker image for service. Service name must define in docker compose yaml.
 target: ""
 category: containerise
 keywords:
