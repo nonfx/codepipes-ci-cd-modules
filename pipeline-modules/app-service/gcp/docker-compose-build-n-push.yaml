@@ -20,7 +20,6 @@ inputs:
       title: Service Name
       description: "Service Name for which Docker image will build & push \n ,Note: Make sure Service name  must pe present in docker-compose.yaml"
       type: string
-      default: service-name        
     enable_docker_buildkit:
       title: Enable docker  build kit
       description: This input enable DOCKER_BUILDKIT
