@@ -30,7 +30,7 @@ inputs:
       title: Image Tag
       description: Tag name for the container image
       type: string
-      default: latest
+      default: ""
     use_github_tag:
       title: Use github tag
       description: Tag name for the container image using github sha
@@ -94,7 +94,7 @@ template: |
     {% endif %}      
   {% endif %}      
 
-  {% if container_tag %}
+  {% if container_tag != "" %}
   - id: 'Docker Compose Build with  conatiner tag'
     name: 'docker/compose:debian-1.29.2'
     dir: {{ working_dir }}
