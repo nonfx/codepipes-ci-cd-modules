@@ -1,0 +1,112 @@
+provisioner: gcp
+name: docker-compose-build-n-push
+version: 1
+revision: 1
+displayName: Docker Compose Build & Push docker images
+description: This plugin only use to Run docker compose to   build  & push docker image for specific service with  tag git Hash Commit or any Container tag. Service name must define in docker compose yaml.
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+  - Push 
+  - Docker-compose
+    
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_compose_service_name:
+      title: Service Name
+      description: "Service Name for which Docker image will build & push \n ,Note: Make sure Service name  must pe present in docker-compose.yaml"
+      type: string
+    enable_docker_buildkit:
+      title: Enable docker  build kit
+      description: This input enable DOCKER_BUILDKIT
+      type: boolean
+      default: true      
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: ""
+    use_github_tag:
+      title: Use github tag
+      description: Tag name for the container image using github sha
+      type: boolean
+      default: true
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  required:
+    - docker_compose_service_name
+template: |
+  steps:
+  - id: 'Docker login'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
+  
+
+  - id: 'Preparing Docker Image Tag'
+    name: 'gcr.io/cloud-builders/docker'
+    dir: {{ working_dir }}
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |  
+      export sha_tag=$$(git log --format="%H" -n 1);
+    {% if use_github_tag == true %}  
+      echo "TAG=${sha_tag}">> .env.tag
+      cat .env.tag    
+    {% endif %}  
+      echo "TAG= {{ container_tag }}" >> .env.container_tag
+      cat .env.container_tag
+
+  {% if use_github_tag == true %}
+  - id: 'Docker Compose Build with hash commit'
+    name: 'docker/compose:debian-1.29.2'
+    dir: {{ working_dir }}
+    args: ["--env-file","./.env.tag","build", "{{ docker_compose_service_name }}"]    
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}
+
+  - id: 'Docker Compose Push with hash commit'
+    name: 'docker/compose:debian-1.29.2'
+    dir: {{ working_dir }}     
+    args: ["--env-file","./.env.tag","push", "{{ docker_compose_service_name }}"]    
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}      
+  {% endif %}      
+
+  {% if container_tag != "" %}
+  - id: 'Docker Compose Build with  conatiner tag'
+    name: 'docker/compose:debian-1.29.2'
+    dir: {{ working_dir }}
+    args: ["--env-file","./.env.container_tag","build", "{{ docker_compose_service_name }}"]    
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}
+
+  - id: 'Docker Compose Push with  conatiner tag'
+    name: 'docker/compose:debian-1.29.2'
+    dir: {{ working_dir }}
+    args: ["--env-file","./.env.container_tag","push", "{{ docker_compose_service_name }}"]    
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}    
+  {% endif %}    
+    
+
+
