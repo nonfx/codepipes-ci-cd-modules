@@ -36,18 +36,13 @@ inputs:
       description: Tag name for the container image using github sha
       type: boolean
       default: true
-    docker_build_args:
-      title: Docker Build Arguments
-      description: Arguments for the docker build command
-      type: array
-      default: []
-      items:
-        type: string
     working_dir:
       title: Working directory
       description: The current working directory to execute command
       type: string
       default: repo
+  required:
+    - docker_compose_service_name
 template: |
   steps:
   - id: 'Docker login'
