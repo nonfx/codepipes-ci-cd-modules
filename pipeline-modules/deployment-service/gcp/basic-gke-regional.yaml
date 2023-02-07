@@ -164,9 +164,8 @@ template: |
     args:
     - '-c'
     - |
-      export PATH="{{workspace}}/bin:$$PATH";
-      export PATH="{{ common_scripts_path }}:$$PATH";
-      install-jq.sh      
+      export PATH="{{workspace}}/bin:$$PATH";    
+      {{ common_scripts_path }}/install-jq.sh
       
       cd {{helm_chart_path}} ;
 

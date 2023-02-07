@@ -395,7 +395,7 @@ template: |
         registryCredentials:
           registry: $$docker_registry
           username: $$docker_username" >> values.yaml
-      
+     
       printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
       
       echo "
