@@ -13,15 +13,64 @@ resources:
       name: cldcvr/product-build-tools
       endpoint: Github-CldCvr
 
-pool:
-  vmImage: ubuntu-latest
-
 variables:
   - group: Common-Dev
   - group: CodePipes-Staging-DB
 
-steps:
-  - template: templates/ci-cd-modules-release.yml@templates
-    parameters:
-      gcpSACreds: $(GCP_SA_CREDS)
-      DBInstanceConnectionName: $(DB_INSTANCE_CONNECTION_NAME)
+stages:
+  - stage: Release_Staging
+    displayName: Release to GCP Staging
+    pool:
+      vmImage: ubuntu-latest
+
+    jobs:
+      - job: Release_Staging
+        displayName: Release to GCP Staging
+        steps:
+          - template: templates/ci-cd-modules-release.yml@templates
+            parameters:
+              gcpSACreds: $(GCP_SA_CREDS)
+              DBInstanceConnectionName: $(DB_INSTANCE_CONNECTION_NAME)
+
+  - stage: Release_AZ_Staging
+    displayName: Release to Azure Staging
+    pool:
+      name: Azure-Agents
+    variables:
+      - group: CodePipes-AZStaging-DB
+
+    jobs:
+      - job: Release_AZ_Staging
+        displayName: Release to Azure Staging
+        steps:
+          - checkout: self
+          - task: GoTool@0
+            displayName: "Go Tool Install"
+            inputs:
+              version: "1.18.7"
+          - task: replacetokens@3
+            displayName: "Token Replace .env.tmpl"
+            inputs:
+              targetFiles: ".env.tmpl => .env"
+              encoding: "auto"
+              writeBOM: true
+              actionOnMissing: "warn"
+              keepToken: false
+              tokenPrefix: "#{"
+              tokenSuffix: "}#"
+              useLegacyPattern: false
+              enableTransforms: false
+              enableTelemetry: true
+          - bash: echo "##vso[task.setvariable variable=shellopts]errexit"
+            displayName: "Force exit on error (bash)"
+          - script: |
+              go env -w GO111MODULE=on
+              go env -w GOPRIVATE=github.com/cldcvr/*
+              skip_dev=1 make init
+              make help-seed
+            env:
+              GIT_TOKEN: $(GIT_TOKEN)
+            displayName: Initialize
+          - script: |
+              make db-update
+            displayName: Execute DB update
