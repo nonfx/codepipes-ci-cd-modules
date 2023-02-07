@@ -309,6 +309,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
   steps:
   - id: 'gcloud container setup'
@@ -335,6 +336,8 @@ template: |
     - '-c'
     - |
       export PATH="{{workspace}}/bin:$$PATH";
+      {{ common_scripts_path }}/install-jq.sh
+
       cd {{helm_chart_path}};
 
       touch .helmignore;
@@ -391,9 +394,9 @@ template: |
         registryCredentials:
           registry: $$docker_registry
           username: $$docker_username" >> values.yaml
-
+     
       printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
-
+      
       echo "
       {% endif %}
       {% if ports %}
