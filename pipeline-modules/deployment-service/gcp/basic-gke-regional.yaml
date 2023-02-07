@@ -223,8 +223,6 @@ template: |
           username: $$docker_username" >> values.yaml
 
       printf '    password: %s\n' "$(printf '%s' "$$docker_password" | jq -aRs .)" >> values.yaml
-      echo "$$docker_password"
-      cat  values.yaml
       echo "
       service:
         type: nodeport
