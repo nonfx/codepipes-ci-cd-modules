@@ -42,12 +42,12 @@ inputs:
       default: ""
     use_github_tag:
       title: Use github tag
-      description: Tag name for the container image using github sha
+      description: true value will push the image reference with git commit sha tag as well
       type: boolean
       default: true
     sha_tag:
       title: SHA Git commit tag
-      description: Resloved Commit hash for Input git artificat
+      description: Resloved Commit hash for Input git artifact
       type: string                
   internal:
     - container_repository
