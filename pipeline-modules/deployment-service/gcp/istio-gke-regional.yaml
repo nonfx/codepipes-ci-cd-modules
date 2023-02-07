@@ -309,6 +309,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
   steps:
   - id: 'gcloud container setup'
@@ -335,6 +336,9 @@ template: |
     - '-c'
     - |
       export PATH="{{workspace}}/bin:$$PATH";
+      export PATH="{{ common_scripts_path }}:$$PATH";
+      install-jq.sh   
+           
       cd {{helm_chart_path}};
 
       touch .helmignore;
