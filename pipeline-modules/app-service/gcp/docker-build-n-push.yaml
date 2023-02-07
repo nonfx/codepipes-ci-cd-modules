@@ -40,9 +40,14 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artificat
+      type: string        
   internal:
     - container_repository
     - container_tag
+    - sha_tag  
 template: |
   steps:
   - id: 'Docker login'
@@ -60,9 +65,8 @@ template: |
     - '-c'
     - |
       {% if use_github_tag == true %}
-      sha_tag=$$(git log --format="%H" -n 1);
-      docker build -t {{container_repository}}:$$sha_tag .
-      docker push {{container_repository}}:$$sha_tag
+      docker build -t {{container_repository}}:{{sha_tag}} .
+      docker push {{container_repository}}:{{sha_tag}}
       {% endif %}
       docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
       docker push {{container_repository}}:{{container_tag}}
