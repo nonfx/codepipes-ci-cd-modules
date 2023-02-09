@@ -16,6 +16,11 @@ meta:
     - google_container_cluster
 inputs:
   properties:
+    projectName:
+      title: project name
+      description: project name
+      type: string   
+      default: "codepipes"  
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -28,7 +33,7 @@ inputs:
       title: Istio Version
       description: Istio version to install
       type: string
-      default: ""
+      default: "1.13.2"
     istio_args:
       title: Istio Arguments
       description: Istio Argument
@@ -44,6 +49,39 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
+    ingress_install:
+      title: IngressInstall
+      type: boolean
+      default: false
+    domains:
+      title: Domain Names
+      description: Domain Names to be used for Ingress/Certificates
+      type: array
+      default: []
+      items:
+        type: object
+        properties:
+          name:
+            title: Domain name
+            type: string
+            default: ""  
+    ingress:
+      title: Ingress
+      description: Detail required to create Ingress on GKE. Avoid this if ,IngressInstall is false 
+      type: array
+      default: []
+      items:
+        type: object
+        properties:               
+          staticIPName:
+            title: staticIPName
+            type: string
+            default: ""
+          IsPrivateIngress:
+            title: IsPrivateIngress
+            type: boolean
+            default: false  
+
   required:
     - cluster
     - region
@@ -55,12 +93,13 @@ template: |
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
-
   steps:
   {% if job_type == 'deploy' %}
   - id: 'Istio installation'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
+    env:
+    - 'ISTIO_VERSION={{istio_version}}'
     args:
     - '-c'
     - |
@@ -71,17 +110,7 @@ template: |
       curl -sL https://istio.io/downloadIstioctl | sh -
       export PATH=$$PATH:$$HOME/.istioctl/bin
       istioctl {{istio_args}} -y;
-    env:
-    - 'ISTIO_VERSION={{istio_version}}'
-  {% if enable_istio_access_log %}
-  - id: 'Istio Access Log Enable'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      #Set kubernetes config
-      gcloud container clusters get-credentials {{cluster}} --region {{region}}
+      
       echo "
       apiVersion: telemetry.istio.io/v1alpha1
       kind: Telemetry
@@ -92,28 +121,132 @@ template: |
         accessLogging:
           - providers:
             - name: envoy " >> enable_istio_access_log.yaml
+      {% if enable_istio_access_log %}        
       kubectl apply -f enable_istio_access_log.yaml
-  {% else %}
-  - id: 'Istio Access Log Disable'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      #Set kubernetes config
-      gcloud container clusters get-credentials {{cluster}} --region {{region}}
-      echo "
-      apiVersion: telemetry.istio.io/v1alpha1
-      kind: Telemetry
-      metadata:
-        name: mesh-default
-        namespace: istio-system
-      spec:
-        accessLogging:
-          - providers:
-            - name: envoy " >> enable_istio_access_log.yaml
+      {% else %}
       kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml
+      {% endif %}
+
+  {% if ingress_install %}
+
+
+      echo "Creating istio Ingress & configuring ....."
+      echo "
+      apiVersion: networking.istio.io/v1alpha3
+      kind: Gateway
+      metadata:
+        name: {{ projectName | lower }}-httpbin-gateway
+      spec:
+        selector:
+          istio: ingressgateway # use Istio default gateway implementation
+        servers:
+        - port:
+            number: 80
+            name: http
+            protocol: HTTP
+          hosts:
+          - '*' "  >> istio_gateway.yaml ;
+      {% if job_type == 'deploy' %}
+      kubectl apply -f istio_gateway.yaml ;
+      {% endif %}            
+
+
+      echo "Creating istio VirtualService for health check....."
+      echo "          
+      apiVersion: networking.istio.io/v1alpha3
+      kind: VirtualService
+      metadata:
+        name: health
+      spec:
+        gateways:
+        - {{ projectName | lower }}-httpbin-gateway
+        hosts:
+        - '*'
+        http:
+        - match:
+          - uri: 
+              exact: /healthz/ready
+          route:
+          - destination:
+              host: istio-ingressgateway.istio-system.svc.cluster.local
+              port:
+                number: 15021 " >> istio_healthcheck_vs.yaml ;          
+      {% if job_type == 'deploy' %}
+      kubectl apply -f istio_healthcheck_vs.yaml ;
+      {% endif %}
+
+
+      echo "Creating Managed certificate in gcp....."
+      echo "
+      apiVersion: networking.gke.io/v1
+      kind: ManagedCertificate
+      metadata:
+        namespace: istio-system
+        name: {{ projectName | lower }}-istio-ingress-certificate
+      spec:
+        domains:
+        {% for domain in domains %}
+        - {{  domain.name }} 
+        {% endfor %}
+      " >> istio_ingress_manage_certificate.yaml ;
+      cat istio_ingress_manage_certificate.yaml ;
+      {% if job_type == 'deploy' %}
+      kubectl apply -f istio_ingress_manage_certificate.yaml;
+      {% else %}
+      kubectl delete -f istio_ingress_manage_certificate.yaml ;
+      {% endif %}
+     
+      echo "Creating GKE Ingress....."
+      echo "
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: {{ projectName | lower }}-istio-ingress
+        namespace: istio-system
+        annotations:
+        {% for ing in ingress %}        
+          # Enable use of manually pre-defined global static IP
+          {% if ing.staticIPName %}
+          kubernetes.io/ingress.global-static-ip-name: '{{ ing.staticIPName }}'
+          {% endif %}        
+          {% if ing.IsPrivateIngress %}
+          #this config create private ingress
+          kubernetes.io/ingress.class: 'gce'
+          networking.gke.io/private-cluster-ingress: 'true'
+          {% endif %}
+          # Enable use of a GCP-managed certificate through a ManagedCertificate resource
+          networking.gke.io/managed-certificates: '{{ projectName | lower }}-istio-ingress-certificate'
+          ingress.kubernetes.io/ssl-redirect: 'true'
+        {% endfor %}
+      spec:
+        rules:
+        {% if domains %}
+        {% for domain in domains %}
+        - host: {{  domain.name }} 
+          http:
+            paths:
+            - path: /*
+              pathType: ImplementationSpecific
+              backend:
+                service:
+                  name: istio-ingressgateway
+                  port:
+                    number: 80 
+        {% endfor %}            
+        {% endif %}    "     >> istio_ingress.yaml ;  
+      
+      cat istio_ingress.yaml
+
+      {% if job_type == 'deploy' %}
+      kubectl apply -f istio_ingress.yaml;
+      {% else %}
+      kubectl delete -f istio_ingress.yaml ;
+      {% endif %}         
+     
+
   {% endif %}
+
+  
   {% else %}
   - id: 'Uninstall Istio'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -123,10 +256,10 @@ template: |
     - |
       gcloud container clusters get-credentials {{cluster}} --region {{region}}
       kubectl delete --ignore-not-found=true Telemetry  mesh-default -n istio-system
+      kubectl delete --ignore-not-found=true ManagedCertificate -n istio-system {{ projectName | lower }}-istio-ingress-certificate ;
+      kubectl delete  --ignore-not-found=true ingress {{ projectName | lower }}-istio-ingress -n istio-system
       curl -sL https://istio.io/downloadIstioctl | sh -
       export PATH=$$PATH:$$HOME/.istioctl/bin     
       istioctl uninstall --purge -y
       kubectl delete namespace istio-system
   {% endif %}
-
-
