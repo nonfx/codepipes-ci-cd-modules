@@ -1,0 +1,52 @@
+provisioner: aws
+name: nexusiq
+version: 1
+revision: 1
+displayName: NexusIQ Scan
+description: Security scan for code using self hosted NexusIQ server 
+target: ""
+category: security analysis
+keywords:
+  - Security Scan Code
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    nexus_application_id:
+      title: NexusIQ Application ID
+      description: NexusIQ application id
+      type: string
+      default: $CPI__NEXUS_APPLICATION_ID
+    nexus_server_host:
+      title: NexusIQ Self Hosted Server Host
+      description: NexusIQ self hosted server host
+      type: string
+      default: $CPI__NEXUS_SERVER_HOST
+    nexus_username:
+      title: NexusIQ Server Username
+      description: NexusIQ server username
+      type: string
+      default: $CPI__NEXUS_USERNAME
+    nexus_password:
+      title: NexusIQ Server Password
+      description: NexusIQ server password
+      type: string
+      default: $CPI__NEXUS_PASSWPRD
+    applicationName:
+      title: Application name
+      description: Code Pipes application name
+      type: string
+  internal:
+    - applicationName
+template: |
+  phases:
+    install:
+      commands:
+        - apt-get update
+    build:
+      commands:
+        - zip -r {{applicationName}}.zip .
+        - wget https://download.sonatype.com/clm/scanner/latest.jar
+        - java -jar ./latest.jar -i {{nexus_application_id}} -s {{nexus_server_host}} -a {{nexus_username}}:'{{nexus_password}}' ./{{applicationName}}.zip -r results.json
+        - sleep 100
+        - cat results.json
