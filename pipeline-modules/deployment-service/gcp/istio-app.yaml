@@ -164,13 +164,21 @@ template: |
         - '*'
         http:
         - match:
-          - uri: 
-              exact: /healthz/ready
+          - headers:
+              user-agent:
+                prefix: GoogleHC
+            method:
+              exact: GET
+            uri:
+              exact: /
+          rewrite:
+            authority: istio-ingressgateway.istio-system.svc.cluster.local:15021
+            uri: /healthz/ready
           route:
           - destination:
               host: istio-ingressgateway.istio-system.svc.cluster.local
               port:
-                number: 15021 " >> istio_healthcheck_vs.yaml ;          
+                number: 15021" >> istio_healthcheck_vs.yaml ;          
       {% if job_type == 'deploy' %}
       kubectl apply -f istio_healthcheck_vs.yaml ;
       {% endif %}
