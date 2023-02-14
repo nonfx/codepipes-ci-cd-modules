@@ -68,11 +68,12 @@ template: |
     args:
     - '-c'
     - |
-      export CODEPIPES_DEPLOY_ACTION={{ job_type }}
       if [ -f {{ pipeline_env_file }} ]; then source {{ pipeline_env_file }}; fi
       if [ -f {{ pipeline_secret_env_file }} ]; then source {{ pipeline_secret_env_file }}; fi
       cd {{ source_code_path }}/{{ repo_dir }}
       ./{{ bash_script }} {% for param in script_parameters %}{{param}} {% endfor %} ;
+    env:
+    - 'CODEPIPES_DEPLOY_ACTION={{ job_type }}'
   - id: 'Extract summary vars'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'

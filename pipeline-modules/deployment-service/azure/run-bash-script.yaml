@@ -69,16 +69,14 @@ template: |
 
   steps:
   - script: |
-      export CODEPIPES_DEPLOY_ACTION={{ job_type }} ;
       if [ -f {{ pipeline_env_file }} ]; then source {{ pipeline_env_file }}; fi ;
       cd {{ source_code_path }}/{{ repo_dir }}
       ./{{ bash_script }} {% for param in script_parameters %}{{param}} {% endfor %} ;
-    {% if pipeline_secret_env %}
     env:
+      CODEPIPES_DEPLOY_ACTION: {{ job_type }}
     {% for env_key in pipeline_secret_env %}
       {{ env_key}}: $({{ env_key }})
     {% endfor -%}
-    {% endif %}
     displayName: 'Execute bash script'
   - script: |
       echo "###pipeline-summary-start###" >> summary.txt 2>&1;

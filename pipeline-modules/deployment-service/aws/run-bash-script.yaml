@@ -61,10 +61,12 @@ template: |
   {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
   version: 0.2
+  env:
+    variables:
+      CODEPIPES_DEPLOY_ACTION: "{{ job_type }}"
   phases:
     build:
       commands:
-        - export CODEPIPES_DEPLOY_ACTION={{ job_type }}
         - if [ -f {{ pipeline_env_file }} ]; then source {{ pipeline_env_file }}; fi
         - if [ -f {{ pipeline_secret_env_file }} ]; then source {{ pipeline_secret_env_file }}; fi
         - cd {{ source_code_path }}/{{ repo_dir }}
