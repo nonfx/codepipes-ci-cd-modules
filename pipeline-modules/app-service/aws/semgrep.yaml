@@ -21,12 +21,12 @@ inputs:
     allow_critical:
       title: Allow Critical Vulnerabilities
       description: Allows builds with critical vulnerabilites
-      type: bool
+      type: boolean
       default: false
     allow_error:
       title: Allow Error Vulnerabilities
       description: Allows Error vulnerabilites
-      type: bool
+      type: boolean
       default: false
 template: |
   version: 0.2

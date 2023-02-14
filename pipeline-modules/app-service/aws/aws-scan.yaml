@@ -21,17 +21,17 @@ inputs:
     allow_critical:
       title: Allow Critical Vulnerabilities
       description: Allows builds with critical vulnerabilites
-      type: bool
+      type: boolean
       default: false
     allow_high:
       title: Allow High Vulnerabilities
       description: Allows High vulnerabilites
-      type: bool
+      type: boolean
       default: false
     allow_warning:
       title: Allow Warning Vulnerabilities
       description: Allows Warning vulnerabilites
-      type: bool
+      type: boolean
       default: false
   internal:
     - container_repository
