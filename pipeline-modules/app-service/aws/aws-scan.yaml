@@ -1,0 +1,85 @@
+provisioner: aws
+name: aws-container-scan
+version: 1
+revision: 1
+displayName: AWS Container Scan
+description: Run AWS Container scans
+target: ""
+category: scan
+keywords:
+  - scan
+  - sast
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute the bash script from
+      type: string
+      default: repo
+    allow_critical:
+      title: Allow Critical Vulnerabilities
+      description: Allows builds with critical vulnerabilites
+      type: bool
+      default: false
+    allow_high:
+      title: Allow High Vulnerabilities
+      description: Allows High vulnerabilites
+      type: bool
+      default: false
+    allow_warning:
+      title: Allow Warning Vulnerabilities
+      description: Allows Warning vulnerabilites
+      type: bool
+      default: false
+  internal:
+    - container_repository
+    - container_tag
+template: |
+  version: 0.2
+  env:
+    shell: bash
+  phases:
+    build:
+      commands:
+        - #aws ecr start-image-scan --repository-name={{container_repository}}  --image-id imageTag={{container_tag}}
+        - while :
+            do 
+              output=$(aws ecr describe-image-scan-findings --repository-name={{container_repository}}  --image-id imageTag={{container_tag}} --output json)
+              status=$(echo $output | jq -r '.imageScanStatus.status')
+              if [ "$status" == "COMPLETE" ]; then
+                echo $output > scan.json
+                break
+              fi
+              sleep 30
+            done
+        - high_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "HIGH")')
+        - critical_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "CRITICAL")')
+        - warning_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "MEDIUM")')
+        - low_values==$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "LOW")')
+        - undefined_values==$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "UNDEFINED")')
+        - if [ -n "$high_values" ]; then
+              echo "Severity High Vulnerabilities found! \n"
+              echo $high_values
+              {% if allow_high == false %}
+              failPipeline=true
+              {% endif %}
+          elif [ -n "$critical_values" ]; then
+              echo "Severity Critical Vulnerabilities found! \n"
+              echo $critical_values
+              {% if allow_critical == false %}
+              failPipeline=true
+              {% endif %}
+          elif [ -n "$warning_values" ]; then
+              echo "Severity Warning Vulnerabilities found! \n"
+              echo $warning_values
+              {% if allow_warning == false %}
+              failPipeline=true
+              {% endif %}
+          fi
+        - if [ -z $failPipeline ]; then
+            echo "Failing Pipeline as Vulnerabilities found."
+            aws ecr batch-delete-image --repository-name {{container_repository}} --image-ids imageTag={{container_tag}}
+            exit 11
+          fi
