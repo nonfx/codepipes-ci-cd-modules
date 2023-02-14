@@ -35,7 +35,6 @@ template: |
   phases:
     build:
       commands:
-        - sudo apt update && sudo apt install python3.9
         - python3 --version
         - python3 -m pip install semgrep
         - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
