@@ -38,6 +38,7 @@ template: |
         - python3 --version
         - python3 -m pip install semgrep
         - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
+        - export PATH=$PATH:~/.local/bin
         - semgrep --config=auto
         - semgrep ci --json -o semgrep.json
         - error_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "ERROR") |  .results[]')
