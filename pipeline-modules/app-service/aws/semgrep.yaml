@@ -42,7 +42,8 @@ template: |
         - error_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "ERROR") |  .results[]')
         - critical_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "CRITICAL") |  .results[]')
         - warning_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "WARNING") | .results[]')
-        - if [ -n "$error_values" ]; then
+        - |
+          if [ -n "$error_values" ]; then
               echo "Severity Error Vulnerabilities found! Please check Semgrep. Failing Pipeline \n"
               echo $error_values
               {% if allow_error == false %}

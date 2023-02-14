@@ -44,7 +44,8 @@ template: |
     build:
       commands:
         - #aws ecr start-image-scan --repository-name={{container_repository}}  --image-id imageTag={{container_tag}}
-        - while :
+        - |
+          while:
             do 
               output=$(aws ecr describe-image-scan-findings --repository-name={{container_repository}}  --image-id imageTag={{container_tag}} --output json)
               status=$(echo $output | jq -r '.imageScanStatus.status')
@@ -59,7 +60,8 @@ template: |
         - warning_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "MEDIUM")')
         - low_values==$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "LOW")')
         - undefined_values==$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "UNDEFINED")')
-        - if [ -n "$high_values" ]; then
+        - |
+          if [ -n "$high_values" ]; then
               echo "Severity High Vulnerabilities found! \n"
               echo $high_values
               {% if allow_high == false %}
@@ -78,7 +80,8 @@ template: |
               failPipeline=true
               {% endif %}
           fi
-        - if [ -z $failPipeline ]; then
+        - |
+          if [ -z $failPipeline ]; then
             echo "Failing Pipeline as Vulnerabilities found."
             aws ecr batch-delete-image --repository-name {{container_repository}} --image-ids imageTag={{container_tag}}
             exit 11
