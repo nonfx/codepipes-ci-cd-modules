@@ -47,9 +47,15 @@ inputs:
       description: Mapping of globally available secret variable id.
       type: object
       default: {}
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string
   internal:
+    - sha_tag
     - working_dir
     - pipeline_secret_env
+
 template: |
   steps:
     {% for target in targets %}
@@ -62,7 +68,7 @@ template: |
           set -x
           make {% if makefile_name %}-f {{ makefile_name }}{% endif %} {{ target.name }}
       env:
-        sha_tag: $(sha_tag)
+        sha_tag: {{ sha_tag }}
       {% if pipeline_secret_env %}
         {% for env_key in pipeline_secret_env %}
         {{ env_key}}: $({{ env_key }})

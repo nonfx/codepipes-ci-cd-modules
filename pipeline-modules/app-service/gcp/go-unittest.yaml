@@ -1,26 +1,19 @@
 provisioner: gcp
-name: go-build
+name: go-unittest
 version: 1
 revision: 1
-displayName: Go Build
-description: Build source code using Golang
+displayName: Go Unit Test
+description: Runs units tests and collects code coverage data
 target: ""
-category: build
+category: unit test
 keywords:
-  - Go
-  - Install
-  - Build
+  - default
+  - go
+  - Test
 author: CloudCover
 meta: {}
 inputs:
   properties:
-    go_build_args:
-      title: Go build args
-      description: Arguments for Go build command
-      type: array
-      default: []
-      items:
-        type: string
     working_dir:
       title: Working directory
       description: The current working directory to execute command
@@ -31,11 +24,23 @@ inputs:
       description: The version of Golang to use
       type: string
       default: latest
+    go_test_args:
+      title: Go Test args
+      description: Arguments for Go test command
+      type: array
+      items:
+        type: string
+      default: []
+    coverage_file:
+      title: Code Coverage file
+      description: Unit test coverage file to be analyzed by SonarCloud
+      type: string
+      default: "coverage.out"
   internal:
     - working_dir
 template: |
   steps:
-  - id: 'Go Build'
+  - id: go_unittest
     name: golang:{{ go_version }}
     dir: {{ working_dir }}
     env: ["GOPATH=/workspace", "CGO_ENABLED=${CGO_ENABLED:-0}"]
@@ -44,5 +49,4 @@ template: |
       - -c
       - |
         set -x
-        go version
-        go build -v {% for arg in go_build_args %} {{ arg }} {% endfor %}
+        go test -v -coverprofile={{ coverage_file }} -coverpkg ./... {% for arg in go_test_args %} {{ arg }} {% endfor %} ./...

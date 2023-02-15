@@ -40,6 +40,11 @@ inputs:
       description: Optionally, use a config file in the repo to setup sonar properties
       type: string
       default: ""
+    coverage_file:
+      title: Code Coverage file
+      description: Unit test coverage file to be analyzed by SonarCloud
+      type: string
+      default: "coverage.out"
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
@@ -55,6 +60,11 @@ template: |
         git fetch --all
       displayName: 'Git fetch base'
       workingDirectory: {{ git_local_path }}
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'coverage'
+        targetPath: '{{ git_local_path }}'
     - task: SonarCloudPrepare@1
       inputs:
         SonarCloud: {{ sonar_cloud_service_connection }}
@@ -69,6 +79,7 @@ template: |
         {%- endif %}
         extraProperties: |
           sonar.projectBaseDir={{ git_local_path }}
+          sonar.go.coverage.reportPaths={{ git_local_path }}/{{ coverage_file }}
           {% if git_checkout_target -%}
           sonar.scm.revision={{ git_checkout_target }}
           sonar.branch.name={{ git_checkout_target }}
