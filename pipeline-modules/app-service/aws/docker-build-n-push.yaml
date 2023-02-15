@@ -35,9 +35,19 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    use_github_tag:
+      title: Use github tag
+      description: true value will push the image reference with git commit sha tag as well
+      type: boolean
+      default: true
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string        
   internal:
     - container_repository
     - container_tag
+    - sha_tag
 template: |
   version: 0.2
 
@@ -52,4 +62,11 @@ template: |
         - echo Build completed on `date`
         - echo Pushing the Docker image...
         - docker push {{container_repository}}:{{container_tag}}
+        {% if use_github_tag %}
+        - echo Building the Docker image with Commit hash...
+        - docker build -t {{container_repository}}:{{sha_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+        - echo Build completed on `date`
+        - echo Pushing the Docker image with Commit hash...
+        - docker push {{container_repository}}:{{sha_tag}}
+        {% endif %}
         

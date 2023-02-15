@@ -32,7 +32,7 @@ inputs:
       default: ""
     use_github_tag:
       title: Use github tag
-      description: Tag name for the container image using github sha
+      description: true value will push the image reference with git commit sha tag as well
       type: boolean
       default: true
     working_dir:
@@ -40,8 +40,14 @@ inputs:
       description: The current working directory to execute command
       type: string
       default: repo
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string       
   required:
     - docker_compose_service_name
+  internal:
+    - sha_tag    
 template: |
   steps:
   - id: 'Docker login'
@@ -59,10 +65,9 @@ template: |
     entrypoint: 'bash'
     args:
     - '-c'
-    - |  
-      export sha_tag=$$(git log --format="%H" -n 1);
+    - |        
     {% if use_github_tag == true %}  
-      echo "TAG=${sha_tag}">> .env.tag
+      echo "TAG= {{ sha_tag }}">> .env.tag
       cat .env.tag    
     {% endif %}  
       echo "TAG= {{ container_tag }}" >> .env.container_tag
