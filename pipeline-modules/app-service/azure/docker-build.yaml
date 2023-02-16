@@ -3,12 +3,19 @@ name: docker-build
 version: 1
 revision: 1
 displayName: Docker Build
-description: This plugin only builds the Docker image, useful for running checks
+description: Build the container image using docker cli
 target: ""
-category: containerise
+category: build
 keywords:
-  - Docker
-  - Build
+  - default
+  - ContainerImage
+  - go
+  - node
+  - java
+  - dotnet
+  - csharp
+  - html
+  - js
 author: CloudCover
 meta: {}
 inputs:
@@ -20,17 +27,30 @@ inputs:
       default: []
       items:
         type: string
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
     working_dir:
       title: Working directory
       description: The current working directory to execute command
       type: string
       default: repo
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
 template: |
   steps:
   - script: |
       echo Build started on `date`
       Building the Docker image...
-      docker build -t temp {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+      docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
       echo Build completed on `date`
     displayName: 'Docker Build'
     workingDirectory: {{ working_dir }}

@@ -1,0 +1,57 @@
+provisioner: gcp
+name: docker-push
+version: 1
+revision: 1
+displayName: Docker Push
+description: Push container image to a registry using docker cli
+target: ""
+category: push
+keywords:
+  - default
+  - ContainerImage
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+    use_github_tag:
+      title: Use github tag
+      description: true value will push the image reference with git commit sha tag as well
+      type: boolean
+      default: true
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string
+  internal:
+    - container_repository
+    - container_tag
+    - sha_tag
+    - working_dir
+template: |
+  steps:
+  - id: 'Docker Build and Push'
+    name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    dir: {{ working_dir }}
+    args:
+    - '-c'
+    - |
+      echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
+      docker push {{container_repository}}:{{container_tag}}
+      {% if use_github_tag == true %}
+      docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}
+      docker push {{container_repository}}:{{sha_tag}}
+      {% endif %}
