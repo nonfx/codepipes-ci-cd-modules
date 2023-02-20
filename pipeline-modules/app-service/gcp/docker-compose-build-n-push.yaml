@@ -67,26 +67,36 @@ template: |
     - '-c'
     - |        
     {% if use_github_tag == true %}  
+      echo "Creating SHA commit tag ..... "  
       echo "TAG= {{ sha_tag }}">> .env.tag
       cat .env.tag    
-    {% endif %}  
+    {% endif %}
+      echo "Creating Container tag ..... "  
       echo "TAG= {{ container_tag }}" >> .env.container_tag
       cat .env.container_tag
 
   {% if use_github_tag == true %}
   - id: 'Docker Compose Build with hash commit'
-    name: 'docker/compose:debian-1.29.2'
+    name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}
-    args: ["--env-file","./.env.tag","build", "{{ docker_compose_service_name }}"]    
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose  --env-file "./.env.tag" build {{ docker_compose_service_name }}
     env:
     {% if enable_docker_buildkit == true %}      
       - "DOCKER_BUILDKIT=1"
     {% endif %}
 
   - id: 'Docker Compose Push with hash commit'
-    name: 'docker/compose:debian-1.29.2'
+    name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}     
-    args: ["--env-file","./.env.tag","push", "{{ docker_compose_service_name }}"]    
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose  --env-file "./.env.tag" push {{ docker_compose_service_name }}
     env:
     {% if enable_docker_buildkit == true %}      
       - "DOCKER_BUILDKIT=1"
@@ -95,23 +105,31 @@ template: |
 
   {% if container_tag != "" %}
   - id: 'Docker Compose Build with  conatiner tag'
-    name: 'docker/compose:debian-1.29.2'
+    name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}
-    args: ["--env-file","./.env.container_tag","build", "{{ docker_compose_service_name }}"]    
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose  --env-file "./.env.container_tag" build {{ docker_compose_service_name }}
     env:
     {% if enable_docker_buildkit == true %}      
       - "DOCKER_BUILDKIT=1"
     {% endif %}
 
   - id: 'Docker Compose Push with  conatiner tag'
-    name: 'docker/compose:debian-1.29.2'
+    name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}
-    args: ["--env-file","./.env.container_tag","push", "{{ docker_compose_service_name }}"]    
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose  --env-file "./.env.container_tag" push {{ docker_compose_service_name }}
     env:
     {% if enable_docker_buildkit == true %}      
       - "DOCKER_BUILDKIT=1"
     {% endif %}    
   {% endif %}    
-    
+
 
 
