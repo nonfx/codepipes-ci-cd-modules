@@ -8,7 +8,7 @@ GIT_REPO=$1
 GIT_REF=$2
 SOURCE_CODE_PATH=$3
 
-echo "=== ${sn}: Cloning Git repo ${GIT_REPO}"
+echo "=== ${sn}: Cloning Git repo ${GIT_REPO} with ref ${GIT_REF} into dir ${SOURCE_CODE_PATH}"
 
 mkdir -p ${SOURCE_CODE_PATH}
 git clone ${GIT_REPO} --single-branch ${SOURCE_CODE_PATH}

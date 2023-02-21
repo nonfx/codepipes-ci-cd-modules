@@ -1,4 +1,4 @@
-provisioner: gcp
+provisioner: azure
 name: git-clone
 version: 1
 revision: 1
@@ -32,10 +32,7 @@ inputs:
     - git_remote_path
 template: |
   steps:
-  - name: 'gcr.io/cloud-builders/git'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
+  - script: |
       git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
-      cd {{ git_local_path }}
+      echo "##vso[task.setvariable variable=sha_tag]$(git -C {{ git_local_path }} log --format="%H" -n 1)"
+    displayName: 'Git Clone'

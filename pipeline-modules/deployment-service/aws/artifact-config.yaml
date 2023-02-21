@@ -49,4 +49,5 @@ template: |
         {% if artifact_type == 'GitCode' %}
         - git-config.sh ${git_username} ${git_password} {{ repository }} {{ git_config_path }} {{ git_creds_path }}
         - git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+        - export sha_tag=$(git -C {{ source_code_path }} log --format="%H" -n 1);
         {% endif %}

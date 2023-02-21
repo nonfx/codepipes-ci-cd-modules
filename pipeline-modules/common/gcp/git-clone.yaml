@@ -1,4 +1,4 @@
-provisioner: azure
+provisioner: gcp
 name: git-clone
 version: 1
 revision: 1
@@ -28,14 +28,13 @@ inputs:
       title: Repository URL
       description: The repository to clone from.
       type: string
-  internal:
+  required:
     - git_remote_path
-    - git_local_path
-    - git_checkout_target
 template: |
   steps:
-  - script: |
+  - id: "Git Clone"
+    name: 'cldcvr/cpi-config'
+    args:
+    - '-c'
+    - |
       git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
-      echo "##vso[task.setvariable variable=sha_tag]$(git -C {{ git_local_path }} log --format="%H" -n 1)"
-      cd {{ git_local_path }}
-    displayName: 'Git Clone'
