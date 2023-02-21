@@ -42,7 +42,7 @@ inputs:
     - working_dir
 template: |
   steps:
-  - id: 'Docker Build and Push'
+  - id: 'Docker Push image'
     name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     dir: {{ working_dir }}
@@ -50,8 +50,10 @@ template: |
     - '-c'
     - |
       echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
+      echo Pushing docker image  with Container Tag : {{container_repository}}:{{container_tag}}
       docker push {{container_repository}}:{{container_tag}}
       {% if use_github_tag == true %}
+      echo Pushing docker image with SHA TAG : {{container_repository}}:{{sha_tag}}
       docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}
       docker push {{container_repository}}:{{sha_tag}}
       {% endif %}
