@@ -24,12 +24,16 @@ inputs:
       title: Enable docker  build kit
       description: This input enable DOCKER_BUILDKIT
       type: boolean
-      default: true      
+      default: true    
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string           
     container_tag:
       title: Image Tag
       description: Tag name for the container image
       type: string
-      default: ""
+      default: ""      
     use_github_tag:
       title: Use github tag
       description: true value will push the image reference with git commit sha tag as well
@@ -43,93 +47,53 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
-      type: string       
+      type: string     
+     
   required:
     - docker_compose_service_name
   internal:
     - sha_tag    
+    - container_repository
+    - container_tag    
 template: |
   steps:
   - id: 'Docker login'
     name: 'gcr.io/cloud-builders/docker'
+    dir: {{ working_dir }}
     entrypoint: 'bash'
     args:
     - '-c'
     - |
       echo $$docker_password | docker login -u $$docker_username --password-stdin $$docker_registry
+    
+  - id: 'Docker Compose Build image'
+    name: 'gcr.io/cloud-builders/docker'
+    dir: {{ working_dir }}
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose build {{ docker_compose_service_name }}
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}
   
-
-  - id: 'Preparing Docker Image Tag'
-    name: 'gcr.io/cloud-builders/docker'
-    dir: {{ working_dir }}
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |        
-    {% if use_github_tag == true %}  
-      echo "Creating SHA commit tag ..... "  
-      echo "TAG= {{ sha_tag }}">> .env.tag
-      cat .env.tag    
-    {% endif %}
-      echo "Creating Container tag ..... "  
-      echo "TAG= {{ container_tag }}" >> .env.container_tag
-      cat .env.container_tag
-
-  {% if use_github_tag == true %}
-  - id: 'Docker Compose Build with hash commit'
+  - id: 'Docker Compose Push image'
     name: 'gcr.io/cloud-builders/docker'
     dir: {{ working_dir }}
     entrypoint: 'bash'  
     args:
-    - '-c'
+    - '-c' 
     - |  
-      docker compose  --env-file "./.env.tag" build {{ docker_compose_service_name }}
-    env:
-    {% if enable_docker_buildkit == true %}      
-      - "DOCKER_BUILDKIT=1"
-    {% endif %}
-
-  - id: 'Docker Compose Push with hash commit'
-    name: 'gcr.io/cloud-builders/docker'
-    dir: {{ working_dir }}     
-    entrypoint: 'bash'  
-    args:
-    - '-c'
-    - |  
-      docker compose  --env-file "./.env.tag" push {{ docker_compose_service_name }}
-    env:
-    {% if enable_docker_buildkit == true %}      
-      - "DOCKER_BUILDKIT=1"
-    {% endif %}      
-  {% endif %}      
-
-  {% if container_tag != "" %}
-  - id: 'Docker Compose Build with  conatiner tag'
-    name: 'gcr.io/cloud-builders/docker'
-    dir: {{ working_dir }}
-    entrypoint: 'bash'  
-    args:
-    - '-c'
-    - |  
-      docker compose  --env-file "./.env.container_tag" build {{ docker_compose_service_name }}
-    env:
-    {% if enable_docker_buildkit == true %}      
-      - "DOCKER_BUILDKIT=1"
-    {% endif %}
-
-  - id: 'Docker Compose Push with  conatiner tag'
-    name: 'gcr.io/cloud-builders/docker'
-    dir: {{ working_dir }}
-    entrypoint: 'bash'  
-    args:
-    - '-c'
-    - |  
-      docker compose  --env-file "./.env.container_tag" push {{ docker_compose_service_name }}
-    env:
-    {% if enable_docker_buildkit == true %}      
-      - "DOCKER_BUILDKIT=1"
-    {% endif %}    
-  {% endif %}    
+      {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}      
+      echo Docker compose created the image: $image_name ......
+      docker tag $image_name {{container_repository}}:{{container_tag}}
+      docker push {{container_repository}}:{{container_tag}}
+      {% if use_github_tag == true %}
+      docker tag $image_name {{container_repository}}:{{ sha_tag }}
+      docker push {{container_repository}}:{{ sha_tag }}  
+      {% endif %}  
 
 
 
