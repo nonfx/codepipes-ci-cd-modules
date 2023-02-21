@@ -1,0 +1,70 @@
+provisioner: gcp
+name: docker-compose-build
+version: 1
+revision: 1
+displayName: Docker Compose Build docker images
+description: This plugin only use to Run docker compose to build. Service name must define in docker compose yaml.
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+  - Push 
+  - Docker-compose
+    
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_compose_service_name:
+      title: Service Name
+      description: "Service Name for which Docker image will build & push \n ,Note: Make sure Service name  must pe present in docker-compose.yaml"
+      type: string
+    enable_docker_buildkit:
+      title: Enable docker  build kit
+      description: This input enable DOCKER_BUILDKIT
+      type: boolean
+      default: true    
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string           
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: ""      
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+     
+  required:
+    - docker_compose_service_name
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir  
+template: |
+  steps:
+  - id: 'Docker Compose Build image'
+    name: 'gcr.io/cloud-builders/docker'
+    dir: {{ working_dir }}
+    entrypoint: 'bash'  
+    args:
+    - '-c'
+    - |  
+      docker compose build {{ docker_compose_service_name }}
+      {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}      
+      echo Docker compose created the image: $image_name ......
+      echo Tagging image with container_tag : {{container_repository}}:{{container_tag}}
+      docker tag $image_name {{container_repository}}:{{container_tag}}
+    env:
+    {% if enable_docker_buildkit == true %}      
+      - "DOCKER_BUILDKIT=1"
+    {% endif %}
+ 
+
+
+
