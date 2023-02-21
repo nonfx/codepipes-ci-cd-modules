@@ -28,17 +28,12 @@ inputs:
       title: Repository URL
       description: The repository to clone from.
       type: string
-    working_dir:
-      title: Working directory
-      description: The current working directory to execute command
-      type: string
-      default: repo
-  internal:
+  required:
     - git_remote_path
-    - working_dir
 template: |
   version: 0.2
   phases:
     build:
       commands:
         - git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
+        - export sha_tag=$(git -C {{ git_local_path }} log --format="%H" -n 1);

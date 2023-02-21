@@ -32,11 +32,9 @@ inputs:
     - git_remote_path
 template: |
   steps:
-  - name: 'gcr.io/cloud-builders/git'
-    entrypoint: 'bash'
+  - id: "Git Clone"
+    name: 'cldcvr/cpi-config'
     args:
     - '-c'
     - |
-      set -x && \
-      git clone {% if git_checkout_target %}--no-checkout{% endif %} {{ git_remote_path }} {{ git_local_path }}{% if git_checkout_target %} && \
-      cd {{ git_local_path }} && git checkout {{ git_checkout_target }}{% endif %}
+      git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}

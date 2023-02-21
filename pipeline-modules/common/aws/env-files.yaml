@@ -14,11 +14,11 @@ meta: {}
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set pipeline_env_file = workspace|add:'/.secret.env' %}
+  {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
 
   version: 0.2
   phases:
     pre_build:
       commands:
         - create-env-file.sh {{ pipeline_env_file }} ${__VG_EXPORTED_ENV_NAMES}
-        - create-env-file.sh {{ pipeline_env_file }} ${__VG_EXPORTED_ENV_NAMES}
+        - create-env-file.sh {{ pipeline_secret_env_file }} ${__VG_EXPORTED_SECRET_ENV_NAMES}
