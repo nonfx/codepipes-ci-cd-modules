@@ -16,6 +16,11 @@ meta:
     - google_container_cluster
 inputs:
   properties:
+    cloudbuild_private_worker_pool:
+      title: Cloud Build Worker Pool
+      description: Name of Cloud Build Private Worker Pool
+      type: string
+      default: ""  
     projectName:
       title: project name
       description: project name
@@ -81,7 +86,6 @@ inputs:
             title: IsPrivateIngress
             type: boolean
             default: false  
-
   required:
     - cluster
     - region
@@ -271,3 +275,9 @@ template: |
       istioctl uninstall --purge -y
       kubectl delete namespace istio-system
   {% endif %}
+  {% if cloudbuild_private_worker_pool != "" %}    
+  options:
+    workerPool: {{ cloudbuild_private_worker_pool }}
+  {% endif %}  
+
+   
