@@ -18,7 +18,7 @@ inputs:
   properties:
     cloudbuild_private_worker_pool:
       title: Cloud Build Worker Pool
-      description: Name of Cloud Build Private Worker Pool
+      description: Name of Cloud Build Private Worker Pool .i.e projects/WORKERPOOL_PROJECT_ID/locations/REGION/workerPools/my-pool
       type: string
       default: ""  
     projectName:
