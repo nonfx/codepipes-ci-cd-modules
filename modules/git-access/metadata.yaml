@@ -1,0 +1,29 @@
+author: CloudCover
+category: git
+description: Configure access to a remote Git repository.
+displayName: Git access
+inputs:
+    properties:
+        git_login:
+            description: Git login.
+            title: Login
+            type: string
+        git_remote_path:
+            description: The repository to configure access to.
+            title: Repository URL
+            type: string
+    required:
+        - git_remote_path
+        - git_login
+keywords:
+    - git
+    - access
+    - credentials
+    - auth
+meta: {}
+name: git-access
+revision: 1
+targets:
+    - integration
+    - infra
+version: 1

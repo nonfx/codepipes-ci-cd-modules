@@ -1,0 +1,37 @@
+author: CloudCover
+category: containerise
+description: This plugin is for Docker build & push
+displayName: Docker Build and Push
+inputs:
+    internal:
+        - container_repository
+        - container_tag
+        - sha_tag
+    properties:
+        docker_build_args:
+            default: []
+            description: Arguments for the docker build command
+            items:
+                type: string
+            title: Docker Build Arguments
+            type: array
+        use_github_tag:
+            default: true
+            description: true value will push the image reference with git commit sha tag as well
+            title: Use github tag
+            type: boolean
+        working_dir:
+            default: repo
+            description: The current working directory to execute command
+            title: Working directory
+            type: string
+keywords:
+    - Docker
+    - Push
+    - Build
+meta: {}
+name: docker-build-n-push
+revision: 1
+targets:
+    - integration
+version: 1

@@ -1,0 +1,56 @@
+author: CloudCover
+description: AWS App Runner Deployment template
+displayName: App runner deployment
+inputs:
+    internal:
+        - app_env
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - project
+        - job_type
+    properties:
+        cpu:
+            default: 1 vCPU
+            description: CPU to be consumed by app runner
+            title: CPU
+            type: string
+        ecr_role:
+            default: ""
+            description: Role to pull image from private ECR
+            title: ECR IAM Role
+            type: string
+        instance_role:
+            default: ""
+            description: Role to be used by app runnner to interact with other AWS services
+            title: Instance IAM Role
+            type: string
+        memory:
+            default: 2 GB
+            description: Memory to be consumed by app runner
+            title: Memory
+            type: string
+        port:
+            maximum: 65535
+            title: Container port
+            type: integer
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+    required:
+        - region
+        - port
+    type: object
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: app-runner
+revision: 1
+targets:
+    - deployment
+version: 1

@@ -1,0 +1,43 @@
+author: CloudCover
+description: Module for the integration test
+displayName: Test Module
+inputs:
+    properties:
+        echo_float:
+            description: The float to echo to the log.
+            title: Echo Float value
+            type: number
+        echo_int:
+            description: The integer to echo to the log.
+            title: Echo Integer value
+            type: integer
+        echo_list:
+            description: The List to echo to the log.
+            items:
+                type: string
+            title: Echo List value
+            type: array
+        echo_map:
+            description: The Map to echo to the log.
+            title: Echo Map value
+            type: object
+        echo_string:
+            description: The string to echo to the log.
+            title: Echo String value
+            type: string
+    required:
+        - echo_string
+        - echo_int
+        - echo_float
+        - echo_map
+        - echo_list
+keywords:
+    - test
+meta: {}
+name: test_module
+revision: 1
+targets:
+    - integration
+    - infra
+    - deployment
+version: 1

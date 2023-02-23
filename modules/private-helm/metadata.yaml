@@ -1,0 +1,58 @@
+author: CloudCover
+description: The template is used for deploying a helm chart in kubernetes cluster
+displayName: Deploy a private helm chart setup in k8s using git repo
+inputs:
+    internal:
+        - app_env
+        - applicationName
+        - environment
+        - project
+        - job_type
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        deployment_timeout:
+            default: 300s
+            description: Time to wait for pods to be ready before terming deployment as unsuccessful
+            title: Deployment Timeout
+            type: string
+        helm_chart_path:
+            description: Path to your helm chart
+            title: Helm Chart Path
+            type: string
+        helm_values_path:
+            description: Path to your helm chart values including values file name
+            title: Helm Chart Values Path
+            type: string
+        helm_values_set_var:
+            default: ""
+            description: 'Optional : Key1=Value1,Key2=Value , which override the value inside values.yaml'
+            title: Helm Set Values
+            type: string
+        namespace:
+            default: default
+            description: K8s namespace to deploy
+            title: namespace
+            type: string
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+    required:
+        - cluster
+        - region
+        - helm_values_path
+        - helm_chart_path
+keywords:
+    - helm
+    - private
+meta:
+    inputArtifactType:
+        - GitCode
+name: private-helm
+revision: 1
+targets:
+    - deployment
+version: 1

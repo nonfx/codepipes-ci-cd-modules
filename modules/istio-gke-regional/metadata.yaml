@@ -1,0 +1,244 @@
+author: CloudCover
+description: The template is used for Istio Based deployments and also provision Virtual Service for application
+displayName: GKE Istio Based Deployment
+inputs:
+    internal:
+        - app_env
+        - files
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - project
+        - customer_bucket
+        - job_type
+        - pipeline_summary_var
+    properties:
+        autoscalingEnabled:
+            default: false
+            description: Whether to enable autoscaling
+            title: Enable Autoscaling
+            type: boolean
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        cpuLimit:
+            default: 200m
+            description: CPU Limit for the pods
+            title: CPU Limit
+            type: string
+        cpuRequest:
+            default: 200m
+            description: CPU Request for the pods
+            title: CPU Request
+            type: string
+        deployment:
+            default: true
+            description: This is to create deployment
+            title: Create Deployment
+            type: boolean
+        deployment_timeout:
+            default: 300s
+            description: Time to wait for pods to be ready before terming deployment as unsuccessful
+            title: Deployment Timeout
+            type: string
+        domains:
+            default: []
+            description: Domain Names to be used for Ingress/Certificates
+            items:
+                properties:
+                    name:
+                        default: ""
+                        title: Domain name
+                        type: string
+                type: object
+            title: Domain Names
+            type: array
+        ingressIP:
+            default: ""
+            description: Ingress IP for GKE Ingress
+            title: GKE Ingress IP
+            type: string
+        ingressIPName:
+            default: ""
+            description: Ingress IP Name for GKE Ingress
+            title: GKE Ingress IP Name
+            type: string
+        istioInjection:
+            default: false
+            description: Enable Istio Injection in namespace
+            title: Istio Injection Enabled
+            type: boolean
+        liveFailThreshold:
+            default: 2
+            description: Successive Fail Threshold for Liveliness Probe
+            title: Liveliness Probe Fail Threshold
+            type: integer
+        liveSuccThreshold:
+            default: 1
+            description: Successive Success Threshold for Liveliness Probe
+            title: Liveliness Probe Success Threshold
+            type: integer
+        manageCertificate:
+            default: false
+            description: Use GCP to procure Certificates
+            title: Managed Certificate from Google
+            type: boolean
+        maxReplicas:
+            default: 5
+            description: maximum number of Replicas (if autoscaling is enabled)
+            title: Maximum Replicas
+            type: integer
+        maxSurge:
+            default: 2
+            description: Maximum Surge
+            title: Maximum Surge Percentage or absolute value for Pods
+            type: integer
+        maxUnavail:
+            default: 50%
+            description: Maximum Unavailable
+            title: Maximum Unavailable Percentage or absolute value for Pods
+            type: string
+        memoryLimit:
+            default: 256Mi
+            description: Memory Limit for the pods
+            title: Memory Limit
+            type: string
+        memoryRequest:
+            default: 256Mi
+            description: Memory Request for the pods
+            title: Memory Request
+            type: string
+        minReplicas:
+            default: 1
+            description: Minimum number of Replicas (if autoscaling is enabled)
+            title: Minimum Replicas
+            type: integer
+        negEnabled:
+            default: false
+            description: Expose GCP Network Endpoint Group
+            title: GCP Network Endpoint Group Enabled
+            type: boolean
+        ports:
+            default: []
+            description: Port used in services
+            items:
+                properties:
+                    containerPort:
+                        maximum: 65535
+                        title: Container port
+                        type: integer
+                    healthCheck:
+                        default: ""
+                        title: Health check path
+                        type: string
+                    name:
+                        title: Service name
+                        type: string
+                    protocol:
+                        default: TCP
+                        enum:
+                            - TCP
+                            - UDP
+                        title: Protocol
+                        type: string
+                required:
+                    - name
+                    - containerPort
+                type: object
+            title: Ports
+            type: array
+        probeDelay:
+            default: 10
+            description: Delay in seconds between probes
+            title: Probe Delay
+            type: integer
+        probePeriod:
+            default: 4
+            description: Probe Period in seconds
+            title: Probe Period
+            type: integer
+        probeTimeout:
+            default: 2
+            description: Probe Timeout in seconds
+            title: Probe Timeout
+            type: integer
+        projectName:
+            default: codepipes
+            description: Code Pipes Project Name
+            title: Code Pipes Project Name
+            type: string
+        readFailThreshold:
+            default: 2
+            description: Successive Fail Threshold for Readiness Probe
+            title: Readiness Probe Fail Threshold
+            type: integer
+        readSuccThreshold:
+            default: 1
+            description: Successive Success Threshold for Readiness Probe
+            title: Readiness Probe Success Threshold
+            type: integer
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+        replicaCount:
+            default: 1
+            description: Replica Count
+            title: Replica Count
+            type: integer
+        service_port:
+            default: NodePort
+            description: Service port
+            title: Service port
+            type: string
+        serviceAccountEnabled:
+            default: false
+            description: Use GCP Service Account
+            title: GCP Service Account Enabled
+            type: boolean
+        targetCPUUtilizationPercentage:
+            default: 80
+            description: Target CPU Utilization to scale replicase
+            title: CPU Utilization to scale
+            type: integer
+        terminationGracePeriodSeconds:
+            default: 30
+            description: Grace Period
+            title: Grace Period before terminating pod in seconds
+            type: integer
+        virtualService:
+            default: []
+            description: Istio Virtual Service
+            items:
+                properties:
+                    prefix:
+                        default: ""
+                        title: Virtual Service Prefix
+                        type: string
+                    rewriteEnabled:
+                        default: ""
+                        title: Virtual Service Rewrite Enabled
+                        type: string
+                    rewriteValue:
+                        default: ""
+                        title: Value of Virtual Service Rewrite Path
+                        type: string
+                type: object
+            title: Virtual Service
+            type: array
+    required:
+        - cluster
+        - region
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: istio-gke-regional
+revision: 1
+targets:
+    - deployment
+version: 1

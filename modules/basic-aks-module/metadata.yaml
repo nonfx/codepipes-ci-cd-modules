@@ -1,0 +1,94 @@
+author: CloudCover
+description: Module for the AKS Deployment
+displayName: AKS Deployment
+inputs:
+    internal:
+        - app_env
+        - files
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - project
+        - customer_bucket
+        - job_type
+        - pipeline_summary_var
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        deployment_timeout:
+            default: 300s
+            description: Time to wait for pods to be ready before terming deployment as unsuccessful
+            title: Deployment Timeout
+            type: string
+        helmVersion:
+            default: 3.7.1
+            description: Helm Version to be Installed
+            title: Helm Version
+            type: string
+        kubectlVersion:
+            default: "1.23"
+            description: Kubectl Version to be Installed
+            title: Kubectl Version
+            type: string
+        pool_name:
+            default: ""
+            description: Use  Azure selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        ports:
+            default: []
+            description: Port used in services
+            items:
+                properties:
+                    containerPort:
+                        default: 80
+                        maximum: 65535
+                        title: Container port
+                        type: integer
+                    healthCheck:
+                        default: /
+                        example: /
+                        title: Health check path
+                        type: string
+                    name:
+                        title: Service name
+                        type: string
+                    protocol:
+                        default: TCP
+                        enum:
+                            - TCP
+                            - UDP
+                        title: Protocol
+                        type: string
+                required:
+                    - name
+                type: object
+            title: Ports
+            type: array
+        resourceGroup:
+            description: Resource Group where cluster is located
+            title: Cluster Resource Group
+            type: string
+        workingDir:
+            default: $(Build.SourcesDirectory)
+            description: Working Directory where the code is to be run
+            title: Working Directory
+            type: string
+    required:
+        - cluster
+        - resourceGroup
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - git
+        - ContainerImage
+name: basic-aks-module
+revision: 1
+targets:
+    - deployment
+version: 1

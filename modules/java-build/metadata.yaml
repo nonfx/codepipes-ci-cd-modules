@@ -1,0 +1,23 @@
+author: CloudCover
+category: build
+description: Runs maven install command on working directory
+displayName: Build JARs (Maven)
+inputs:
+    internal:
+        - working_dir
+    properties:
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+keywords:
+    - java
+    - build
+    - maven
+meta: {}
+name: java-build
+revision: 1
+targets:
+    - integration
+version: 1

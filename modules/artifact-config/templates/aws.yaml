@@ -1,0 +1,15 @@
+{% set workspace = '$CODEBUILD_SRC_DIR' %}
+{% set source_code_path = workspace|add:'/source_code' %}
+{% set git_creds_path = '$HOME/.git-credentials' %}
+{% set git_config_path = '$HOME/.gitconfig' %}
+
+version: 0.2
+phases:
+  pre_build:
+    commands:
+      - echo "Artifact configuration"
+      {% if artifact_type == 'GitCode' %}
+      - git-config.sh ${git_username} ${git_password} {{ repository }} {{ git_config_path }} {{ git_creds_path }}
+      - git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+      - export sha_tag=$(git -C {{ source_code_path }} log --format="%H" -n 1);
+      {% endif %}

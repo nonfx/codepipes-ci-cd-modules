@@ -1,0 +1,285 @@
+properties:
+    app_env:
+        default: {}
+        description: Application Related Envs
+        title: Application Environment
+        type: object
+    application:
+        default: latest
+        description: A Code Pipes application name
+        title: Application name
+        type: string
+    applicationName:
+        default: latest
+        description: This is vanguard application name
+        title: Application name
+        type: string
+    artifact_bucket:
+        description: Name of the bucket to store Terraform artifacts.
+        pattern: '[a-z0-9\-_.]{3,63}'
+        title: Artifact Bucket
+        type: string
+    artifact_dir:
+        description: Name of the root directory in the artifact bucket.
+        title: Artifact Directory
+        type: string
+    artifact_type:
+        description: Type of artifact
+        title: Artifact type
+        type: string
+    components:
+        default: []
+        description: Component definitions to be included in the root Terraform configuration.
+        items:
+            properties:
+                inputs:
+                    default: []
+                    description: Module input values.
+                    items:
+                        properties:
+                            declare:
+                                default: false
+                                description: Whether a new Terraform variable should be declared for this input value.
+                                title: Declare Variable
+                                type: boolean
+                            expression:
+                                description: Expression that resolves into the input value.
+                                title: Input Expression
+                                type: string
+                            name:
+                                description: Name of the module input variable.
+                                title: Input Name
+                                type: string
+                        required:
+                            - name
+                            - expression
+                        type: object
+                    title: Input Values
+                    type: array
+                label:
+                    description: Name to refer to this instance of the module.
+                    title: Local Name
+                    type: string
+                locator:
+                    description: Module source locator in the repository.
+                    properties:
+                        name:
+                            description: The name of the module.
+                            title: Name
+                            type: string
+                        namespace:
+                            description: The user the module is owned by.
+                            title: Namespace
+                            type: string
+                        path:
+                            default: ""
+                            description: Relative path to the sub-module directory.
+                            title: Path
+                            type: string
+                        provider:
+                            description: The name of the provider.
+                            title: Provider
+                            type: string
+                        version:
+                            description: The version of the module.
+                            title: Version
+                            type: string
+                    required:
+                        - namespace
+                        - name
+                        - provider
+                        - version
+                    title: Source Locator
+                    type: object
+                outputs:
+                    default: []
+                    description: Component output declarations.
+                    items:
+                        properties:
+                            description:
+                                default: ""
+                                description: Description of the output variable.
+                                title: Output Description
+                                type: string
+                            expression:
+                                default: ""
+                                description: Expression that resolves into the output value. Defaults to 'module.<component.label>.<name>'.
+                                title: Output Expression
+                                type: string
+                            name:
+                                description: Name of the output variable will be pre-fixed by 'component.label'.
+                                title: Output Name
+                                type: string
+                        required:
+                            - name
+                        type: object
+                    title: Output Values
+                    type: array
+            required:
+                - label
+                - locator
+            type: object
+        title: Component Definitions
+        type: array
+    container_repository:
+        description: Complete repository path
+        title: Container repository
+        type: string
+    container_tag:
+        default: latest
+        description: Tag name for the container image
+        title: Image Tag
+        type: string
+    customer_bucket:
+        default: latest
+        description: This is a vanguard Customer  bucket name
+        title: Customer Bucket Name
+        type: string
+    environment:
+        default: latest
+        description: This is vanguard environment name
+        title: Environment Name
+        type: string
+    files:
+        default: {}
+        description: Files mounted in container
+        title: Files
+        type: object
+    git_local_path:
+        default: repo
+        description: The name of a new directory to clone into.
+        title: Local Clone Directory
+        type: string
+    git_login:
+        description: Git login.
+        title: Login
+        type: string
+    git_remote_path:
+        description: The repository to configure access to.
+        title: Repository URL
+        type: string
+    iac_checkout_src:
+        description: Path to Git repository with IaC code.
+        title: IaC Source Repository URL
+        type: string
+    iac_checkout_target:
+        description: Git branch, tag or commit hash to checkout.
+        title: IaC Source Revision Identifier
+        type: string
+    iac_root:
+        default: .
+        description: Relative path to the infrastructure code.
+        title: IaC Root Directory
+        type: string
+    job_type:
+        default: deploy
+        description: This is to deploy or undeploy application
+        title: Job Type
+        type: string
+    pipeline_env:
+        default: {}
+        description: Mapping of globally available variables to values.
+        title: Global Environment
+        type: object
+    pipeline_logs_bucket:
+        default: ""
+        description: S3 bucket for logs generated by the pipeline.
+        title: Logs Bucket
+        type: string
+    pipeline_module_git:
+        description: git url for cloning the pipeline module repo.
+        title: Pipeline module git repo url
+        type: string
+    pipeline_module_git_rev:
+        description: git revision for cloning the pipeline module repo.
+        title: Pipeline module git repo revision
+        type: string
+    pipeline_secret_env:
+        default: {}
+        description: Mapping of globally available variables to encrypted values.
+        title: Global Secret Environment
+        type: object
+    pipeline_secret_env_key:
+        default: ""
+        description: Name of a KMS key used to encrypt secret values.
+        title: Secret Environment Encryption Key
+        type: string
+    pipeline_summary_var:
+        default: []
+        description: This will create pipeline summary as per user request
+        items:
+            properties:
+                Command:
+                    title: Command
+                    type: string
+                Name:
+                    title: Name
+                    type: string
+            required:
+                - Command
+                - Name
+            type: object
+        title: Pipeline Summary
+        type: array
+    privileged_mode:
+        default: "false"
+        description: 'When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon'
+        title: Privileged Mode
+        type: string
+    project: {}
+    repo_dir:
+        description: Repo Dir
+        title: Repo Dir
+        type: string
+    repository:
+        default: ""
+        description: Enter Full container url without tag
+        title: Container Repository
+        type: string
+    sha_tag:
+        description: Resolved Commit hash for Input git artifact
+        title: SHA Git commit tag
+        type: string
+    storage_account_name:
+        description: Storage Account to Store Build Artifacts.
+        title: Storage Account Name
+        type: string
+    tag:
+        default: latest
+        description: Tagged container will deploy
+        title: Container tag
+        type: string
+    tf_action:
+        description: Terraform action to be performed (e.g plan, apply, destroy).
+        enum:
+            - plan
+            - plan-destroy
+            - apply
+            - destroy
+        title: Terraform Action
+        type: string
+    tf_plan_file:
+        default: terraform.tfplan
+        description: Name of the plan file artifact.
+        title: Terraform Plan File
+        type: string
+    tf_state_file:
+        default: terraform.tfstate
+        description: Name of the state file artifact.
+        title: Terraform State File
+        type: string
+    tf_version:
+        default: 1.3.6
+        description: Version of Terraform to be used to deploy the infrastructure.
+        title: Terraform Version
+        type: string
+    variable_group_name:
+        default: ""
+        description: Keeps all secret variables available to pipeline.
+        title: Secret Variables Group
+        type: string
+    working_dir:
+        default: repo
+        description: The current working directory to execute command
+        title: Working directory
+        type: string

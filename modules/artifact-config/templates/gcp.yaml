@@ -1,0 +1,16 @@
+{% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+{% set source_code_path = workspace|add:'/source_code' %}
+{% set git_creds_path = '$$HOME/.git-credentials' %}
+{% set git_config_path = '$$HOME/.gitconfig' %}
+
+steps:
+- id: "Artifact Configuration"
+  name: 'cldcvr/cpi-config'
+  args:
+  - '-c'
+  - |
+    echo "Artifact configuration"
+    {% if artifact_type == 'GitCode' %}
+    git-config.sh $$git_username $$git_password {{ repository }} {{ git_config_path }} {{ git_creds_path }}
+    git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+    {% endif %}

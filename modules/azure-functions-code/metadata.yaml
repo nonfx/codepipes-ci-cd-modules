@@ -1,0 +1,35 @@
+author: CloudCover
+description: Deploy Azure functions
+displayName: Azure functions deployment with code
+inputs:
+    internal:
+        - app_env
+        - applicationName
+        - environment
+        - job_type
+        - repo_dir
+    properties:
+        function_app_name:
+            description: Function App Name, to link this variable to a terraform output use this syntax ${terraform.func_name.value} where func_name is output variable key.
+            tfOutputRegex: ^func
+            title: Function App Name
+            type: string
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+    required:
+        - function_app_name
+    type: object
+keywords:
+    - serverless
+    - functions
+meta:
+    inputArtifactType:
+        - GitCode
+name: azure-functions-code
+revision: 1
+targets:
+    - deployment
+version: 1

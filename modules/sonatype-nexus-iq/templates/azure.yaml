@@ -1,0 +1,8 @@
+steps:
+  - task: NexusIqPipelineTask@1
+    inputs:
+      nexusIqService: $(CPI__NEXUS_SERVICE_CONNECTION)
+      organizationId: $(CPI__NEXUS_ORG_ID)
+      applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
+      stage: 'Build'
+      scanTargets: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip

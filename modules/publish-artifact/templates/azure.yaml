@@ -1,0 +1,11 @@
+steps:
+- task: UniversalPackages@0
+  inputs:
+    command: 'publish'
+    publishDirectory: '$(System.DefaultWorkingDirectory)'
+    feedsToUsePublish: 'internal'
+    vstsFeedPublish: '$(CPI__artifact_feed)'
+    vstsFeedPackagePublish: '{{applicationName}}.zip'
+    packagePublishDescription: '$(sha_tag)'
+    versionOption: 'minor'
+    publishedPackageVar: 'codepipes'

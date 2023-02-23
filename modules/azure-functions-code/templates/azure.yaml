@@ -1,0 +1,38 @@
+{% set workspace = '$(Build.SourcesDirectory)' %}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+{% set source_code_path = workspace|add:'/source_code' %}
+steps:
+- script: |
+      cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          echo "-$name $value " >> config.txt
+      done;
+      config_var="$(cat config.txt | tr -d '\n')"
+      echo "##vso[task.setvariable variable=config_map]$config_var"
+      cd {{source_code_path}}/{{repo_dir}}
+      git log --format="%H" -n 1
+      sha_tag=$(git log --format="%H" -n 1);
+      echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
+- task: UniversalPackages@0
+  inputs:
+    command: 'download'
+    downloadDirectory: '$(System.DefaultWorkingDirectory)'
+    feedsToUse: 'internal'
+    vstsFeed: '$(CPI__artifact_feed)'
+    vstsFeedPackage: '{{applicationName}}.zip'
+    vstsPackageVersion: '*'
+    publishedPackageVar: 'codepipes'
+{% if job_type == 'deploy' %}
+- task: AzureFunctionApp@1
+  displayName: 'Deploy azure func'
+  inputs:
+    azureSubscription: $(CPI__azure_subscription)
+    appType: functionApp
+    appName: {{ function_app_name }}
+    package: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
+    appSettings: '$(CONFIG_MAP)'
+{% else %}
+- script: |
+      echo "Please delete the function from the Class and redeploy" 
+{% endif %}

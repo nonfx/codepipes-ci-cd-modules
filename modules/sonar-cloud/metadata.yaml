@@ -1,0 +1,50 @@
+author: CloudCover
+category: code analysis
+description: Analyze source code using Sonar Cloud
+displayName: Sonar Cloud
+inputs:
+    properties:
+        git_checkout_target:
+            default: ""
+            description: Git branch, tag or commit hash to checkout.
+            title: Checkout Target
+            type: string
+        git_local_path:
+            default: repo
+            description: The name of a new directory to clone into.
+            title: Local Clone Directory
+            type: string
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        sonar_cloud_org:
+            description: Sonar organization key found in project information section of sonar cloud web console
+            title: Sonar Organization Key
+            type: string
+        sonar_cloud_project_key:
+            default: ""
+            description: Sonar project key found in project information section of sonar cloud web console. This is required if sonar_config_file is not set
+            title: Sonar Project Key
+            type: string
+        sonar_cloud_service_connection:
+            description: Azure DevOps service connection for Sonar cloud. Create it from project settings > service connection. Use sonar token from account > security
+            title: Sonar service connection
+            type: string
+        sonar_config_file:
+            default: ""
+            description: Optionally, use a config file in the repo to setup sonar properties
+            title: Sonar config file name
+            type: string
+    required:
+        - sonar_cloud_service_connection
+        - sonar_cloud_org
+keywords:
+    - Analyze Code
+meta: {}
+name: sonar-cloud
+revision: 1
+targets:
+    - integration
+version: 1

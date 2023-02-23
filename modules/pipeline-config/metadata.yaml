@@ -1,0 +1,71 @@
+author: CloudCover
+description: Configure global pipeline options and environment.
+displayName: Configure Pipeline
+inputs:
+    internal:
+        - pipeline_logs_bucket
+        - pipeline_env
+        - pipeline_secret_env
+        - privileged_mode
+        - pipeline_module_git
+        - pipeline_module_git_rev
+    properties:
+        pipeline_compute_type:
+            default: BUILD_GENERAL1_SMALL
+            description: Specifies the compute resources used by this build environment.
+            title: Compute Type
+            type: string
+        pipeline_job_id:
+            default: AUTO_JOB_ID
+            description: This must be unique across all of the build projects in your AWS account.
+            title: Job ID
+            type: string
+        pipeline_run_timeout_min:
+            default: 60
+            description: Amount of time in minutes the pipeline will be allowed to run.
+            title: Run Timeout [min]
+            type: integer
+        pipeline_tags:
+            default: {}
+            description: Tags assigned to the pipeline.
+            title: Tags
+            type: object
+        vpc_config:
+            default: {}
+            description: VpcConfig enables CodeBuild to access resources in an Amazon VPC.
+            properties:
+                securityGroupIds:
+                    default: []
+                    description: A list of one or more security groups IDs in your Amazon VPC.
+                    items:
+                        type: string
+                    title: Security Group IDs
+                    type: array
+                subnets:
+                    default: []
+                    description: A list of one or more subnet IDs in your Amazon VPC.
+                    items:
+                        type: string
+                    title: Subnet IDs
+                    type: array
+                vpcId:
+                    default: ""
+                    description: The ID of the Amazon VPC.
+                    title: VPC ID
+                    type: string
+            title: VPC Config
+            type: object
+keywords:
+    - env
+    - environment
+    - secret
+    - config
+    - configuration
+meta: {}
+name: pipeline-config
+revision: 1
+targets:
+    - integration
+    - infra
+    - deployment
+version: 1

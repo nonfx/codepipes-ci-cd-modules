@@ -1,0 +1,26 @@
+{% set workspace = '$(Build.SourcesDirectory)' %}
+{% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+{% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+
+name: '$(Date:yyyyMMdd)$(Rev:.r)'
+trigger: none
+pool:
+{% if pool_name %}
+  name: {{ pool_name }}
+{% else %}
+  vmImage: ubuntu-latest
+{% endif %}
+steps:
+- script: |
+    echo "Cloning the pipeline modules..."
+    mkdir -p {{pipeline_modules_path}}
+    git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
+    echo '##vso[task.prependpath]{{ common_scripts_path }}'
+    export PATH={{ common_scripts_path }}:$PATH
+    install-jq.sh
+variables:
+  - group: {{ variable_group_name }}
+  - name: __VG_EXPORTED_ENV_NAMES
+    value: {% for env_key in pipeline_env %} {{env_key}} {% endfor %}
+  - name: __VG_EXPORTED_SECRET_ENV_NAMES
+    value: {% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}

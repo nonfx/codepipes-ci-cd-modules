@@ -1,0 +1,44 @@
+author: CloudCover
+category: utility
+description: Execute a target in a Makefile
+displayName: Makefile Target
+inputs:
+    properties:
+        makefile_name:
+            default: ""
+            description: Custom file name for Makefile
+            title: Makefile name
+            type: string
+        targets:
+            default: []
+            description: The Makefile target to execute
+            items:
+                properties:
+                    name:
+                        description: Name of the target to execute
+                        title: Target name
+                        type: string
+                    target_dir:
+                        default: .
+                        description: Working directory for this target
+                        title: Target working directory
+                        type: string
+                required:
+                    - name
+                type: object
+            title: Target definitions
+            type: array
+        working_dir:
+            default: repo
+            description: The directory within the repo where the Makefile is located
+            title: Working directory
+            type: string
+keywords:
+    - make
+    - linux
+meta: {}
+name: make-target
+revision: 1
+targets:
+    - integration
+version: 1

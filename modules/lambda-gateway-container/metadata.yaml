@@ -1,0 +1,67 @@
+author: CloudCover
+description: Deploy Lambda functions with API gateway
+displayName: AWS Lambda deployment with container
+inputs:
+    internal:
+        - app_env
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - project
+        - job_type
+    properties:
+        architecture:
+            default: x86_64
+            description: Processor architecture x86_64 or arm64, default x86_64
+            title: Processor architecture
+            type: string
+        bucket:
+            description: S3 bucket to hold serverless state file
+            title: bucket to store state of IAC
+            type: string
+        function:
+            description: Function name
+            title: Function Name
+            type: string
+        memory:
+            default: "1024"
+            description: Memory in MB, default 1024MB
+            title: Memory
+            type: string
+        path:
+            description: Function path
+            title: Function Path
+            type: string
+        region:
+            description: Region name for lambda deployment
+            title: Region name
+            type: string
+        timeout:
+            default: 10
+            description: Timeout in seconds, default 10 seconds
+            title: timeout
+            type: integer
+        verb:
+            description: RESTFUL verb for function (eg PUT,POST,DELETE)
+            title: Function Verb
+            type: string
+    required:
+        - region
+        - bucket
+        - verb
+        - function
+        - path
+    type: object
+keywords:
+    - bash
+    - linux
+    - functions
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: lambda-gateway-container
+revision: 1
+targets:
+    - deployment
+version: 1

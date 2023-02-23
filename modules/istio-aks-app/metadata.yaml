@@ -1,0 +1,82 @@
+author: CloudCover
+description: Run Istio commands on AKS Clusters
+displayName: AKS Istio Commands
+inputs:
+    internal:
+        - job_type
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        domains:
+            default: []
+            description: Domain Names to be used for Ingress/Certificates
+            items:
+                properties:
+                    name:
+                        default: ""
+                        title: Domain name
+                        type: string
+                type: object
+            title: Domain Names
+            type: array
+        enable_istio_access_log:
+            default: true
+            description: To enable Istio accessLogging
+            title: Istio-proxy Access Log
+            type: boolean
+        install_ingress:
+            default: false
+            title: Install Ingress
+            type: boolean
+        istio_args:
+            default: install --set profile=default
+            description: Istio Argument
+            title: Istio Arguments
+            type: string
+        istio_version:
+            default: 1.13.2
+            description: Istio version to install
+            title: Istio Version
+            type: string
+        lb_type:
+            default: Public
+            enum:
+                - Internal
+                - Public
+            title: Load Balancer Type
+            type: string
+        pool_name:
+            default: ""
+            description: Use  Azure selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        projectName:
+            default: codepipes
+            description: Code Pipes Project Name
+            title: Code Pipes Project Name
+            type: string
+        publicIP:
+            default: ""
+            description: This is Public IP to be alloted to the Load Balancer
+            title: Public IP
+            type: string
+        resourceGroup:
+            description: Azure Resource Group where AKS Cluster is deployed
+            title: Azure Resource Group
+            type: string
+    required:
+        - cluster
+        - resourceGroup
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: istio-aks-app
+revision: 1
+targets:
+    - deployment
+version: 1

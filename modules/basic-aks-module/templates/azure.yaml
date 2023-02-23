@@ -1,0 +1,140 @@
+{% set workspace = '' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'.env' %}
+{% set pipeline_secret_file = workspace|add:'.secret.env' %}
+{% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+{% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/basic-aks" %}
+
+steps:
+  - task: HelmInstaller@0
+    inputs:
+      helmVersion: {{helmVersion}}
+      installKubectl: true
+      kubectlVersion: {{kubectlVersion}}
+  - script: |
+        az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+        az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+    displayName: "Get AKS Kubecofing"
+    workingDirectory: {{ workingDir }}
+  {% if job_type == 'deploy' %}
+  - script: |
+        export PATH="{{workspace}}/bin:$$PATH";
+        cp {{pipeline_env_file}} {{helm_chart_path}} 2>/dev/null || :;
+        cp {{pipeline_secret_file}} {{helm_chart_path}} 2>/dev/null || :;
+        cd {{helm_chart_path}} ;
+        touch .helmignore;
+        rm -f values.yaml;
+        if [ -z "$(docker_registry)" ]; then
+          export docker_registry="index.docker.io"
+        fi
+        echo "applicationName: {{applicationName}} #auto
+        environment:  {{environment}} #auto
+        project: {{project}} #auto
+        deploy:
+          replicaCount: 1
+          strategy: RollingUpdate
+          maxUnavail: 1
+          maxSurge: 1
+          terminationGracePeriodSeconds: 30
+          healthCheck:
+            liveFailThreshold: '2'
+            liveSuccThreshold: '1'
+            readFailThreshold: '2'
+            readSuccThreshold: '1'
+            delay: '10'
+            period: '4'
+            timeout: '2'
+        ports:
+        {% for port in ports%}
+          - name: {{port.name}}
+            containerPort: {{port.containerPort}}
+            protocol: {{port.protocol}}
+            {% if port.healthCheck %}
+            healthcheck: {{port.healthCheck}}
+            {% endif %}
+        {% endfor %}
+        image: #auto
+          repository: {{ repository }}
+          pullPolicy: Always
+          tag:  {{ tag }}
+          registryCredentials:
+            registry: $docker_registry
+            username: $(docker_username)" >> values.yaml
+        printf '    password: %s\n' "$(printf '%s' "$(docker_password)" | jq -aRs .)" >> values.yaml
+        echo "
+        service:
+          type: nodeport
+          private: false
+        autoscaling:
+          enabled: false
+          minReplicas: 1
+          maxReplicas: 5
+          targetCPUUtilizationPercentage: 80
+        resourcequota:
+          quotaRequestsCpu: 100
+          quotaRequestsMem: 0.2
+          quotaLimitsCpu: 200
+          quotaLimitsMem: 0.3
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        lifecycle:
+          prestop:
+            command: ['/bin/sh', '-c', 'sleep 30']
+        artifacts:
+        {% for mountPath, fs in files %}
+          - mountPath: {{mountPath}}
+            files:
+            {% for file in fs %}
+              - '{{file}}'
+            {% endfor %}
+        {% endfor %}
+        envs:" >> values.yaml;
+        cat {{pipeline_env_file}} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf '  %s: %s\n' $name "$value" >> values.yaml
+        done;
+        echo "secrets:" >> values.yaml;
+        cat {{pipeline_secret_file}} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf '  %s: %s\n' $name $value >> values.yaml
+        done;
+    displayName: "Generate values file"
+    workingDirectory: {{ workingDir }}
+  - script: |
+          cd {{helm_chart_path}} ;
+          helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+    displayName: "Helm Deploy {{applicationName}}"
+    workingDirectory: {{ workingDir }}
+  {% if ports %}
+  - script: |
+          summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
+          cat <<EOF >>summary.txt
+          ###pipeline-summary-start###
+          {% if pipeline_summary_var -%}
+          {% for summary in pipeline_summary_var %}
+          $({{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s" {% endfor %})
+          {% else %}
+          Service URL=http://$summary_command
+          {% endif %}
+          ###pipeline-summary-end###
+          EOF
+          awk 'NF' summary.txt  > tmp.txt
+          mv tmp.txt summary.txt
+          cat summary.txt
+    displayName: "Pipeline Summary for {{applicationName}}"
+    workingDirectory: {{ workingDir }}
+    {% endif %}
+  {% else %}
+  - script: |
+          cd {{helm_chart_path}} ;
+          helm list;
+          helm uninstall {{applicationName}}-{{environment}};
+    displayName: "Helm Uninstall {{applicationName}}"
+    workingDirectory: {{ workingDir }}
+  {% endif %}

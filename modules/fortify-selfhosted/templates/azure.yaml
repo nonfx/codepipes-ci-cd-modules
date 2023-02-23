@@ -1,0 +1,48 @@
+steps:
+  - task: InstallFortifySCA@7
+    inputs:
+      InstallerPath: '{{ INSTALLER_PATH }}'
+      LicenseFile: '{{ LICENSE_PATH }}'
+      RunFortifyRulepackUpdate: true
+      ProxyPort: 
+  - task: FortifySCA@7
+    inputs:
+      runBuildTranslate: true
+      applicationType: 'java'
+      buildClasspath: ''
+      fortifyBuildId: $(Build.BuildId)
+      runFortifyClean: true
+      scaVerbose: true
+      scaDebug: true
+      runFortifyScan: true
+      fortifyScanType: 'Local'
+    displayName: 'Fortify SCA'
+  - script: sourceanalyzer -b $(Build.BuildId) -scan > scan_$(Build.BuildId).log
+    displayName: 'Fortify Scan'
+  - script: echo "Critical `grep -w \"critical\" scan_$(Build.BuildId).log  | wc -l`"
+    displayName: 'Checking scan results'
+  - script: scancentral -sscurl {{SSC_URL}} -ssctoken {{CONTROLLER_TOKEN}} start -upload -application {{FortifyAppName}} -application-version  {{FortifyAppVersion}} -b $(Build.BuildId) -uptoken {{CONTROLLER_TOKEN}} -scan –Xmx2G
+    displayName: 'Upload results to SSC'
+  - task: CmdLine@2
+    displayName: 'Compare Threshold'
+    inputs:
+      script: |
+        CRITICAL=`grep -w "critical" scan_$(Build.BuildId).log  | wc -l`
+        HIGH=`grep -w "high" scan_$(Build.BuildId).log  | wc -l`
+        WARNING=`grep -w "warning" scan_$(Build.BuildId).log  | wc -l`
+        echo "evaluating critical threshold $CRITICAL > {{CRITICAL_THRESHOLD}}"
+        if [[ $CRITICAL -gt {{CRITICAL_THRESHOLD}} ]]
+        then
+            echo "Exceeds the critical threshold"; exit 1
+        fi
+        echo "evaluating high threshold $HIGH > {{HIGH_THRESHOLD}}"
+        if [[ $HIGH -gt {{HIGH_THRESHOLD}} ]]
+        then
+            echo "Exceeds the high threshold"; exit 1
+        fi
+        echo "evaluating warning threshold $WARNING > {{WARNING_THRESHOLD}}"
+    
+        if [[ $WARNING -gt {{WARNING_THRESHOLD}} ]]
+        then
+            echo "Exceeds the warning threshold"; exit 1
+        fi

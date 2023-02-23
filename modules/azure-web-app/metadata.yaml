@@ -1,0 +1,35 @@
+author: CloudCover
+description: Deploy web app
+displayName: Azure web app deployment with code
+inputs:
+    internal:
+        - app_env
+        - applicationName
+        - environment
+        - job_type
+        - repo_dir
+    properties:
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        web_app_name:
+            description: Web App Name, to link this variable to a terraform output use this syntax ${terraform.webapp_name.value} where webapp_name is output variable key.
+            tfOutputRegex: ^func
+            title: Web App Name
+            type: string
+    required:
+        - web_app_name
+    type: object
+keywords:
+    - serverless
+    - web-app
+meta:
+    inputArtifactType:
+        - GitCode
+name: azure-web-app
+revision: 1
+targets:
+    - deployment
+version: 1

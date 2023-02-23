@@ -33,12 +33,14 @@ ifneq (${GIT_TOKEN},)
 	git config --global url.https://${GIT_TOKEN}@github.com/.insteadOf https://github.com/
 endif
 
-db-update:
-	./cpi-module-seed/create-common-links.sh
-	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed run
+common-links:
+	./scripts/cpi-module-seed/create-common-links.sh
+
+db-update: common-links
+	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./scripts/cpi-module-seed run
 
 help-seed:
-	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed help
+	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./scripts/cpi-module-seed help
 
 clean:
 	find pipeline-modules -type l -name "cmn-*.yaml" -delete
@@ -59,3 +61,6 @@ ifeq (${CPU_ARCH},amd64)
 else
 	@echo "This target must be run from amd64 architecture - current is $(CPU_ARCH)"
 endif
+
+migrate:
+	go run ./scripts/migrate_script/main.go

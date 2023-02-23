@@ -1,0 +1,33 @@
+author: CloudCover
+category: git
+description: Clone remote Git repository and checkout a given commit if specified.
+displayName: Git clone
+inputs:
+    properties:
+        git_checkout_target:
+            default: ""
+            description: Git branch, tag or commit hash to checkout.
+            title: Checkout Target
+            type: string
+        git_local_path:
+            default: repo
+            description: The name of a new directory to clone into.
+            title: Local Clone Directory
+            type: string
+        git_remote_path:
+            description: The repository to clone from.
+            title: Repository URL
+            type: string
+    required:
+        - git_remote_path
+keywords:
+    - git
+    - clone
+    - checkout
+meta: {}
+name: git-clone
+revision: 1
+targets:
+    - integration
+    - deployment
+version: 1

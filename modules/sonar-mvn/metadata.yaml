@@ -1,0 +1,45 @@
+author: CloudCover
+category: code analysis
+description: Analyze java source code using SonarCloud/SonarQube
+displayName: Sonar maven
+inputs:
+    properties:
+        git_local_path:
+            default: repo
+            description: The name of a new directory to clone into.
+            title: Local Clone Directory
+            type: string
+        sonar_cloud_org:
+            description: Sonar organization key found in project information section of sonar cloud web console
+            title: Sonar Organization Key
+            type: string
+        sonar_cloud_project_key:
+            description: Sonar project key found in project information section of sonar cloud web console. This is required if sonar_config_file is not set
+            title: Sonar Project Key
+            type: string
+        sonar_config_file:
+            default: ""
+            description: Optionally, use a config file in the repo to setup sonar properties
+            title: Sonar config file name
+            type: string
+        sonar_host:
+            description: IP where sonarqube is hosted, for sonarcloud it will be https://sonarcloud.io
+            title: Host IP
+            type: string
+        sonar_login_token:
+            description: Personal access token for sonar, can be gerenrated from <host>/account/security/
+            title: Sonar login token
+            type: string
+    required:
+        - sonar_host
+        - sonar_cloud_org
+        - sonar_cloud_project_key
+        - sonar_login_token
+keywords:
+    - Analyze Code
+meta: {}
+name: sonar-mvn
+revision: 1
+targets:
+    - integration
+version: 1

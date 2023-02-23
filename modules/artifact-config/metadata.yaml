@@ -1,0 +1,21 @@
+author: CloudCover
+category: config
+description: Configure settings for the deploy artifact
+displayName: Artifact Configuration
+inputs:
+    internal:
+        - repository
+        - tag
+        - repo_dir
+        - artifact_type
+    properties: {}
+keywords:
+    - config
+    - configuration
+    - cp-internal
+meta: {}
+name: artifact-config
+revision: 1
+targets:
+    - deployment
+version: 1

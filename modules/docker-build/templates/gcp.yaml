@@ -1,0 +1,9 @@
+steps:
+- id: 'Docker Build'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  dir: {{ working_dir }}
+  args:
+  - '-c'
+  - |
+    docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .

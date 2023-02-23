@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - cd {{working_dir}}
+      - echo Logging in to docker
+      - echo $docker_password | docker login -u $docker_username --password-stdin $docker_registry
+      - echo Pushing the Docker image...
+      - docker push {{container_repository}}:{{container_tag}}
+      {% if use_github_tag %}
+      - echo Creating new tag with Commit hash...
+      - docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}
+      - echo Pushing the Docker image with Commit hash...
+      - docker push {{container_repository}}:{{sha_tag}}
+      {% endif %}
+      

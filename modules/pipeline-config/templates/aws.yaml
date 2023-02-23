@@ -1,0 +1,84 @@
+{% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+{% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+{% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+
+artifacts:
+  type: "NO_ARTIFACTS"
+badgeenabled: null
+buildbatchconfig: null
+cache:
+  type: "NO_CACHE"
+description: null
+encryptionkey: null
+environment:
+  certificate: null
+  computetype: "{{ pipeline_compute_type }}"
+  environmentvariables:
+  - name: "__VG_EXPORTED_ENV_NAMES"
+    value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}"
+    type: "PLAINTEXT"
+  - name: "__VG_EXPORTED_SECRET_ENV_NAMES"
+    value: "{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
+    type: "PLAINTEXT"
+  {% for env_key, env_value in pipeline_env %}
+  - name: {{ env_key|cpi_quote }}
+    value: {{ env_value|cpi_quote }}
+    type: "PLAINTEXT"
+  {% endfor %}
+  {% for env_key, env_value in pipeline_secret_env %}
+  - name: "{{ env_key }}"
+    value: "{{ env_value }}"
+    type: "SECRETS_MANAGER"
+  {% endfor %}
+  image: "aws/codebuild/standard:4.0"
+  imagepullcredentialstype: "CODEBUILD"
+  privilegedmode: {{ privileged_mode }}
+  registrycredential: null
+  type: "LINUX_CONTAINER"
+filesystemlocations: null
+logsconfig:
+  cloudwatchlogs:
+    status: DISABLED
+  s3logs:
+    encryptiondisabled: false
+    location: "{{ pipeline_logs_bucket }}"
+    status: "ENABLED"
+name: "{{ pipeline_job_id }}"
+queuedtimeoutinminutes: {{ pipeline_queue_timeout_min }}
+secondaryartifacts: null
+secondarysourceversions: null
+secondarysources: null
+servicerole: "codebuild-new"
+source:
+  auth: null
+  buildstatusconfig: null
+  buildspec: |
+    env:
+      shell: bash
+    phases:
+      pre_build:
+        commands:
+          - echo "Cloning the pipeline modules..."
+          - mkdir -p {{pipeline_modules_path}}
+          - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
+          - export PATH={{ common_scripts_path }}:$PATH
+          - install-jq.sh
+  gitclonedepth: null
+  gitsubmodulesconfig: null
+  insecuressl: null
+  location: null
+  reportbuildstatus: null
+  sourceidentifier: null
+  type: "NO_SOURCE"
+sourceversion: null
+tags:
+{% for tag_key, tag_value in pipeline_tags %}
+- key: "{{ tag_key }}"
+  value: "{{ tag_value }}"
+{% endfor %}
+timeoutinminutes: {{ pipeline_run_timeout_min }}
+{% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
+vpcconfig: null
+{% else %}
+vpcconfig: {{ vpc_config|cpi_json }}
+{% endif %}

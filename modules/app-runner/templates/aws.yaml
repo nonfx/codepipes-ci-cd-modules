@@ -1,0 +1,66 @@
+########################################################################################################################################################
+# The module creates json config file for source configuration and instance configuration                                                              #
+# The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+# So we don't have to worry about character escaping in this module.                                                                                   #
+########################################################################################################################################################
+{% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+
+version: 0.2
+phases:
+  install:
+    commands:
+      - aws configure set region {{region}}
+  build:
+    commands:
+      {% if job_type == 'deploy' %}
+      - |
+        c=1; #Counter to check if its the last element in file
+        length=$(cat {{pipeline_env_file}} | wc -l); #Finds out the number of elements to put in json
+        echo "{" >> env.json; #start of the json file
+        cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          if [ $c -ge $length ] #Check to add or remove trailing comma while writing JSON
+          then
+              printf '"%s":%s\n' "$name" "$value" >> env.json
+              break;
+          else
+              printf '"%s":%s,\n' "$name" "$value" >> env.json
+          fi
+        c=$((c+1)) #Incrementing the counter
+        done;
+        echo "}" >> env.json;
+        envJSON=$(cat env.json);
+        JSON_FMT='{
+            "ImageRepository": {
+                "ImageIdentifier": "{{repository}}:{{tag}}",
+                "ImageConfiguration": {
+                    "RuntimeEnvironmentVariables": %s,
+                    "Port": "{{port}}"
+                },
+                "ImageRepositoryType": {% if repository|slice:":7" == 'public.' %}"ECR_PUBLIC"{% else %}"ECR"{% endif %}
+            },
+            "AutoDeploymentsEnabled": false {% if repository|slice:":7" != 'public.' %},
+            "AuthenticationConfiguration": {
+              "AccessRoleArn": "{{ecr_role}}"
+            }{% else %}{% endif %}
+        }';
+        # Replaces the %s in JSON_FMT with environment variable json created
+        printf "$JSON_FMT" "$envJSON" >> app.json
+      - |
+        echo '{
+          "Cpu": "{{cpu}}",
+          "Memory": "{{memory}}"{% if instance_role != '' %},
+          "InstanceRoleArn": "{{instance_role}}"{% else %}{% endif %}
+        }' >> instance.json
+      - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json  --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+  post_build:
+    commands:
+      - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      - echo "Service URL=https://"$serviceUrl | tr -d '"' >> summary.txt;
+      - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      - cat summary.txt
+    {% else %}
+      - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
+    {% endif %}

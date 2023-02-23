@@ -1,0 +1,11 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+    {% for summary in pipeline_summary_var %}
+    {{ summary.command }} | xargs -0 printf "{{ summary.name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+    cat summary.txt;
+    echo "###pipeline-summary-end###";

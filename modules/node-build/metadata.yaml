@@ -1,0 +1,44 @@
+author: CloudCover
+category: build
+description: This plugin is for building or testng your app with Node.js
+displayName: Node.js Build
+inputs:
+    properties:
+        node_js_version:
+            default: 18.12.0-alpine
+            description: The version of Node.js being used (From https://hub.docker.com/_/node/)
+            title: Node.js Version
+            type: string
+        npm_build_args:
+            default:
+                - install
+            description: Arguments for your Package manager command
+            items:
+                type: string
+            title: Package manager arguments
+            type: array
+        package_manager:
+            default: node
+            description: Your package manager, either node or yarn
+            enum:
+                - node
+                - yarn
+            title: Package manager
+            type: string
+        working_dir:
+            default: repo
+            description: The current working directory to execute command
+            title: Working directory
+            type: string
+keywords:
+    - Node.js
+    - NPM
+    - Yarn
+    - Install
+    - Build
+meta: {}
+name: node-build
+revision: 1
+targets:
+    - integration
+version: 1

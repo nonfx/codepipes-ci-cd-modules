@@ -1,0 +1,78 @@
+author: CloudCover
+category: security
+description: Scans java code for vulnarabilities
+displayName: Self hosted Fortify
+inputs:
+    internal:
+        - working_dir
+    properties:
+        CONTROLLER_TOKEN:
+            default: null
+            description: Senstive token to access fortify server
+            title: Fortify controller token
+            type: string
+        CRITICAL_THRESHOLD:
+            default: null
+            description: Upper limit to number of critical level vulnarabilities allowed
+            title: Critical severity threshold
+            type: string
+        FortifyAppName:
+            default: null
+            description: name of applicaton created in fortify
+            title: Fortify App Name
+            type: string
+        FortifyAppVersion:
+            default: null
+            description: version of applicaton created in fortify
+            title: Fortify App Version
+            type: string
+        HIGH_THRESHOLD:
+            default: null
+            description: Upper limit to number of high level vulnarabilities allowed
+            title: High severity threshold
+            type: string
+        INSTALLER_PATH:
+            default: null
+            description: Path to installer present on hosted agent
+            title: Path to installer present on hosted agent
+            type: string
+        LICENSE_PATH:
+            default: null
+            description: Path to fortify licence file
+            title: Path to fortify licence file
+            type: string
+        SSC_URL:
+            default: null
+            description: Scan central URL
+            title: Scan central URL
+            type: string
+        WARNING_THRESHOLD:
+            default: null
+            description: Upper limit to number of warning level vulnarabilities allowed
+            title: Warning severity threshold
+            type: string
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+    required:
+        - SSC_URL
+        - FortifyAppName
+        - FortifyAppVersion
+        - INSTALLER_PATH
+        - LICENSE_PATH
+        - CRITICAL_THRESHOLD
+        - HIGH_THRESHOLD
+        - WARNING_THRESHOLD
+        - CONTROLLER_TOKEN
+keywords:
+    - java
+    - fortify
+    - Security
+meta: {}
+name: fortify-selfhosted
+revision: 1
+targets:
+    - integration
+version: 1

@@ -1,0 +1,33 @@
+author: CloudCover
+category: build
+description: Build the container image using docker cli
+displayName: Docker Build
+inputs:
+    internal:
+        - container_repository
+        - container_tag
+        - working_dir
+    properties:
+        docker_build_args:
+            default: []
+            description: Arguments for the docker build command
+            items:
+                type: string
+            title: Docker Build Arguments
+            type: array
+keywords:
+    - default
+    - ContainerImage
+    - go
+    - node
+    - java
+    - dotnet
+    - csharp
+    - html
+    - js
+meta: {}
+name: docker-build
+revision: 1
+targets:
+    - integration
+version: 1

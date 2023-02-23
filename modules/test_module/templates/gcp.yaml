@@ -1,0 +1,28 @@
+steps:
+- name: 'bash'
+  args:
+  - '-c'
+  - |-
+    echo "stringVal={{ echo_string }}"
+    echo "intVal={{ echo_int }}"
+    echo "floatVal={{ echo_float }}"
+    echo "mapVal:"
+    {% for map_key, map_value in echo_map %}
+    echo "    {{ map_key }}={{ map_value }}"
+    {% endfor %}
+    echo "listVal:"
+    {% for list_value in echo_list %}
+    echo "    {{ list_value }}"
+    {% endfor %}
+- name: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+    {% if pipeline_summary_var %}
+    {% for summary in pipeline_summary_var %}
+    {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+    {% endif %}
+    echo "Service URL=[test_module succeeded $(date)]" >> summary.txt 2>&1;
+    echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+    cat summary.txt;

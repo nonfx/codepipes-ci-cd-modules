@@ -1,0 +1,26 @@
+author: CloudCover
+category: unit test
+description: run Java unit test with Maven
+displayName: Java UnitTest with Maven
+inputs:
+    internal:
+        - working_dir
+    properties:
+        test_args:
+            default: []
+            description: Arguments for mvn test command
+            items:
+                type: string
+            title: Mvn test command arguments
+            type: array
+keywords:
+    - default
+    - java
+    - unit-test
+    - maven
+meta: {}
+name: java-unit-test
+revision: 1
+targets:
+    - integration
+version: 1

@@ -1,0 +1,15 @@
+steps:
+- script: |
+    echo Logging in to docker
+    docker login -u $(docker_username) -p $(docker_password) $(docker_registry)
+    echo Pushing the Docker image...
+    docker push {{container_repository}}:{{container_tag}}
+    
+    {% if use_github_tag == true %}
+    echo Pushing the Docker image with Commit hash...
+    docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}
+    docker push {{container_repository}}:{{sha_tag}}
+    {% endif %}
+
+  displayName: 'Docker Push'
+  workingDirectory: {{ working_dir }}

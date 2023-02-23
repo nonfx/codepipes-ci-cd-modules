@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo Installing Golang v{{ go_version }}
+      - goenv install {{ go_version }}
+      - goenv local $(goenv versions | grep -m 1 {{ go_version }} | awk '{ print $1 }')
+      - CGO_ENABLED=${CGO_ENABLED:-0}
+      - go version
+      - cd {{working_dir}}
+      - echo Building the Go code...
+      - go build -v {% for arg in go_build_args %} {{ arg }} {% endfor %}

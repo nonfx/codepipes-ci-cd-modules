@@ -1,0 +1,69 @@
+author: CloudCover
+description: The template is used for deploying a helm chart in kubernetes cluster
+displayName: Deploy a public helm chart setup in k8s
+inputs:
+    internal:
+        - app_env
+        - applicationName
+        - environment
+        - project
+        - job_type
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        deployment_timeout:
+            default: 300s
+            description: Time to wait for pods to be ready before terming deployment as unsuccessful
+            title: Deployment Timeout
+            type: string
+        helm_chart_name:
+            default: ""
+            description: helm chart name
+            title: Helm Chart name
+            type: string
+        helm_chart_repo:
+            default: ""
+            description: helm chart repo
+            title: Helm Chart repo
+            type: string
+        helm_chart_url:
+            default: ""
+            description: helm chart url
+            title: Helm Chart url
+            type: string
+        helm_chart_version:
+            default: ""
+            description: helm chart version
+            title: Helm Chart version
+            type: string
+        helm_values_path:
+            default: ""
+            description: Path to your helm chart values including values file name
+            title: Helm Chart Values Path
+            type: string
+        namespace:
+            default: default
+            description: K8s namespace to deploy
+            title: namespace
+            type: string
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+    required:
+        - cluster
+        - region
+keywords:
+    - helm
+    - public
+    - charts
+meta:
+    inputArtifactType:
+        - GitCode
+name: basic-helm
+revision: 1
+targets:
+    - deployment
+version: 1

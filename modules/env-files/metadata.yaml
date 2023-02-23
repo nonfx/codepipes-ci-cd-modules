@@ -1,0 +1,16 @@
+author: CloudCover
+description: Create local .env files in the pipeline from the exported environment variables
+displayName: Create .env and .secret.env files
+inputs:
+    properties: {}
+keywords:
+    - env
+    - environment
+    - cp-internal
+meta: {}
+name: env-files
+revision: 1
+targets:
+    - integration
+    - deployment
+version: 1

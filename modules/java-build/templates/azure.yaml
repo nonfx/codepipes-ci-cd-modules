@@ -1,0 +1,5 @@
+steps:
+- script: mvn clean install
+  displayName: 'Maven Build'
+  workingDirectory: {{ working_dir }}
+  

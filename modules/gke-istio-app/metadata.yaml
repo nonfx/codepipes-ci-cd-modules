@@ -1,0 +1,83 @@
+author: CloudCover
+description: To run istio commands on GKE
+displayName: Istio Commands GKE
+inputs:
+    internal:
+        - job_type
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        domains:
+            default: []
+            description: Domain Names to be used for Ingress/Certificates
+            items:
+                properties:
+                    name:
+                        default: ""
+                        title: Domain name
+                        type: string
+                type: object
+            title: Domain Names
+            type: array
+        enable_istio_access_log:
+            default: true
+            description: To enable Istio access logging
+            title: Istio-proxy Access Log
+            type: boolean
+        ingress:
+            default: []
+            description: Detail required to create Ingress on GKE. Avoid this if ,IngressInstall is false
+            items:
+                properties:
+                    IsPrivateIngress:
+                        default: false
+                        title: IsPrivateIngress
+                        type: boolean
+                    staticIPName:
+                        default: ""
+                        title: staticIPName
+                        type: string
+                type: object
+            title: Ingress
+            type: array
+        ingress_install:
+            default: false
+            title: IngressInstall
+            type: boolean
+        istio_args:
+            default: install --set profile=default
+            description: Istio Argument
+            title: Istio Arguments
+            type: string
+        istio_version:
+            default: 1.13.2
+            description: Istio version to install
+            title: Istio Version
+            type: string
+        projectName:
+            default: codepipes
+            description: project name
+            title: project name
+            type: string
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+    required:
+        - cluster
+        - region
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+    requiredResources:
+        - google_container_cluster
+name: gke-istio-app
+revision: 1
+targets:
+    - deployment
+version: 1

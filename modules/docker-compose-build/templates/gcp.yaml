@@ -1,0 +1,17 @@
+steps:
+- id: 'Docker Compose Build image'
+  name: 'gcr.io/cloud-builders/docker'
+  dir: {{ working_dir }}
+  entrypoint: 'bash'  
+  args:
+  - '-c'
+  - |  
+    docker compose build {{ docker_compose_service_name }}
+    {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}      
+    echo Docker compose created the image: $image_name ......
+    echo Tagging image with container_tag : {{container_repository}}:{{container_tag}}
+    docker tag $image_name {{container_repository}}:{{container_tag}}
+  env:
+  {% if enable_docker_buildkit == true %}      
+    - "DOCKER_BUILDKIT=1"
+  {% endif %}

@@ -1,0 +1,42 @@
+version: 0.2
+phases:
+    pre_build:
+        commands:
+        {% for component in components %}
+            - |
+                cat <<'EOF' >>$CODEBUILD_SRC_DIR/cp_components.{% now '20060102150405.000000' %}.tf
+                # Input variable declarations.
+                {% for input in component.inputs %}
+                {% if input.declare %}
+                variable "{{ input.expression }}" {}
+                {% endif %}
+                {% endfor %}
+
+                # Output variable declarations.
+                {% for output in component.outputs %}
+                output "{{ component.label }}_{{ output.name }}" {
+                {% if not output.expression %}
+                value = module.{{ component.label }}[*].{{ output.name }}
+                sensitive = true
+                {% else %}
+                value = {{ output.expression }}
+                {% endif %}
+                description = "{{ output.description }}"
+                }
+                {% endfor %}
+
+                # Module definition.
+                module "{{ component.label }}" {
+                source = "{{ component.locator.namespace }}/{{ component.locator.name }}/{{ component.locator.provider }}//{{ component.locator.path }}"
+                version = "{{ component.locator.version }}"
+
+                {% for input in component.inputs %}
+                {% if input.declare %}
+                {{ input.name }} = var.{{ input.expression }}
+                {% else %}
+                {{ input.name }} = {{ input.expression }}
+                {% endif %}
+                {% endfor %}
+                }
+                EOF
+        {% endfor %}

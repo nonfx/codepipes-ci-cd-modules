@@ -1,0 +1,12 @@
+{% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+
+steps:
+  {% for target in targets %}
+- name: 'cldcvr/cpi-make'
+  dir: {{ workspace }}/{{ working_dir }}/{{ target.target_dir }}
+  args:
+    {% if makefile_name %}
+    - -f {{ makefile_name }}
+    {% endif %}
+    - '{{ target.name }}'
+  {% endfor %}

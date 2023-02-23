@@ -1,0 +1,54 @@
+{% set workspace = '/workspace' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+{% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+{% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+{% set source_code_path = workspace|add:'/source_code' %}
+
+steps:
+- id: 'gcloud container setup'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials {{cluster}} --region {{region}}
+- id: 'Install helm'
+  name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
+    cd cloud-builders-community/helm;
+    docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
+{% if job_type == 'deploy' %}
+- id: 'Install Application'
+  name: 'gcr.io/$PROJECT_ID/helm'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    {% if namespace != 'default' %}
+    kubectl create ns {{namespace}}
+    {% endif %}
+    cd {{source_code_path}}/{{helm_chart_path}} ;
+    helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
+- id: 'Extract summary vars'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+    echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+    cat summary.txt;
+{% else %}
+- id: 'Uninstall application'
+  name: 'gcr.io/$PROJECT_ID/helm'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    cd {{source_code_path}}/{{helm_chart_path}} ;
+    helm uninstall {{applicationName}}-{{environment}} --namespace {{namespace}};
+{% endif %}

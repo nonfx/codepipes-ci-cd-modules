@@ -1,0 +1,7 @@
+steps:
+- id: "Git Clone"
+  name: 'cldcvr/cpi-config'
+  args:
+  - '-c'
+  - |
+    git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}

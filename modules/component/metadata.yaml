@@ -1,0 +1,17 @@
+author: CloudCover
+description: Include infrastructure component modules imported from a shared library repository.
+displayName: Infrastructure component
+inputs:
+    internal:
+        - components
+    properties: {}
+    required: []
+    type: object
+keywords:
+    - terraform
+meta: {}
+name: component
+revision: 1
+targets:
+    - infra
+version: 1

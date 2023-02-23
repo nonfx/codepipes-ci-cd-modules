@@ -1,0 +1,110 @@
+{% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+{% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+steps:
+  - script: |
+        az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+        curl -sL https://istio.io/downloadIstioctl | sh -
+        export PATH=$PATH:$HOME/.istioctl/bin
+        az aks get-credentials --name {{cluster}} -g {{resourceGroup}} -a
+        {% if job_type == 'deploy' %}
+        istioctl x precheck
+        export PATH="{{workspace}}/bin:$PATH"
+        {% if lb_type == 'Public' %}
+        istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.loadBalancerIP={{publicIP}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
+        {% else %}
+        istioctl {{istio_args}} --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-internal"="true" --set values.gateways.istio-ingressgateway.serviceAnnotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}} -y
+        {% endif %}
+        {% else %}
+        istioctl x uninstall --purge --skip-confirmation
+        kubectl delete  ns istio-system --ignore-not-found=true
+        {% endif %}
+    displayName: "Istio {{job_type}}"
+    env:
+      ISTIO_VERSION: "{{istio_version}}"
+  {% if install_ingress %}
+  - script: |
+        echo "apiVersion: networking.istio.io/v1alpha3
+        kind: Gateway
+        metadata:
+          name: {{ projectName | lower }}-httpbin-gateway
+        spec:
+          selector:
+            istio: ingressgateway # use Istio default gateway implementation
+          servers:
+          - port:
+              number: 80
+              name: http
+              protocol: HTTP
+            hosts:
+            - '*'" >> gateway.yaml;
+        {% if job_type == 'deploy' %}
+        kubectl apply -f gateway.yaml;
+        {% else %}
+        kubectl delete -f gateway.yaml;
+        {% endif %}
+    displayName: "Gateway {{job_type}}"
+  - script: |
+        echo ""
+        echo "apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: {{ projectName | lower }}-istio-ingress
+          namespace: istio-system
+        spec:
+          rules:
+          {% if domains %}
+          {% for domain in domains %}
+          - host: {{domain.name}}
+            http:
+              paths:
+              - path: /*
+                backend:
+                  service:
+                    name: istio-ingressgateway
+                    port:
+                      number: 80
+                pathType: ImplementationSpecific
+        {% endfor %}
+        {% endif %}" >> ingress.yaml;
+        {% if job_type == 'deploy' %}
+        kubectl apply -f ingress.yaml;
+        {% else %}
+        kubectl delete -f ingress.yaml;
+        {% endif %}
+    displayName: "Ingress {{job_type}}"
+  {% endif %}
+{% if job_type == 'deploy' %}  
+{% if enable_istio_access_log %}
+  - script: |
+        #Set kubernetes config
+        echo "
+        apiVersion: telemetry.istio.io/v1alpha1
+        kind: Telemetry
+        metadata:
+          name: mesh-default
+          namespace: istio-system
+        spec:
+          accessLogging:
+            - providers:
+              - name: envoy " >> enable_istio_access_log.yaml
+        kubectl apply -f enable_istio_access_log.yaml 
+    displayName: "Enabled istio Access Logging"
+{% else %}
+  - script: |
+        #Set kubernetes config
+        echo "
+        apiVersion: telemetry.istio.io/v1alpha1
+        kind: Telemetry
+        metadata:
+          name: mesh-default
+          namespace: istio-system
+        spec:
+          accessLogging:
+            - providers:
+              - name: envoy " >> enable_istio_access_log.yaml
+        kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml  
+    displayName: "Disabled istio Access Logging"    
+{% endif %}
+{% endif %}
+  

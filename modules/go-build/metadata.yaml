@@ -1,0 +1,33 @@
+author: CloudCover
+category: build
+description: Build source code using Golang
+displayName: Go Build
+inputs:
+    properties:
+        go_build_args:
+            default: []
+            description: Arguments for Go build command
+            items:
+                type: string
+            title: Go build args
+            type: array
+        go_version:
+            default: 1.15.15
+            description: The version of Golang to use
+            title: Golang version
+            type: string
+        working_dir:
+            default: repo
+            description: The current working directory to execute command
+            title: Working directory
+            type: string
+keywords:
+    - Go
+    - Install
+    - Build
+meta: {}
+name: go-build
+revision: 1
+targets:
+    - integration
+version: 1

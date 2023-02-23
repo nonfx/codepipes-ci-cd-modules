@@ -1,0 +1,44 @@
+author: CloudCover
+category: security
+description: Scans go code for vulnarabilities using gosec and golint
+displayName: Go Scan
+inputs:
+    internal:
+        - working_dir
+    properties:
+        go_lint_args:
+            default:
+                - run
+            description: Arguments for Go lint command
+            items:
+                type: string
+            title: Go lint args
+            type: array
+        go_sec_args:
+            default:
+                - ./...
+            description: Arguments for Go sec command
+            items:
+                type: string
+            title: Go sec args
+            type: array
+        golint_version:
+            default: 1.44.0
+            description: Golint version https://github.com/golangci/golangci-lint
+            title: Go lint version
+            type: string
+        gosec_version:
+            default: 2.9.6
+            description: Gosec version https://github.com/securego/gosec
+            title: Go sec version
+            type: string
+keywords:
+    - Go
+    - Scan
+    - lint
+meta: {}
+name: go-scan
+revision: 1
+targets:
+    - integration
+version: 1

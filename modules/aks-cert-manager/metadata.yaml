@@ -1,0 +1,117 @@
+author: CloudCover
+description: The template is used to install Cert Manager, Gateway, Cert Issuer and Ingress
+displayName: AKS Cert Manager Installation
+inputs:
+    internal:
+        - app_env
+        - files
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - job_type
+        - pipeline_summary_var
+    properties:
+        certManagerVersion:
+            default: v1.7.2
+            description: CertManager version to install
+            title: CertManager Version
+            type: string
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        deployment:
+            default: true
+            description: This is to create deployment
+            title: Create Deployment
+            type: boolean
+        domains:
+            default: []
+            description: Domain Names to be used for Ingress/Certificates
+            items:
+                properties:
+                    name:
+                        default: ""
+                        title: Domain name
+                        type: string
+                type: object
+            title: Domain Names
+            type: array
+        hostedZone:
+            default: ""
+            description: Name of the Azure DNS Hosted Zone for CertManager for which certificate is required
+            title: Azure DNS Hosted Zone for CertManager
+            type: string
+        managedCertificate:
+            default: false
+            description: This will deploy acme certificate issuer with letsencrypt as signing authority
+            title: Managed Certificate from LetsEncrypt
+            type: boolean
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        ports:
+            default: []
+            description: Port used in services
+            items:
+                properties:
+                    containerPort:
+                        maximum: 65535
+                        title: Container port
+                        type: integer
+                    healthCheck:
+                        default: ""
+                        title: Health check path
+                        type: string
+                    name:
+                        title: Service name
+                        type: string
+                    protocol:
+                        default: TCP
+                        enum:
+                            - TCP
+                            - UDP
+                        title: Protocol
+                        type: string
+                required:
+                    - name
+                    - containerPort
+                type: object
+            title: Ports
+            type: array
+        project:
+            default: latest
+            description: This is a vanguard project name
+            title: Project Name
+            type: string
+        projectName:
+            default: codepipes
+            description: Code Pipes Project Name
+            title: Code Pipes Project Name
+            type: string
+        resourceGroup:
+            description: Name of the resource group where AKS Cluster is deployed
+            title: Resource Group Name
+            type: string
+        workingDir:
+            default: $(Build.SourcesDirectory)
+            description: Working Directory where the code is to be run
+            title: Working Directory
+            type: string
+    required:
+        - cluster
+        - resourceGroup
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: aks-cert-manager
+revision: 1
+targets:
+    - deployment
+version: 1

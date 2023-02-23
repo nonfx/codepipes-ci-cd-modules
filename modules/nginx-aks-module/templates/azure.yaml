@@ -1,0 +1,33 @@
+{% set workspace = '' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'.env' %}
+{% set pipeline_secret_file = workspace|add:'.secret.env' %}
+{% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+{% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+
+steps:
+  - task: HelmInstaller@0
+    inputs:
+      helmVersion: {{helmVersion}}
+      installKubectl: true
+      kubectlVersion: {{kubectlVersion}}
+  - script: |
+        az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+        az aks get-credentials --name {{cluster}} --resource-group {{resourceGroup}} --subscription $(ARM_SUBSCRIPTION_ID) --overwrite-existing -a
+    displayName: "Get AKS Kubecofing"
+    workingDirectory: {{ workingDir }}
+  {% if job_type == 'deploy' %}
+  - script: |
+        NAMESPACE={{namespace}}
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+        helm repo update
+        helm install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace $NAMESPACE --set controller.service.loadBalancerIP={{publicIP}} --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}}
+    displayName: "Helm Deploy {{applicationName}}"
+    workingDirectory: {{ workingDir }}
+  {% else %}
+  - script: |
+          NAMESPACE={{namespace}}
+          helm uninstall nginx-ingress --namespace {{namespace}};
+          kubectl delete ns {{namespace}};
+    displayName: "Helm Uninstall {{applicationName}}"
+    workingDirectory: {{ workingDir }}
+  {% endif %}

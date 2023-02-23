@@ -1,0 +1,82 @@
+author: CloudCover
+description: Deploy Lambda functions with API gateway
+displayName: AWS Lambda deployment with code
+inputs:
+    internal:
+        - app_env
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - job_type
+        - repo_dir
+    properties:
+        architecture:
+            default: x86_64
+            description: Processor architecture x86_64 or arm64, default x86_64
+            title: Processor architecture
+            type: string
+        bucket:
+            description: S3 bucket to hold serverless state file
+            title: bucket to store state of IAC
+            type: string
+        funcs:
+            description: Function configuration
+            items:
+                properties:
+                    handler:
+                        title: handler
+                        type: string
+                    name:
+                        title: Name
+                        type: string
+                    path:
+                        title: Path
+                        type: string
+                    verb:
+                        title: Verb
+                        type: string
+                required:
+                    - path
+                    - name
+                    - handler
+                    - verb
+                type: object
+            title: function config
+            type: array
+        memory:
+            default: "1024"
+            description: Memory in MB, default 1024MB
+            title: Memory
+            type: string
+        region:
+            description: Region name for lambda deployment
+            title: Region name
+            type: string
+        runtime:
+            description: application runtime
+            title: runtime
+            type: string
+        timeout:
+            default: 10
+            description: Timeout in seconds, default 10 seconds
+            title: timeout
+            type: integer
+    required:
+        - region
+        - bucket
+        - funcs
+        - runtime
+    type: object
+keywords:
+    - bash
+    - linux
+    - functions
+meta:
+    inputArtifactType:
+        - GitCode
+name: lambda-gateway-code
+revision: 1
+targets:
+    - deployment
+version: 1

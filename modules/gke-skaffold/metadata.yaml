@@ -1,0 +1,37 @@
+author: CloudCover
+description: Deploy application to GKE via Skaffold
+displayName: GKE-skaffold
+inputs:
+    properties:
+        gke_cluster_name:
+            description: Name of the GKE Cluster
+            title: GKE Cluster Name
+            type: string
+        gke_cluster_region:
+            default: $$GOOGLE_REGION
+            description: Location of GKE
+            title: GKE Cluster Region
+            type: string
+        skaffold_path:
+            default: skaffold.yaml
+            description: The file path of skaffold yaml
+            title: Skaffold file path
+            type: string
+        working_dir:
+            default: repo
+            description: The current working directory to execute command
+            title: Working directory
+            type: string
+    required:
+        - gke_cluster_name
+keywords:
+    - deploy
+    - skaffold
+meta:
+    gcpRoles:
+        - roles/container.developer
+name: gke-skaffold
+revision: 1
+targets:
+    - integration
+version: 1

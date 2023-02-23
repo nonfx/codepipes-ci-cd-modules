@@ -1,0 +1,18 @@
+author: CloudCover
+description: Configure access to a remote Git repository in AWS codecommit.
+displayName: AWS codecommit access
+inputs:
+    properties: {}
+keywords:
+    - git
+    - access
+    - credentials
+    - auth
+meta: {}
+name: codecommit
+revision: 1
+targets:
+    - integration
+    - infra
+    - deployment
+version: 1

@@ -1,0 +1,15 @@
+steps:
+- id: 'Go Version'
+  name: "gcr.io/cloud-builders/go:{{ go_version }}"
+  args: ["version"]
+  env: ["GOPATH=/workspace"]
+- id: 'Go Build'
+  name: 'gcr.io/cloud-builders/go:{{ go_version }}'
+  dir: {{ working_dir }}
+  env: ["GOPATH=/workspace", "PROJECT_ROOT={{ working_dir }}", "CGO_ENABLED=${CGO_ENABLED:-0}"]
+  args:
+   - 'build'
+   - '-v'
+  {% for arg in go_build_args %}
+   - '{{ arg }}'
+  {% endfor %}

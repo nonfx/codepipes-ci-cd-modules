@@ -1,0 +1,26 @@
+author: CloudCover
+category: utility
+description: The bash script to run
+displayName: Bash script
+inputs:
+    properties:
+        bash_script:
+            description: This is a bash script
+            title: Bash script
+            type: string
+        working_dir:
+            default: repo
+            description: The current working directory to execute the bash script from
+            title: Working directory
+            type: string
+    required:
+        - bash_script
+keywords:
+    - bash
+    - linux
+meta: {}
+name: bash
+revision: 1
+targets:
+    - integration
+version: 1

@@ -1,0 +1,77 @@
+author: CloudCover
+description: Deploy Lambda functions with API gateway
+displayName: AWS Lambda deployment
+inputs:
+    internal:
+        - app_env
+        - repository
+        - tag
+        - application
+        - environment
+        - project
+        - job_type
+    properties:
+        architecture:
+            default: x86_64
+            description: Processor architecture x86_64 or arm64, default x86_64
+            title: Processor architecture
+            type: string
+        bucket:
+            description: S3 bucket to hold serverless state file
+            title: bucket to store state of IAC
+            type: string
+        funcs:
+            description: Function configuration
+            items:
+                properties:
+                    image:
+                        title: Image
+                        type: string
+                    name:
+                        title: Name
+                        type: string
+                    path:
+                        title: Path
+                        type: string
+                    verb:
+                        title: Verb
+                        type: string
+                required:
+                    - path
+                    - name
+                    - image
+                    - verb
+                type: object
+            title: function config
+            type: array
+        memory:
+            default: "1024"
+            description: Memory in MB, default 1024MB
+            title: Memory
+            type: string
+        region:
+            description: Region name for lambda deployment
+            title: Region name
+            type: string
+        timeout:
+            default: 10
+            description: Timeout in seconds, default 10 seconds
+            title: timeout
+            type: integer
+    required:
+        - region
+        - bucket
+        - funcs
+    type: object
+keywords:
+    - bash
+    - linux
+    - functions
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: lambda-gateway
+revision: 1
+targets:
+    - deployment
+version: 1

@@ -1,0 +1,5 @@
+phases:
+  install:
+    commands:
+    # Install git-remote-codecommit python package
+    - pip3 install git-remote-codecommit

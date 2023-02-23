@@ -1,0 +1,32 @@
+author: CloudCover
+description: Execute a bash script from file
+displayName: Execute a bash script
+inputs:
+    internal:
+        - pipeline_summary_var
+        - repo_dir
+        - job_type
+    properties:
+        bash_script:
+            description: This the filename of the bash script to run
+            title: Bash script
+            type: string
+        script_parameters:
+            default: []
+            items:
+                type: string
+            title: Parameters to pass to the bash script
+            type: array
+    required:
+        - bash_script
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - GitCode
+name: run-bash-script
+revision: 1
+targets:
+    - deployment
+version: 1

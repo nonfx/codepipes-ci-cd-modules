@@ -1,0 +1,25 @@
+author: CloudCover
+category: push
+description: Push container image to a registry using docker cli
+displayName: Docker Push
+inputs:
+    internal:
+        - container_repository
+        - container_tag
+        - sha_tag
+        - working_dir
+    properties:
+        use_github_tag:
+            default: true
+            description: true value will push the image reference with git commit sha tag as well
+            title: Use github tag
+            type: boolean
+keywords:
+    - default
+    - ContainerImage
+meta: {}
+name: docker-push
+revision: 1
+targets:
+    - integration
+version: 1

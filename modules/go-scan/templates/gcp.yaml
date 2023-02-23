@@ -1,0 +1,18 @@
+steps:
+- id: go_security
+  name: "securego/gosec:v{{ gosec_version }}"
+  dir: {{ working_dir }}
+  args:
+  {% for arg in go_sec_args %}
+    - '{{ arg }}'
+  {% endfor %}
+- id: go_linter
+  name: "golangci/golangci-lint:v{{ golint_version }}"
+  dir: {{ working_dir }}
+  env:
+    - 'GO111MODULE=on'
+  args:
+    - "golangci-lint"
+  {% for arg in go_lint_args %}
+    - '{{ arg }}'
+  {% endfor %}

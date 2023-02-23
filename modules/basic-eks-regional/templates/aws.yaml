@@ -1,0 +1,184 @@
+{% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+{% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+{% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
+
+version: 0.2
+phases:
+  install:
+    commands:
+      - wget https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz
+      - tar -zxvf helm-v3.5.3-linux-amd64.tar.gz
+      - mv linux-amd64/helm /usr/local/bin/helm
+  build:
+    commands:
+      - export PATH="{{workspace}}/bin:$PATH"
+      - aws eks --region {{region}} update-kubeconfig --name {{cluster}} --role-arn {{roleArn}}
+      {% if job_type == 'deploy' %}
+      - cd {{helm_chart_path}} ;
+      - touch .helmignore;
+      - |
+        {% if files %}
+        {% for mounthPath, fs in files %}
+        {% if fs %}
+        {% for file in fs %}
+        aws s3 cp s3://{{customer_bucket}}/{{file}} {{file}} ;
+        openssl aes-256-cbc -md sha256 -pbkdf2 -d -in {{file}} -out {{file}} -k $vg_pipeline_artifact_aes_key
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+        # aws s3 rm  s3://{{customer_bucket}} --recursive ;
+        {% endif %}
+        rm -f values.yaml;
+
+        if [ -z "$docker_registry" ]; then
+        export docker_registry="index.docker.io"
+        fi
+
+        echo "applicationName: {{applicationName}} #auto
+        environment:  {{environment}} #auto
+        project: {{project}} #auto
+
+        deploy:
+          replicaCount: 1
+          strategy: RollingUpdate
+          maxUnavail: 1
+          maxSurge: 1
+          terminationGracePeriodSeconds: 30
+          healthCheck:
+            liveFailThreshold: '2'
+            liveSuccThreshold: '1'
+            readFailThreshold: '2'
+            readSuccThreshold: '1'
+            delay: '10'
+            period: '4'
+            timeout: '2'
+
+        ports:
+        {% for port in ports%}
+          - name: {{port.name}}
+            containerPort: {{port.containerPort}}
+            protocol: {{port.protocol}}
+            {% if port.healthCheck %}
+            healthcheck: {{port.healthCheck}}
+            {% endif %}
+        {% endfor %}
+
+        image: #auto
+          repository: {{ repository }}
+          pullPolicy: Always
+          tag:  {{ tag }}
+          registryCredentials:
+            registry: $docker_registry
+            username: $docker_username" >> values.yaml
+
+        printf '    password: %s\n' "$(printf '%s' "$docker_password" | jq -aRs .)" >> values.yaml
+
+        echo "
+        {% for ing in ingress%}
+        {% if ing.domain %}
+        ingress:
+          domain: {{ing.domain}}
+          certificateArn: {{ing.certificateArn}}
+          {% if ing.bucketName %}
+          bucketName: {{ing.bucketName}}
+          {% endif %}
+          {% if ing.appDomain %}
+          appDomain: {{ing.appDomain}}
+          {% else %}
+          appDomain: {{applicationName}}.{{ing.domain}}
+          {% endif %}
+          externalDNSenabled: {{ing.externalDNSenabled}}
+        {% endif %}
+        {% endfor %}
+
+        service:
+          type: nodeport
+          private: false
+
+        autoscaling:
+          enabled: false
+          minReplicas: 1
+          maxReplicas: 5
+          targetCPUUtilizationPercentage: 80
+
+        resourcequota:
+          quotaRequestsCpu: 100
+          quotaRequestsMem: 0.2
+          quotaLimitsCpu: 200
+          quotaLimitsMem: 0.3
+
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+
+        lifecycle:
+          prestop:
+            command: ['/bin/sh', '-c', 'sleep 30']
+
+        artifacts:
+        {% for mountPath, fs in files %}
+          - mountPath: {{mountPath}}
+            files:
+            {% for file in fs %}
+              - '{{file}}'
+            {% endfor %}
+        {% endfor %}
+        envs:
+        " >> values.yaml
+        cat {{pipeline_env_file}} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf '  %s: %s\n' "$name" "$value" >> values.yaml
+        done;
+      - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+
+  post_build:
+    commands:
+      - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
+      {% if pipeline_summary_var %}
+      {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
+      {% endif %}
+      {% if ports %}
+      - echo '#!/bin/bash' >> test.sh
+      - echo 'summary=""' >> test.sh
+      - echo 'count=30' >> test.sh
+      - echo 'while [ true ]; do' >> test.sh
+      - {% if ingress %}
+        {% if ingress.0.domain %}
+        echo "sleep 2; summary=$(kubectl get ingress -n {{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+        {% else %}
+        echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+        {% endif %}
+        {% else %}
+        echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+        {% endif %}
+      - echo 'if [ ! -z "$summary" ]; then' >> test.sh
+      - {% if ingress %}
+        {% if ingress.0.domain %}
+        echo 'echo "Service URL=https://"$summary >> summary.txt; break' >> test.sh
+        {% else %}
+        echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+        {% endif %}
+        {% else %}
+        echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
+        {% endif %}
+      - echo 'fi' >> test.sh
+      - echo 'if [ $count -eq 0 ]; then' >> test.sh
+      - echo 'break' >> test.sh
+      - echo 'fi' >> test.sh
+      - echo 'count=`expr $count - 1`' >> test.sh
+      - echo 'done' >> test.sh
+      - chmod 755 ./test.sh
+      - cat ./test.sh
+      - ./test.sh
+      {% endif %}
+      - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
+      - cat summary.txt
+    {% else %}
+      - helm uninstall {{applicationName}}-{{environment}}
+    {% endif %}

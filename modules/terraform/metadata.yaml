@@ -1,0 +1,41 @@
+author: CloudCover
+description: Executes Terraform commands on code from external repository
+displayName: Terraform pipeline
+inputs:
+    internal:
+        - iac_checkout_src
+        - iac_checkout_target
+        - iac_root
+        - artifact_bucket
+        - artifact_dir
+        - tf_action
+        - tf_state_file
+        - tf_plan_file
+        - tf_version
+    properties:
+        tf_log_level:
+            default: DEBUG
+            description: Terraform log verbosity.
+            enum:
+                - TRACE
+                - DEBUG
+                - INFO
+                - WARN
+                - ERROR
+                - JSON
+            title: Terraform Log Level
+            type: string
+    required:
+        - iac_checkout_src
+        - iac_checkout_target
+        - artifact_bucket
+        - artifact_dir
+        - tf_action
+keywords:
+    - terraform
+meta: {}
+name: terraform
+revision: 1
+targets:
+    - infra
+version: 1

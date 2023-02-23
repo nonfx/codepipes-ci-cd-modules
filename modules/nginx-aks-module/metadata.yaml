@@ -1,0 +1,51 @@
+author: CloudCover
+description: The template is used for nginx based deployments and also provision virtual service for application
+displayName: AKS nginx Based Deployment
+inputs:
+    internal:
+        - app_env
+        - files
+        - job_type
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        namespace:
+            default: ingress-basic
+            description: This is to deploy or undeploy application
+            title: Job Type
+            type: string
+        pool_name:
+            default: ""
+            description: Use  Azure selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        publicIP:
+            description: This is Public IP to be alloted to the Load Balancer
+            title: Public IP
+            type: string
+        resourceGroup:
+            description: Name of the resource group where AKS Cluster is deployed
+            title: Resource Group Name
+            type: string
+        workingDir:
+            default: $(Build.SourcesDirectory)
+            description: Working Directory where the code is to be run
+            title: Working Directory
+            type: string
+    required:
+        - cluster
+        - resourceGroup
+        - publicIP
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: nginx-aks-module
+revision: 1
+targets:
+    - deployment
+version: 1

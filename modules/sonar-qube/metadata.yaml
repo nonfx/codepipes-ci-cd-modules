@@ -1,0 +1,31 @@
+author: CloudCover
+category: code analysis
+description: Analyze source code using Sonar Qube
+displayName: Sonar Qube
+env:
+    - CPI__SONARQUBE_SERVICE_CONNECTION
+inputs:
+    internal:
+        - git_local_path
+        - working_dir
+        - applicationName
+    properties:
+        pool_name:
+            default: ""
+            description: Use selfhosted agent by proving agent pool name.
+            title: Pool Name
+            type: string
+        sonarQube_application_id:
+            default: ""
+            description: If not provided, Code Pipes application name will be used
+            title: SonarQube Application ID
+            type: string
+keywords:
+    - analyze
+    - quality gate
+meta: {}
+name: sonar-qube
+revision: 1
+targets:
+    - integration
+version: 1

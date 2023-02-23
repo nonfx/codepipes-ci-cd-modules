@@ -1,0 +1,6 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - echo Running unit test..
+      - mvn test {% for arg in test_args %} {{ arg }} {% endfor %}

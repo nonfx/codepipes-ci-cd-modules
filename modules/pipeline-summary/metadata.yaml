@@ -1,0 +1,31 @@
+author: CloudCover
+description: Configure Pipeline summary
+displayName: Pipeline summary
+inputs:
+    properties:
+        pipeline_summary_var:
+            default: []
+            description: This will create pipeline summary as per user request
+            items:
+                properties:
+                    Command:
+                        title: Command
+                        type: string
+                    Name:
+                        title: Name
+                        type: string
+                required:
+                    - Command
+                    - Name
+                type: object
+            title: Pipeline Summary
+            type: array
+keywords:
+    - summary
+meta: {}
+name: pipeline-summary
+revision: 1
+targets:
+    - integration
+    - deployment
+version: 1

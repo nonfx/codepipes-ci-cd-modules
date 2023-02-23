@@ -1,0 +1,55 @@
+########################################################################################################################################################
+# The template uses serverless framework to deploy function to lambdas using container images                                                          #
+# Uses serverless-deployment-bucket plugin to keep iac code                                                                                            #
+# Uses machine env from .env file https://www.serverless.com/framework/docs/environment-variables                                                           #
+########################################################################################################################################################
+{% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+{% set pipeline_env_file = workspace|add:'/.env' %}
+
+version: 0.2
+phases:
+  install:
+    commands:
+      - aws configure set region {{region}}
+      - npm install -g npm
+      - npm install serverless -g
+      - npm install serverless-deployment-bucket -g
+  build: 
+    commands:
+      - |
+        echo "
+        service: {{application}}
+        useDotenv: true
+        frameworkVersion: '3'
+        provider:
+          name: aws
+          stage: {{environment}}
+          ecr:
+            images: 
+            {% for func in funcs %} 
+              {{ func.name }}:
+                uri: {{ func.image }}
+            {% endfor %}    
+          architecture: {{architecture}}
+          memorySize: {{memory}}
+          timeout: {{timeout}}
+          deploymentBucket:
+            name: {{ bucket }}
+        functions:
+        {% for func in funcs %} 
+          {{ func.name }}:
+            image:
+              name: {{ func.name }}
+            events:
+              - httpApi:
+                  path: {{ func.path }}
+                  method: {{ func.verb }}
+        {% endfor %}  
+        plugins:
+          - serverless-deployment-bucket  
+        " >> serverless.yml
+    {% if job_type == 'deploy' %}
+      - serverless deploy
+    {% else %}
+      - serverless remove
+    {% endif %}

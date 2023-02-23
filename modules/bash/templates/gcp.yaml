@@ -1,0 +1,9 @@
+steps:
+- id: 'Run Bash script'
+  name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    cd /workspace/{{ working_dir }} ;
+    {{ bash_script }}

@@ -1,0 +1,74 @@
+author: CloudCover
+description: The bash script to run
+displayName: GKE deployment
+inputs:
+    internal:
+        - app_env
+        - files
+        - repository
+        - tag
+        - applicationName
+        - environment
+        - project
+        - customer_bucket
+        - job_type
+        - pipeline_summary_var
+    properties:
+        cluster:
+            description: Cluster name in which deployment will happen
+            title: Cluster Name
+            type: string
+        deployment_timeout:
+            default: 300s
+            description: Time to wait for pods to be ready before terming deployment as unsuccessful
+            title: Deployment Timeout
+            type: string
+        ports:
+            default: []
+            description: Port used in services
+            items:
+                properties:
+                    containerPort:
+                        maximum: 65535
+                        title: Container port
+                        type: integer
+                    healthCheck:
+                        default: ""
+                        title: Health check path
+                        type: string
+                    name:
+                        title: Service name
+                        type: string
+                    protocol:
+                        default: TCP
+                        enum:
+                            - TCP
+                            - UDP
+                        title: Protocol
+                        type: string
+                required:
+                    - name
+                    - containerPort
+                type: object
+            title: Ports
+            type: array
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+    required:
+        - cluster
+        - region
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+    requiredResources:
+        - google_container_cluster
+name: basic-gke-regional
+revision: 1
+targets:
+    - deployment
+version: 1

@@ -1,0 +1,8 @@
+steps:
+{% for arg in npm_build_args %}
+- id: '{{ package_manager }} {{ arg }}'
+  name: node:{{ node_js_version }}
+  entrypoint: {{ package_manager }}
+  args: ['{{ arg }}']
+  dir: {{ working_dir }}
+{% endfor %}

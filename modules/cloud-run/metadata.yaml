@@ -1,0 +1,49 @@
+author: CloudCover
+description: Deploy cloud run on GCP
+displayName: Cloud Run Deployment
+inputs:
+    internal:
+        - applicationName
+        - environment
+        - project
+        - repository
+        - tag
+        - job_type
+    properties:
+        allowUnauthenticated:
+            default: true
+            description: Boolean to allow Unauthenticated traffic
+            title: Allow Unauthenticated
+            type: boolean
+        containerPort:
+            default: 8080
+            description: Requests will be sent to the container on this port, default is 8080
+            title: Container Port
+            type: integer
+        domain:
+            default: ""
+            description: Creates a domain mapping provided the domain has been already verified with the GCP project
+            title: Custom Domain
+            type: string
+        region:
+            description: region name for cluster
+            title: Region name
+            type: string
+        vpcConnector:
+            default: ""
+            description: Name of the VPC Connector
+            title: VPC Connector
+            type: string
+    required:
+        - region
+keywords:
+    - bash
+    - linux
+meta:
+    inputArtifactType:
+        - ContainerImage
+name: cloud-run
+revision: 1
+targets:
+    - deployment
+version: 1

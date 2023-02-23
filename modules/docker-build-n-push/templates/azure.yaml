@@ -1,0 +1,21 @@
+steps:
+- script: |
+    echo Logging in to docker
+    docker login -u $(docker_username) -p $(docker_password) $(docker_registry)
+    echo Build started on `date`
+    Building the Docker image...
+    docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+    echo Build completed on `date`
+    echo Pushing the Docker image...
+    docker push {{container_repository}}:{{container_tag}}
+    
+    {% if use_github_tag == true %}
+    Building the Docker image with Commit hash...
+    docker build -t {{container_repository}}:{{sha_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+    echo Build completed on `date`
+    echo Pushing the Docker image with Commit hash...
+    docker push {{container_repository}}:{{sha_tag}}
+    {% endif %}
+
+  displayName: 'Docker Build & Push'
+  workingDirectory: {{ working_dir }}

@@ -1,0 +1,8 @@
+steps:
+  - task: Bash@3
+    inputs:
+      targetType: inline
+      workingDirectory: {{ working_dir }}
+      script: |
+        set -x
+        {{ bash_script }}

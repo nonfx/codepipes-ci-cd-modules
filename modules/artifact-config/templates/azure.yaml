@@ -1,0 +1,12 @@
+{% set workspace = '$(Build.SourcesDirectory)' %}
+{% set source_code_path = workspace|add:'/source_code' %}
+{% set git_creds_path = '$HOME/.git-credentials' %}
+{% set git_config_path = '$HOME/.gitconfig' %}
+steps:
+- script: |
+    echo "Artifact configuration"
+    {% if artifact_type == 'GitCode' %}
+    git-config.sh $(git_username) $(GIT_PASSWORD) {{ repository }} {{ git_config_path }} {{ git_creds_path }}
+    git-clone.sh {{ repository }} {{ tag }} {{ source_code_path }}
+    echo "##vso[task.setvariable variable=sha_tag]$$(git -C {{ source_code_path }} log --format="%H" -n 1)"
+    {% endif %}

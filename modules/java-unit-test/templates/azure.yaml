@@ -1,0 +1,4 @@
+steps:
+- script: mvn test {% for arg in test_args %} {{ arg }} {% endfor %}
+  displayName: 'Maven Run UnitTest'
+  workingDirectory: {{ working_dir }}

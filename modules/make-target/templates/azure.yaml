@@ -1,0 +1,18 @@
+steps:
+  {% for target in targets %}
+  - task: Bash@3
+    displayName: Make {{ target.name }}
+    inputs:
+      targetType: inline
+      workingDirectory: {{ working_dir }}/{{ target.target_dir }}
+      script: |
+        set -x
+        make {% if makefile_name %}-f {{ makefile_name }}{% endif %} {{ target.name }} 
+    env:
+      sha_tag: $(sha_tag)
+    {% if pipeline_secret_env %}
+      {% for env_key in pipeline_secret_env %}
+      {{ env_key}}: $({{ env_key }})
+      {% endfor -%}
+    {% endif %}
+  {% endfor %}

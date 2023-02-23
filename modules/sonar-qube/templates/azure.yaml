@@ -1,0 +1,22 @@
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSource: 'spec'
+      versionSpec: '16.x')
+  - script: |
+      # because sonar needs the base branch fetched for comparison
+      git fetch --all
+    displayName: 'Git fetch base'
+    workingDirectory: {{ git_local_path }}
+  - task: SonarQubePrepare@5
+    inputs:
+      SonarQube: $(CPI__SONARQUBE_SERVICE_CONNECTION)
+      scannerMode: 'CLI'
+      configMode: 'manual'
+      cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
+      cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
+      extraProperties: |
+          sonar.exclusions=**/*.bin
+          sonar.scm.exclusions.disabled=true
+  - task: SonarQubeAnalyze@5
+  - task: SonarQubePublish@5
