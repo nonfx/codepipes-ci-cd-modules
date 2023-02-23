@@ -142,7 +142,8 @@ template: |
             "Memory": "{{memory}}"{% if instance_role != '' %},
             "InstanceRoleArn": "{{instance_role}}"{% else %}{% endif %}
           }' >> instance.json
-        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json  --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+        - applicationName={{applicationName}}-{{environment}}
+        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName|cpi_namefix:40}} --source-configuration file://app.json --instance-configuration file://instance.json  --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
     post_build:
       commands:
         - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
@@ -150,5 +151,5 @@ template: |
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
         - cat summary.txt
       {% else %}
-        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
+        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
       {% endif %}
