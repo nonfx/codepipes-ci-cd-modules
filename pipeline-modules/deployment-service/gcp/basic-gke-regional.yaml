@@ -274,6 +274,8 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+      kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
+      kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     args:
