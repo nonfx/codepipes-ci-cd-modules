@@ -48,3 +48,9 @@ cloud-builders:
 		echo "=== Building container for $${builder} as ${CLOUD_BUILDER_REPOBASE}${CLOUD_BUILDER_REPO_PREFIX}$${builder}" ; \
 		docker buildx build --push --platform ${CLOUD_BUILDER_PLATFORMS} -t ${CLOUD_BUILDER_REPOBASE}${CLOUD_BUILDER_REPO_PREFIX}$${builder}:${COMMIT} ${CLOUD_BUILDERS_TAG} ${CLOUD_BUILDERS_DIR}/$${builder} ; \
 	done
+
+.PHONY: push-module-containers
+push-module-containers:
+	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/p0k3r4s4
+	gcloud auth configure-docker
+	cd scripts && ./container-load.sh

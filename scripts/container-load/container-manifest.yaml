@@ -1,0 +1,8 @@
+registries:
+  - public.ecr.aws/p0k3r4s4
+  - gcr.io/codepipes-staging
+
+images:
+  - name: sonarsource/sonar-scanner-cli
+    tag: latest
+    target_name: sonar-scanner-cli
