@@ -1,6 +1,6 @@
 ## Container Image loader
 
-This script pulls container images from one registry (say DockerHub) and pushes them up to 1 or more other registries (likely CldCvr registries on cloud). This is so that we can have local hostiing of images in our cloud accounts.
+This script pulls container images from one registry (say DockerHub) and pushes them up to 1 or more other registries (likely CldCvr registries on cloud). This is so that we can have local hosting of images in our cloud accounts.
 
 The script processes a manifest file - container-manifest.yaml - This contains the list of registries to push to (ECR/GCR) and the images to process. e.g.:
 
