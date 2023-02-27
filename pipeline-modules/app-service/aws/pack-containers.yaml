@@ -1,0 +1,63 @@
+provisioner: aws
+name: pack-build
+version: 1
+revision: 1
+displayName: Pack Build
+description: This plugin only builds OCI compliact container images without dockerfile using buildpacks
+target: ""
+category: build
+keywords:
+  - default
+  - ContainerImage
+  - go
+  - node
+  - java
+  - dotnet
+  - csharp
+  - html
+  - js
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    builder:
+      title: Buildpack builder
+      description: Provide a specific builder for buildpack
+      type: string
+      default: "paketobuildpacks/builder:base"
+      minLength: 1
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string    
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
+    - sha_tag
+template: |
+  version: 0.2
+  phases:
+    install:
+      commands:
+      - wget -q https://github.com/buildpacks/pack/releases/download/v0.28.0/pack-v0.28.0-linux.tgz -O - | tar -xz
+      - chmod +x ./pack
+      - mv pack /usr/local/bin/pack
+    build:
+      commands:
+      - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+      - pack build {{container_repository}}:{{container_tag}} --builder {{ builder }}
