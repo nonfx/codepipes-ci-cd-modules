@@ -7,7 +7,6 @@ description: Build the container image using docker cli
 target: ""
 category: build
 keywords:
-  - default
   - ContainerImage
   - go
   - node
