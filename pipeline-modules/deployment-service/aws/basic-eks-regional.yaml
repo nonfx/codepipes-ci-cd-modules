@@ -303,6 +303,8 @@ template: |
           printf '  %s: %s\n' "$name" "$value" >> values.yaml
           done;
         - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
+        - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
+        - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
 
     post_build:
       commands:

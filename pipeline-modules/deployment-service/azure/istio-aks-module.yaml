@@ -464,6 +464,9 @@ template: |
             ls -la;
             cat values.yaml;
             helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}}
+            kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
+            kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
+
       displayName: "Helm Deploy {{applicationName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
