@@ -48,6 +48,7 @@ inputs:
     - container_repository
     - container_tag
     - sha_tag
+    - working_dir
 template: |
   version: 0.2
 
@@ -57,6 +58,8 @@ template: |
         - echo Logging in to docker
         - echo $docker_password | docker login -u $docker_username --password-stdin $docker_registry
         - echo Build started on `date`
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - echo Building the Docker image...
         - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
         - docker push {{container_repository}}:{{container_tag}}
         {% if use_github_tag %}

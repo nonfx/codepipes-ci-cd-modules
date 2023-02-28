@@ -34,5 +34,6 @@ template: |
   phases:
     build:
       commands:
+        - cd $CODEBUILD_SRC_DIR/{{working_dir}}
         - echo Running unit test..
         - mvn test {% for arg in test_args %} {{ arg }} {% endfor %}

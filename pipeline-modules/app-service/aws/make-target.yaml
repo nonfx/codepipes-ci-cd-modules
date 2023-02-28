@@ -42,7 +42,8 @@ inputs:
             description: Working directory for this target
             type: string
             default: "."
-
+  internal:
+  - working_dir
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
 
