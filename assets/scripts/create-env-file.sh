@@ -2,7 +2,7 @@
 set -e
 sn=`basename $0`
 
-[ $# -lt 2 ] && echo "$0: must supply at least 2 parameters - env_file_name, <list of exported variables>" && exit 1
+[ $# -lt 2 ] && echo "$0: less than 2 input parameters provided - skipping env file creation for $@" exit 0
 
 ENV_FILE_NAME=$1
 shift
