@@ -1,15 +1,15 @@
 provisioner: azure
-name: azure-functions-code
+name: azure-functions-deploy
 version: 1
 revision: 1
 displayName: "Azure functions deployment with code"
 description: "Deploy Azure functions"
 target: "deployment-template"
 keywords: ["serverless","functions"]
-author: "CloudCover"
+author: CloudCover
 meta:
   inputArtifactType:
-    - GitCode
+    - GitCode 
 inputs:
   type: object
   properties:
@@ -46,8 +46,20 @@ inputs:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: deploy
-  required: ["function_app_name"]
+      default: deploy       
+    FeedName:
+      title: Artifact Feed Name
+      description: Azure devops Artifact Feed name where App artifact will download 
+      type: string    
+    ServiceConnectionString:
+      title: Service Connection String Name
+      description: Service Connection Name which created 
+      type: string                        
+  
+  required: 
+    - function_app_name
+    - FeedName
+    - ServiceConnectionString
   internal:
     - app_env
     - applicationName
@@ -68,30 +80,51 @@ template: |
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
         cd {{source_code_path}}/{{repo_dir}}
+        ls -la
         git log --format="%H" -n 1
-        sha_tag=$(git log --format="%H" -n 1);
+        export sha_tag=$(git log --format="%H" -n 1);
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
+        echo "$sha_tag"
+        mkdir azure-functions-code
+
   - task: UniversalPackages@0
     inputs:
       command: 'download'
-      downloadDirectory: '$(System.DefaultWorkingDirectory)'
+      downloadDirectory: '$(System.DefaultWorkingDirectory)/azure-functions-code'
       feedsToUse: 'internal'
-      vstsFeed: '$(CPI__artifact_feed)'
-      vstsFeedPackage: '{{applicationName}}.zip'
+      vstsFeed: '{{FeedName}}'
+      vstsFeedPackage: '{{applicationName}}-$(sha_tag).zip'
       vstsPackageVersion: '*'
       publishedPackageVar: 'codepipes'
+      extract: false
+
+  - task: ArchiveFiles@2
+    displayName: "Archive files"
+    inputs:
+      rootFolderOrFile: "$(System.DefaultWorkingDirectory)/azure-functions-code"
+      includeRootFolder: false
+      archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}-$(sha_tag).zip"
+  
+  - script: |
+        echo 'List the file'
+        cd '$(System.DefaultWorkingDirectory)/azure-functions-code' && ls -la     
+        echo 'list zip file'
+        cd $(System.DefaultWorkingDirectory)
+        ls -la
+              
   {% if job_type == 'deploy' %}
   - task: AzureFunctionApp@1
     displayName: 'Deploy azure func'
     inputs:
-      azureSubscription: $(CPI__azure_subscription)
+      azureSubscription: {{ServiceConnectionString}}
       appType: functionApp
       appName: {{ function_app_name }}
-      package: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
+      package: "$(System.DefaultWorkingDirectory)/{{applicationName}}-$(sha_tag).zip"
       appSettings: '$(CONFIG_MAP)'
   {% else %}
   - script: |
         echo "Please delete the function from the Class and redeploy" 
   {% endif %}
+
 
 
