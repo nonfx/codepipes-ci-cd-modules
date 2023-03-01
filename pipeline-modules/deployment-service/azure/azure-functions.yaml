@@ -85,6 +85,7 @@ template: |
         export sha_tag=$(git log --format="%H" -n 1);
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
         mkdir azure-functions-code
+    displayName: "Get Latest SHA Tag"
 
   - task: UniversalPackages@0
     inputs:
@@ -110,6 +111,7 @@ template: |
         echo 'list zip file'
         cd $(System.DefaultWorkingDirectory)
         ls -la
+    displayName: "List file"
               
   {% if job_type == 'deploy' %}
   - task: AzureFunctionApp@1
