@@ -30,6 +30,7 @@ inputs:
       title: Echo Map value
       description: The Map to echo to the log.
       type: object
+      default: {"key":"val"}
     echo_string:
       title: Echo String value
       description: The string to echo to the log.
@@ -38,7 +39,6 @@ inputs:
     - echo_string
     - echo_int
     - echo_float
-    - echo_map
     - echo_list
 template: |
   version: 0.2
