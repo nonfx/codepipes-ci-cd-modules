@@ -52,6 +52,16 @@ inputs:
       description: CPU to be consumed by app runner
       type: string
       default: "1 vCPU"
+    vpc_connector_arn:
+      title: VPC Connector ARN
+      description: ARN for a connector to a specific VPC
+      type: string
+      default: ""
+    is_public:
+      title: Is Public
+      description: Should this service be exposed to public network
+      type: boolean
+      default: true
     port:
       title: Container port
       type: integer
@@ -142,7 +152,25 @@ template: |
             "Memory": "{{memory}}"{% if instance_role != '' %},
             "InstanceRoleArn": "{{instance_role}}"{% else %}{% endif %}
           }' >> instance.json
-        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json  --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+        - |
+          echo '{
+            "EgressConfiguration": {
+            {% if vpc_connector_arn != '' %}
+                "EgressType": "VPC",
+                "VpcConnectorArn": "{{vpc_connector_arn}}"
+            {% else %}
+                "EgressType": "DEFAULT",
+            {% endif %}
+            },
+            "IngressConfiguration": {
+            {% if is_public %}
+                "IsPubliclyAccessible": true
+            {% else %}
+                "IsPubliclyAccessible": false
+            {% endif %}
+            }
+          }' >> network.json
+        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
     post_build:
       commands:
         - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
