@@ -84,7 +84,6 @@ template: |
         git log --format="%H" -n 1
         export sha_tag=$(git log --format="%H" -n 1);
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
-        echo "$sha_tag"
         mkdir azure-functions-code
 
   - task: UniversalPackages@0
@@ -114,7 +113,7 @@ template: |
               
   {% if job_type == 'deploy' %}
   - task: AzureFunctionApp@1
-    displayName: 'Deploy azure func'
+    displayName: 'Deploy Azure function'
     inputs:
       azureSubscription: {{ServiceConnectionString}}
       appType: functionApp
