@@ -53,7 +53,7 @@ inputs:
       type: string    
     ServiceConnectionString:
       title: Service Connection String Name
-      description: Service Connection Name which created 
+      description: Service Connection Name which created on Azure devops
       type: string                        
   
   required: 
