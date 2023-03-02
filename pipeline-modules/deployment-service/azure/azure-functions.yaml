@@ -47,19 +47,19 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy       
-    FeedName:
+    feed_name:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed name where App artifact will download 
       type: string    
-    ServiceConnectionString:
+    service_connection_string:
       title: Service Connection String Name
       description: Service Connection Name which created on Azure devops
       type: string                        
   
   required: 
     - function_app_name
-    - FeedName
-    - ServiceConnectionString
+    - feed_name
+    - service_connection_string
   internal:
     - app_env
     - applicationName
@@ -92,7 +92,7 @@ template: |
       command: 'download'
       downloadDirectory: '$(System.DefaultWorkingDirectory)/azure-functions-code'
       feedsToUse: 'internal'
-      vstsFeed: '{{FeedName}}'
+      vstsFeed: '{{feed_name}}'
       vstsFeedPackage: '{{applicationName}}-$(sha_tag).zip'
       vstsPackageVersion: '*'
       publishedPackageVar: 'codepipes'
@@ -117,7 +117,7 @@ template: |
   - task: AzureFunctionApp@1
     displayName: 'Deploy Azure function'
     inputs:
-      azureSubscription: {{ServiceConnectionString}}
+      azureSubscription: {{service_connection_string}}
       appType: functionApp
       appName: {{ function_app_name }}
       package: "$(System.DefaultWorkingDirectory)/{{applicationName}}-$(sha_tag).zip"

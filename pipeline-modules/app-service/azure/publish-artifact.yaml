@@ -26,7 +26,7 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
-    FeedName:
+    feed_name:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed Name
       type: string      
@@ -40,7 +40,7 @@ inputs:
     - sha_tag
     - working_dir
   required:
-    - FeedName
+    - feed_name
     
 template: |-
   steps:
@@ -49,7 +49,7 @@ template: |-
       command: 'publish'
       publishDirectory: '$(System.DefaultWorkingDirectory)/{{working_dir}}'
       feedsToUsePublish: 'internal'
-      vstsFeedPublish: '{{FeedName}}'
+      vstsFeedPublish: '{{feed_name}}'
       vstsFeedPackagePublish: '{{applicationName}}-{{sha_tag}}.zip'
       packagePublishDescription: 'sha_tag:{{sha_tag}}'
       versionOption: 'minor'
