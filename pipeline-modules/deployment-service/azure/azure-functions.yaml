@@ -1,5 +1,5 @@
 provisioner: azure
-name: azure-functions-deploy
+name: azure-functions-code
 version: 1
 revision: 1
 displayName: "Azure functions deployment with code"
