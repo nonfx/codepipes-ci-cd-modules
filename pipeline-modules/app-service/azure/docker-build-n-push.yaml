@@ -48,8 +48,9 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
-      type: string                
+      type: string
   internal:
+    - working_dir
     - container_repository
     - container_tag
     - sha_tag
@@ -64,7 +65,7 @@ template: |
       echo Build completed on `date`
       echo Pushing the Docker image...
       docker push {{container_repository}}:{{container_tag}}
-      
+
       {% if use_github_tag == true %}
       Building the Docker image with Commit hash...
       docker build -t {{container_repository}}:{{sha_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .

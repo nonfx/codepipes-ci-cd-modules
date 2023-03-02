@@ -49,10 +49,8 @@ inputs:
       description: The version of package manager being used
       type: string
       default: latest
-  # For some reason required fields with default value is not allowed, this needs to be fixed before we uncomment the below fields
-  # required:
-  #   - package_manager
-  #   - npm_build_args
+  internal:
+    - working_dir
 template: |
   steps:
   - id: 'Node Build'

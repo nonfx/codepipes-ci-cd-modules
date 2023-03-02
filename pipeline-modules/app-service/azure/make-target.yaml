@@ -47,9 +47,9 @@ inputs:
       description: Mapping of globally available secret variable id.
       type: object
       default: {}
-internal:
-  - pipeline_secret_env
-
+  internal:
+    - working_dir
+    - pipeline_secret_env
 template: |
   steps:
     {% for target in targets %}
@@ -60,7 +60,7 @@ template: |
         workingDirectory: {{ working_dir }}/{{ target.target_dir }}
         script: |
           set -x
-          make {% if makefile_name %}-f {{ makefile_name }}{% endif %} {{ target.name }} 
+          make {% if makefile_name %}-f {{ makefile_name }}{% endif %} {{ target.name }}
       env:
         sha_tag: $(sha_tag)
       {% if pipeline_secret_env %}

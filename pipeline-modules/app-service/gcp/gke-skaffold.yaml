@@ -35,6 +35,8 @@ inputs:
       default: repo
   required:
     - gke_cluster_name
+  internal:
+    - working_dir
 template: |
   steps:
   - id: 'Deploy application to cluster'

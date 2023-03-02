@@ -31,6 +31,8 @@ inputs:
       description: The version of Golang to use
       type: string
       default: latest
+  internal:
+    - working_dir
 template: |
   steps:
   - id: 'Go Version'
