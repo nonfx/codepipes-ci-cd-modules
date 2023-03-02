@@ -80,10 +80,9 @@ template: |
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
         cd {{source_code_path}}/{{repo_dir}}
-        ls -la
-        git log --format="%H" -n 1
+        ls -la        
         export sha_tag=$(git log --format="%H" -n 1);
-        echo "SHA Tag value:"
+        echo "SHA Tag value: $sha_tag"
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
         mkdir azure-functions-code
     displayName: "Get Latest SHA Tag"
