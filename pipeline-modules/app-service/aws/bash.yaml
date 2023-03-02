@@ -24,6 +24,8 @@ inputs:
       default: repo
   required:
     - bash_script
+  internal:
+    - working_dir
 template: |
   version: 0.2
   env:

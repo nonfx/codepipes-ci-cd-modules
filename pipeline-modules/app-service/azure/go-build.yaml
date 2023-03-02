@@ -36,6 +36,8 @@ inputs:
       description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""
+  internal:
+    - working_dir
 template: |
   steps:
   - task: GoTool@0

@@ -30,6 +30,8 @@ inputs:
       description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""
+  internal:
+    - working_dir
 template: |
   steps:
   - script: mvn test {% for arg in test_args %} {{ arg }} {% endfor %}
