@@ -1,5 +1,5 @@
 provisioner: azure
-name: node-app-build
+name: node-build
 version: 1
 revision: 1
 displayName: Node App Build
