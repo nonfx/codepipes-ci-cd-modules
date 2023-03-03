@@ -1,0 +1,35 @@
+provisioner: azure
+name: publish-archive
+version: 1
+revision: 1
+displayName: Publish Zip archive
+description: This plugin can use to archive the folder to Create zip file
+target: ""
+category: publish
+keywords:
+  - Publish
+  - Zip
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string           
+  internal:
+    - working_dir
+    - sha_tag       
+template: |
+  steps:
+  - task: ArchiveFiles@2
+    displayName: "Archive files to Zip"
+    inputs:
+      rootFolderOrFile: "$(System.DefaultWorkingDirectory)/{{ working_dir }}"
+      includeRootFolder: false
+      archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}-{{sha_tag}}.zip"

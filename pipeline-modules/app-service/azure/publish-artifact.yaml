@@ -13,6 +13,10 @@ author: CloudCover
 meta: {}
 inputs:
   properties:
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string  
     pool_name:
       title: Pool Name
       description: Use selfhosted agent by proving agent pool name.
@@ -22,17 +26,32 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+    feed_name:
+      title: Artifact Feed Name
+      description: Azure devops Artifact Feed Name
+      type: string      
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo      
   internal:
     - applicationName
+    - sha_tag
+    - working_dir
+  required:
+    - feed_name
+    
 template: |-
   steps:
   - task: UniversalPackages@0
     inputs:
       command: 'publish'
-      publishDirectory: '$(System.DefaultWorkingDirectory)'
+      publishDirectory: '$(System.DefaultWorkingDirectory)/{{working_dir}}'
       feedsToUsePublish: 'internal'
-      vstsFeedPublish: '$(CPI__artifact_feed)'
-      vstsFeedPackagePublish: '{{applicationName}}.zip'
-      packagePublishDescription: '$(sha_tag)'
+      vstsFeedPublish: '{{feed_name}}'
+      vstsFeedPackagePublish: '{{applicationName}}-{{sha_tag}}.zip'
+      packagePublishDescription: 'sha_tag:{{sha_tag}}'
       versionOption: 'minor'
       publishedPackageVar: 'codepipes'
+    displayName: "Publish Artifact"  

@@ -1,0 +1,50 @@
+provisioner: azure
+name: python-build
+version: 1
+revision: 1
+displayName: Python App Build
+description: Build source code for Python
+target: ""
+category: build
+keywords:
+  - Python
+  - Install
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    python_version:
+      title: Python Version
+      description: The version of Python use build
+      type: string
+      default: '3.8'  
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string           
+  internal:
+    - working_dir
+    - sha_tag       
+template: |
+  steps: 
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: {{python_version}}
+    displayName: 'Use Python {{python_version}}'
+
+  - script: |
+      python --version 
+      python -m venv antenv
+      source antenv/bin/activate
+      python -m pip install --upgrade pip
+      pip install setup
+      pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
+    workingDirectory: {{ working_dir }}
+    displayName: "Install requirements"
