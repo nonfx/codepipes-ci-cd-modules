@@ -159,7 +159,7 @@ template: |
                 "EgressType": "VPC",
                 "VpcConnectorArn": "{{vpc_connector_arn}}"
             {% else %}
-                "EgressType": "DEFAULT",
+                "EgressType": "DEFAULT"
             {% endif %}
             },
             "IngressConfiguration": {
