@@ -2,6 +2,7 @@ COMMIT := $(shell git log --format="%H" -n 1)
 
 DOTENV_FILE = .env
 GO_BIN_DIR := $(shell go env GOPATH|cut -d ":" -f 1)/bin
+CPU_ARCH := $(shell go env GOARCH)
 
 GODOTENV := $(shell which $(GO_BIN_DIR)/godotenv)
 ifeq (${GODOTENV},)
@@ -51,6 +52,10 @@ cloud-builders:
 
 .PHONY: push-module-containers
 push-module-containers:
+ifeq (${CPU_ARCH},amd64)
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/p0k3r4s4
 	gcloud auth configure-docker
-	cd scripts && ./container-load.sh
+	cd scripts/container-load && ./container-load.sh
+else
+	@echo "This target must be run from amd64 architecture - current is $(CPU_ARCH)"
+endif

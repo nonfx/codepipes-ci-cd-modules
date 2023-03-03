@@ -11,11 +11,11 @@ registries:
 
 images:
   - name: sonarsource/sonar-scanner-cli
-    tag: latest
+    tags: [latest, 4, 4.8]
     target_name: sonar-scanner-cli
 ```
 
-This will push the DockerHub image sonar-scanner-cli up to ECR and GCR with tag latest.
+This will push the DockerHub image sonar-scanner-cli up to ECR and GCR with tag latest, 4 and 4.8.
 
 Requirements:
 
@@ -27,7 +27,7 @@ Requirements:
 Running the script:
 
 ```
-$ scripts/container-load > ./container-load.sh
+$ scripts/container-load> ./container-load.sh
 ```
 
 There is also a make target for ease of use:
@@ -37,3 +37,4 @@ $ make push-module-containers
 ```
 
 The make target will also attempt to login to ECR and GCR using local credentials.
+NOTE: This make target will fail with a message if not run from an environment based of amd64 CPU architecture.

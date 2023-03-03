@@ -4,5 +4,11 @@ registries:
 
 images:
   - name: sonarsource/sonar-scanner-cli
-    tag: latest
+    tags: [latest, 4, 4.8]
     target_name: sonar-scanner-cli
+  - name: alpine
+    tags: [latest]
+    target_name: alpine
+  - name: golang
+    tags: [1.17-alpine]
+    target_name: golang
