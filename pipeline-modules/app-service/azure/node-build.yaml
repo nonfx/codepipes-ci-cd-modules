@@ -62,4 +62,4 @@ template: |
       {{ package_manager }} {{ arg }}
     {% endfor %}      
     workingDirectory: {{ working_dir }}
-    displayName: 'npm install and build'
+    displayName: 'Node App build'
