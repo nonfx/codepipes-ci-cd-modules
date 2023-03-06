@@ -309,7 +309,6 @@ template: |
           name=${line%%=*}
           printf '  %s: %s\n' $name $value >> values.yaml
           done; 
-        -  ls -la  templates/ && cat values.yaml
         - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
         - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
         - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
