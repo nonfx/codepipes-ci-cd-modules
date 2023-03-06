@@ -167,6 +167,7 @@ inputs:
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}  
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
 
@@ -302,6 +303,13 @@ template: |
           name=${line%%=*}
           printf '  %s: %s\n' "$name" "$value" >> values.yaml
           done;
+          echo "secrets:" >> values.yaml;
+          cat {{pipeline_secret_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf '  %s: %s\n' $name $value >> values.yaml
+          done; 
+        -  ls -la  templates/ && cat values.yaml
         - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
         - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
         - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
