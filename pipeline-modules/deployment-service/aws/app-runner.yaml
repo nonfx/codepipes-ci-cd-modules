@@ -103,6 +103,7 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -170,7 +171,7 @@ template: |
             {% endif %}
             }
           }' >> network.json
-        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+        - serviceUrl=$(aws apprunner create-service --service-name  {{service_name}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
     post_build:
       commands:
         - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
@@ -178,5 +179,5 @@ template: |
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
         - cat summary.txt
       {% else %}
-        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
+        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{ service_name }}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
       {% endif %}

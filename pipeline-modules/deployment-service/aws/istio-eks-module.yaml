@@ -275,6 +275,10 @@ inputs:
     region:
       title: Region name
       description: region name for cluster
+      type: string
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of application
       type: string      
                 
   required:
@@ -290,6 +294,7 @@ inputs:
     - environment
     - job_type
     - pipeline_summary_var
+    - deploymentName
 
 template: |
   {% set workspace = '' %}   {# has to be a persistent volume #}
@@ -297,6 +302,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/istio-eks" %}
+  {% set service_name = deploymentName|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -451,11 +457,11 @@ template: |
           printf '  %s: %s\n' $name $value >> values.yaml
           done; 
   
-        - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}}
-        - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
-        - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
+        - helm upgrade --install -f values.yaml {{ service_name }} . #--atomic --timeout {{deployment_timeout}}
+        - kubectl rollout restart deployment {{ service_name }}-deployment -n {{applicationName}}
+        - kubectl rollout status deployment {{ service_name }}-deployment   -n {{applicationName}}
 
       {% else %}
         - helm list 
-        - helm uninstall {{applicationName}}-{{environment}}
+        - helm uninstall {{ service_name }}
       {% endif %}

@@ -148,6 +148,10 @@ inputs:
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
       type: string
       default: 300s
+    deploymentName:
+      title: Deployment Name
+      description: Deployment name of application
+      type: string
   required:
     - cluster
     - region
@@ -163,12 +167,14 @@ inputs:
     - customer_bucket
     - job_type
     - pipeline_summary_var
+    - deploymentName
 
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
+  {% set service_name = deploymentName|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -302,9 +308,9 @@ template: |
           name=${line%%=*}
           printf '  %s: %s\n' "$name" "$value" >> values.yaml
           done;
-        - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
-        - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
-        - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
+        - helm upgrade --install -f values.yaml {{ service_name }} . --atomic --timeout {{deployment_timeout}}
+        - kubectl rollout restart deployment {{ service_name }}-deployment -n {{applicationName}}
+        - kubectl rollout status deployment {{ service_name }}-deployment   -n {{applicationName}}
 
     post_build:
       commands:
@@ -349,5 +355,5 @@ template: |
         - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
         - cat summary.txt
       {% else %}
-        - helm uninstall {{applicationName}}-{{environment}}
+        - helm uninstall {{service_name}}
       {% endif %}

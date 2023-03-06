@@ -41,10 +41,12 @@ inputs:
     - echo_float
     - echo_list
 template: |
+  {% set service_name = echo_string|add:"-"|add:echo_string|cpi_trimlength:40|cpi_replacespecial:"-" %}
   version: 0.2
   phases:
     build:
       commands:
+        - echo "appName={{ service_name }}"
         - echo "stringVal={{ echo_string }}"
         - echo "intVal={{ echo_int }}"
         - echo "floatVal={{ echo_float }}"
