@@ -159,7 +159,7 @@ template: |
           commands:
             - echo "Cloning the pipeline modules..."
             - mkdir -p {{pipeline_modules_path}}
-            - git clone {{pipeline_module_git}} --branch akashj/VAN-3851 --single-branch {{pipeline_modules_path}}
+            - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
             - export PATH={{ common_scripts_path }}:$PATH
             - install-jq.sh
     gitclonedepth: null
