@@ -35,9 +35,7 @@ inputs:
 template: |
   steps:
   - script: |
-      git clone {% if git_checkout_target %}--no-checkout{% endif %} {{ git_remote_path }} {{ git_local_path }}{% if git_checkout_target %}
-      cd {{ git_local_path }} && git checkout {{ git_checkout_target }} && cd .. {% endif %}
+      git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
+      echo "##vso[task.setvariable variable=sha_tag]$(git -C {{ git_local_path }} log --format="%H" -n 1)"
       cd {{ git_local_path }}
-      sha_tag=$(git log --format="%H" -n 1);
-      echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
     displayName: 'Git Clone'

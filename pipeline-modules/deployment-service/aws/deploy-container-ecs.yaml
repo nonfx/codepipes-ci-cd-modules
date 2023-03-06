@@ -1,0 +1,145 @@
+provisioner: aws
+name: deploy-container-ecs
+version: 1
+revision: 1
+displayName: "App ECS deployment"
+description: "AWS ECS Deployment template"
+target: "deployment-template"
+keywords: ["bash", "linux" , "ecs aws container"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - ContainerImage
+inputs:
+  type: object
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    task_name:
+      title: Task Name
+      description: The ECS Task Name to update
+      type: string
+    service_name:
+      title: Service Name
+      description: The ECS Service Name to deploy to
+      type: string
+    cluster_name:
+      title: Cluster Name
+      description: The ECS Cluster Name to Deploy to
+      type: string
+    port_mapping:
+      title: Port Mapping
+      description: "Port Mapping maps host port to container port"
+      type: object
+      default: {}
+      properties:
+        host_port:
+          title: Host Port
+          description: "The ECS Port to use."
+          type: integer
+          default: 80
+        container_port:
+          title: Container Port
+          description: "The Container Port to use."
+          type: integer
+          default: 80
+    vpc_config:
+      title: VPC Config
+      description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
+      type: object
+      default: {}
+      properties:
+        securityGroupIds:
+          title: Security Group IDs
+          description: "A list of one or more security groups IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        subnets:
+          title: Subnet IDs
+          description: "A list of one or more subnet IDs in your Amazon VPC."
+          type: array
+          default: []
+          items:
+            type: string
+        vpcId:
+          title: VPC ID
+          description: "The ID of the Amazon VPC."
+          type: string
+          default: ""
+  required: ["task_name","service_name","cluster_name"]
+  internal:
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - job_type
+template: |
+  ########################################################################################################################################################
+  # The module creates json config file for source configuration and instance configuration                                                              #
+  # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+  # So we don't have to worry about character escaping in this module.                                                                                   #
+  ########################################################################################################################################################
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - aws configure set region $AWS_DEFAULT_REGION
+    build:
+      commands:
+        - echo "Setting configurations" 
+        - export TASK_NAME={{task_name}} 
+        - export SERVICE_NAME={{service_name}} 
+        - export CLUSTER_NAME={{cluster_name}} 
+        - export REGION=$AWS_DEFAULT_REGION
+        - export VERSION=1.0 
+        - export NEW_IMAGE="{{repository}}:{{tag}}"
+        - echo "Updating ECS" 
+        - TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_NAME" --region "$REGION") 
+        - NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "$NEW_IMAGE" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)')
+        - echo $NEW_TASK_DEFINITION
+        - NEW_REVISION=$(aws ecs register-task-definition --region "$REGION" --cli-input-json "$NEW_TASK_DEFINITION") 
+        - echo $NEW_REVISION
+        - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
+        - FINAL_REVISION=$(echo $NEW_REVISION)
+        - NEW_SERVICE=$(aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $TASK_NAME --force-new-deployment) 
+        - echo "done" 
+        - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"

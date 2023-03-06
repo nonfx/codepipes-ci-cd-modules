@@ -1,9 +1,9 @@
 provisioner: aws
-name: docker-build-n-push
+name: build-docker-image
 version: 1
 revision: 1
 displayName: Docker Build and Push
-description: This plugin is for Docker build & push
+description: This plugin is for Docker build & push. Uses Ubuntu 18 base image with buildpacks for .NET, Go, Java, Node.js, and Python. 
 target: ""
 category: containerise
 keywords:
@@ -43,7 +43,12 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
-      type: string        
+      type: string    
+    default_builder:
+      title: Default Builder to use
+      description: Builder to build docker image from code automatically. Default builder is Google's Ubuntu 18 base image with buildpacks for .NET, Go, Java, Node.js, and Python.
+      type: string   
+      default: "gcr.io/buildpacks/builder:v1"    
   internal:
     - container_repository
     - container_tag
@@ -54,16 +59,24 @@ template: |
   phases:
     build:
       commands:
+        - echo Getting build packs
+        - sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
+        - sudo apt-get update
+        - sudo apt-get install pack-cli
+        - echo Building image
+        - pack config default-builder {{default_builder}}
+        - pack build {{container_repository}}:{{container_tag}}
         - echo Logging in to docker
         - echo $docker_password | docker login -u $docker_username --password-stdin $docker_registry
         - echo Build started on `date`
-        - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+        - echo Building the Docker image...
+        - echo Build completed on `date`
+        - echo Pushing the Docker image...
         - docker push {{container_repository}}:{{container_tag}}
         {% if use_github_tag %}
         - echo Building the Docker image with Commit hash...
-        - docker build -t {{container_repository}}:{{sha_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
+        - docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}
         - echo Build completed on `date`
         - echo Pushing the Docker image with Commit hash...
         - docker push {{container_repository}}:{{sha_tag}}
         {% endif %}
-        - echo Build completed on `date`    
