@@ -50,16 +50,16 @@ inputs:
     feed_name:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed name where App artifact will download 
-      type: string    
+      type: string
+      default: "$(CPI__artifact_feed)"
     service_connection_string:
       title: Service Connection String Name
       description: Service Connection Name which created on Azure devops
-      type: string                        
-  
+      type: string
+      default: "$(CPI__azure_subscription)"
+ 
   required: 
     - function_app_name
-    - feed_name
-    - service_connection_string
   internal:
     - app_env
     - applicationName
