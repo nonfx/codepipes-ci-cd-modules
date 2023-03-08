@@ -174,7 +174,7 @@ template: |
       git checkout "{{ iac_checkout_target }}"
       # include infrastructure component modules
       find . -name "cp_components*.tf" -maxdepth 1 -type f -exec cp -f "{}" "{{ local_code_path }}" \;
-      printenv | grep "{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
+      printenv | grep "^{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
       cd "{{ local_code_path }}"
       # copy pre-existing terraform state to the working directory
       test ! -f "{{ local_artifact_path }}/{{ tf_state_file }}" || cp -f -v {{ local_artifact_path }}/{{ tf_state_file }} {{ local_code_path }}/{{ tf_state_file }} > {{ logger('init') }}
