@@ -70,11 +70,6 @@ inputs:
       description: "The Container Port to use."
       type: integer
       default: 8000
-    launch_type:
-      title: ECS Launch Type
-      description: "Launch Type for ECS."
-      type: string
-      default: "FARGATE"
     execution_role_arn:
       title: Execution Role Arn
       description: "The execution Role ARN which allows to deploy to ECS."
@@ -128,7 +123,7 @@ template: |
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
-        - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":[{{launch_type}}],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
+        - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
