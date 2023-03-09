@@ -53,7 +53,7 @@ template: |
                 echo $output > scan.json
                 break
               fi
-              sleep 15
+              sleep 10
             done
         - high_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "HIGH")')
         - critical_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "CRITICAL")')
