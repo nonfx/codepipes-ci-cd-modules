@@ -38,6 +38,7 @@ inputs:
       type: string
   internal:
     - applicationName
+    - working_dir
 template: |
   phases:
     install:
@@ -45,6 +46,7 @@ template: |
         - apt-get update
     build:
       commands:
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
         - zip -r {{applicationName}}.zip .
         - wget https://download.sonatype.com/clm/scanner/latest.jar
         - java -jar ./latest.jar -i {{nexus_application_id}} -s {{nexus_server_host}} -a {{nexus_username}}:'{{nexus_password}}' ./{{applicationName}}.zip -r results.json

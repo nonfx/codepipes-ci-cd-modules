@@ -28,6 +28,8 @@ inputs:
     - sonar_host
     - sonar_cloud_project_key
     - sonar_login_token
+  internal:
+    - working_dir
 template: |
   phases:
     install:
@@ -38,6 +40,7 @@ template: |
         - export PATH=$PATH:/sonar-scanner-3.3.0.1492-linux/bin/
     build:
       commands:
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
         - sonar-scanner -Dsonar.login={{sonar_login_token}} -Dsonar.host.url={{sonar_host}} -Dsonar.projectKey={{sonar_cloud_project_key}}
         - sleep 100
         - curl -u {{sonar_login_token}}: {{sonar_host}}/api/qualitygates/project_status?projectKey={{sonar_cloud_project_key}} > result.json

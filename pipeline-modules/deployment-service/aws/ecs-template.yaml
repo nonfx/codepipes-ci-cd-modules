@@ -70,36 +70,11 @@ inputs:
       description: "The Container Port to use."
       type: integer
       default: 8000
-    vpc_config:
-      title: VPC Config
-      description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
-      type: object
-      default: {}
-      properties:
-        securityGroupIds:
-          title: Security Group IDs
-          description: "A list of one or more security groups IDs in your Amazon VPC."
-          type: array
-          default: []
-          items:
-            type: string
-        subnets:
-          title: Subnet IDs
-          description: "A list of one or more subnet IDs in your Amazon VPC."
-          type: array
-          default: []
-          items:
-            type: string
-        vpcId:
-          title: VPC ID
-          description: "The ID of the Amazon VPC."
-          type: string
-          default: ""
-        launch_type:
-          title: ECS Launch Type
-          description: "Launch Type for ECS."
-          type: string
-          default: "FARGATE"
+    launch_type:
+      title: ECS Launch Type
+      description: "Launch Type for ECS."
+      type: string
+      default: "FARGATE"
     execution_role_arn:
       title: Execution Role Arn
       description: "The execution Role ARN which allows to deploy to ECS."
