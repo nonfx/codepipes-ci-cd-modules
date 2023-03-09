@@ -123,7 +123,7 @@ template: |
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
-        - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["FARGATE,"EC2"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
+        - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
