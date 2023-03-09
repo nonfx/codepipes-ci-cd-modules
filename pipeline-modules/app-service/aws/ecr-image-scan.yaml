@@ -36,6 +36,7 @@ inputs:
   internal:
     - container_repository
     - container_tag
+    - working_dir
 template: |
   version: 0.2
   env:
@@ -43,7 +44,6 @@ template: |
   phases:
     build:
       commands:
-        - #aws ecr start-image-scan --repository-name={{container_repository}}  --image-id imageTag={{container_tag}}
         - |
           while:
             do 
@@ -53,7 +53,7 @@ template: |
                 echo $output > scan.json
                 break
               fi
-              sleep 30
+              sleep 15
             done
         - high_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "HIGH")')
         - critical_values=$(cat scan.json | jq -r '.imageScanFindings.findings[] | select(.severity == "CRITICAL")')
