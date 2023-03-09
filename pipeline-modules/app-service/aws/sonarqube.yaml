@@ -1,0 +1,45 @@
+provisioner: aws
+name: sonarqube-scan
+version: 1
+revision: 1
+displayName: SonarQube Scan
+description: Analyze javascript source code using SonarCloud/SonarQube
+target: ""
+category: code analysis
+keywords:
+  - Analyze Code
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    sonar_host:
+      title: Host IP
+      description: IP where sonarqube is hosted, for sonarcloud it will be https://sonarcloud.io
+      type: string
+    sonar_cloud_project_key:
+      title: Sonar Project Key
+      description: Sonar project key found in project information section of sonar cloud web console. This is required if sonar_config_file is not set
+      type: string
+    sonar_login_token:
+      title: Sonar login token
+      description: Personal access token for sonar, can be gerenrated from <host>/account/security/
+      type: string
+  required:
+    - sonar_host
+    - sonar_cloud_project_key
+    - sonar_login_token
+template: |
+  phases:
+    install:
+      commands:
+        - apt-get update
+        - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip
+        - unzip ./sonar-scanner-cli-3.3.0.1492-linux.zip
+        - export PATH=$PATH:/sonar-scanner-3.3.0.1492-linux/bin/
+    build:
+      commands:
+        - sonar-scanner -Dsonar.login={{sonar_login_token}} -Dsonar.host.url={{sonar_host}} -Dsonar.projectKey={{sonar_cloud_project_key}}
+        - sleep 100
+        - curl -u {{sonar_login_token}}: {{sonar_host}}/api/qualitygates/project_status?projectKey={{sonar_cloud_project_key}} > result.json
+        - cat result.json
+        - if [ $(jq -r '.projectStatus.status' result.json) = ERROR ] ; then $CODEBUILD_BUILD_SUCCEEDING -eq 0 ;fi

@@ -1,0 +1,67 @@
+provisioner: aws
+name: semgrep
+version: 1
+revision: 1
+displayName: semgrep
+description: Run semgrep scans
+target: ""
+category: scan
+keywords:
+  - scan
+  - sast
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute the bash script from
+      type: string
+      default: repo
+    allow_critical:
+      title: Allow Critical Vulnerabilities
+      description: Allows builds with critical vulnerabilites
+      type: boolean
+      default: false
+    allow_error:
+      title: Allow Error Vulnerabilities
+      description: Allows Error vulnerabilites
+      type: boolean
+      default: false
+template: |
+  version: 0.2
+  env:
+    shell: bash
+  phases:
+    build:
+      commands:
+        - python3 --version
+        - python3 -m pip install semgrep
+        - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
+        - semgrepPath=$(find ~ -name semgrep | head -n 1)
+        - echo $semgrepPath
+        - binPath=${semgrepPath%/*}
+        - echo $binPath
+        - export PATH=$PATH:$binPath
+        - semgrep --config=auto
+        - semgrep ci --json -o semgrep.json
+        - error_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "ERROR") |  .results[]')
+        - critical_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "CRITICAL") |  .results[]')
+        - warning_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "WARNING") | .results[]')
+        - |
+          if [ -n "$error_values" ]; then
+              echo "Severity Error Vulnerabilities found! Please check Semgrep. Failing Pipeline \n"
+              echo $error_values
+              {% if allow_error == false %}
+              exit 11
+              {% endif %}
+          elif [ -n "$critical_values" ]; then
+              echo "Severity Critical Vulnerabilities found! Please check Semgrep. Failing Pipeline \n"
+              echo $critical_values
+              {% if allow_critical == false %}
+              exit 11
+              {% endif %}
+          elif [ -n "$warning_values" ]; then
+              echo "Severity Warning Vulnerabilities found! Please check Semgrep \n"
+              echo $critical_values
+          fi
