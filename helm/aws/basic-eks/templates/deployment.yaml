@@ -89,6 +89,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Values.applicationName }}-configmap
+            {{- if .Values.secrets }}
+            - secretRef:
+                name: {{ $.Values.applicationName }}-secret-env
+            {{- end}}                
           volumeMounts:
           {{- range  $index,$artifact := .Values.artifacts }}
             - name: {{ $.Values.applicationName }}-volume-{{$index}}
