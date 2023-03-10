@@ -23,22 +23,38 @@ inputs:
       title: Echo List value
       description: The List to echo to the log.
       type: array
+      default: []
       items:
         type: string
     echo_map:
       title: Echo Map value
       description: The Map to echo to the log.
       type: object
+      default: {}
+      properties:
+        foo:
+          title: Foo
+          type: string
+          default: ""
     echo_string:
       title: Echo String value
       description: The string to echo to the log.
+      type: string
+    check_secret:
+      title: Check secret string value
+      description: Value must be "Hello World"
+      type: string
+      default: "${TEST_SECRET:-''}"
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
       type: string
   required:
     - echo_string
     - echo_int
     - echo_float
-    - echo_map
-    - echo_list
+  internal:
+    - working_dir
 template: |
   steps:
   - name: 'bash'
@@ -56,3 +72,13 @@ template: |
       {% for list_value in echo_list %}
       echo "    {{ list_value }}"
       {% endfor %}
+      check_secret_result=$(if [ {{check_secret}} = "Hello World" ]; then echo "PASS"; else echo "FAIL"; fi)
+      echo "check_secret=$check_secret_result"
+
+      var_prefix="test_module"
+      outputs.sh add "$var_prefix.echo_int" "{{ echo_int }}"
+      outputs.sh add "$var_prefix.echo_float" "{{ echo_float }}"
+      outputs.sh add "$var_prefix.echo_string" "{{ echo_string | cpi_quote }}"
+      outputs.sh add "$var_prefix.check_secret_result" "{{ check_secret_result }}"
+      outputs.sh add "$var_prefix.echo_map" "{{ echo_map | cpi_json | cpi_quote }}"
+      outputs.sh add "$var_prefix.echo_list" "{{ echo_list | cpi_json | cpi_quote }}"

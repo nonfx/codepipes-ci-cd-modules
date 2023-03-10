@@ -1,0 +1,26 @@
+provisioner: aws
+name: print-output
+version: 1
+revision: 1
+displayName: Print pipeline output
+description: Print all the outputs collected within the pipeline
+target: ""
+category: internal
+keywords:
+  - internal
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+  internal:
+    - working_dir
+template: |
+  version: 0.2
+  phases:
+    post_build:
+      commands:
+          outputs.sh print
