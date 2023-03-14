@@ -42,8 +42,13 @@ inputs:
             description: Working directory for this target
             type: string
             default: "."
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string
   internal:
     - working_dir
+    - sha_tag
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
 
@@ -51,6 +56,8 @@ template: |
     {% for target in targets %}
   - name: 'cldcvr/cpi-make'
     dir: {{ workspace }}/{{ working_dir }}/{{ target.target_dir }}
+    env:
+    - 'sha_tag={{ sha_tag }}'
     args:
       {% if makefile_name %}
       - -f {{ makefile_name }}

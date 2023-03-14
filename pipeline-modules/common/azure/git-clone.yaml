@@ -34,5 +34,4 @@ template: |
   steps:
   - script: |
       git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
-      echo "##vso[task.setvariable variable=sha_tag]$(git -C {{ git_local_path }} log --format="%H" -n 1)"
     displayName: 'Git Clone'
