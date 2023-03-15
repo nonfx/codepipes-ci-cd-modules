@@ -1,0 +1,84 @@
+provisioner: aws
+name: sonar-cloud
+version: 1
+revision: 1
+displayName: Sonar Cloud
+description: Analyze source code using Sonar Cloud
+target: ""
+category: code analysis
+keywords:
+  - Analyze Code
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""
+    git_local_path:
+      title: Local Clone Directory
+      description: The name of a new directory to clone into.
+      type: string
+      default: repo
+    sonar_cloud_url:
+      title: SonarCloud URL
+      description: URL for SonarCloud endpoint
+      type: string
+      default: "https://sonarcloud.io"
+    sonar_cloud_login_token:
+      title: Sonar Login Token
+      description: User generated token used to authenticate with Sonar Cloud
+      type: string
+    sonar_cloud_org:
+      title: Sonar Organization Key
+      description: Sonar organization key found in project information section of sonar cloud web console
+      type: string
+    sonar_cloud_project_key:
+      title: Sonar Project Key
+      description: Sonar project key found in project information section of sonar cloud web console. This is required if sonar_config_file is not set
+      type: string
+      default: ""
+    sonar_config_file:
+      title: Sonar config file name
+      description: Optionally, use a config file in the repo to setup sonar properties
+      type: string
+      default: ""
+    sonar_verbose_log:
+      title: Sonar log verbosity
+      description: Increase the verbosity of the Sonar log
+      type: boolean
+      default: false
+    coverage_file:
+      title: Code Coverage file
+      description: Unit test coverage file to be analyzed by SonarCloud
+      type: string
+      default: "coverage.out"
+  internal:
+    - git_checkout_target
+  required:
+    - sonar_cloud_login_token
+    - sonar_cloud_org
+template: |
+  version: 0.2
+
+  phases:
+    build:
+      commands:
+        - docker run --rm
+          -v $CODEBUILD_SRC_DIR:/usr/src
+          public.ecr.aws/p0k3r4s4/sonar-scanner-cli
+          -Dsonar.host.url={{ sonar_cloud_url }}
+          -Dsonar.login={{ sonar_cloud_login_token }}
+          -Dsonar.organization={{ sonar_cloud_org }}
+          {% if sonar_config_file -%}
+          -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }}
+          {% else -%}
+          -Dsonar.projectKey={{ sonar_cloud_project_key }}
+          {%- endif %}
+          -Dsonar.projectBaseDir={{ git_local_path }}
+          -Dsonar.branch.name={{ git_checkout_target }}
+          -Dsonar.go.coverage.reportPaths={{ coverage_file }}
+          -Dsonar.qualitygate.wait=true
+          -Dsonar.verbose={{ sonar_verbose_log }}

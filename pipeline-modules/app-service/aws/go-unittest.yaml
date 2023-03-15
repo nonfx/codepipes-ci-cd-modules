@@ -1,0 +1,52 @@
+provisioner: aws
+name: go-unittest
+version: 1
+revision: 1
+displayName: Go Unit Test
+description: Runs units tests and collects code coverage data
+target: ""
+category: unit test
+keywords:
+  - default
+  - go
+  - Test
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    go_version:
+      title: Golang version
+      description: The version of Golang to use
+      type: string
+      default: latest
+    go_test_args:
+      title: Go Test args
+      description: Arguments for Go test command
+      type: array
+      items:
+        type: string
+      default: []
+    coverage_file:
+      title: Code Coverage file
+      description: Unit test coverage file to be analyzed by SonarCloud
+      type: string
+      default: "coverage.out"
+  internal:
+    - working_dir
+template: |
+  version: 0.2
+  phases:
+    build:
+      commands:
+        - CGO_ENABLED=${CGO_ENABLED:-0}
+        - GOPATH=$CODEBUILD_SRC_DIR
+        - echo Installing Golang v{{ go_version }}
+        - goenv install {{ go_version }}
+        - goenv local $(goenv versions | grep -m 1 {{ go_version }} | awk '{ print $1 }')
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - go test -v -coverprofile={{ coverage_file }} -coverpkg ./... {% for arg in go_test_args %} {{ arg }} {% endfor %} ./...

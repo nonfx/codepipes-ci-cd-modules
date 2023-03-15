@@ -36,4 +36,3 @@ template: |
     build:
       commands:
         - git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
-        - export sha_tag=$(git -C {{ git_local_path }} log --format="%H" -n 1);
