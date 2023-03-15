@@ -42,14 +42,21 @@ inputs:
             description: Working directory for this target
             type: string
             default: "."
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string
   internal:
   - working_dir
+  - sha_tag
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
 
   version: 0.2
   env:
     shell: bash
+    variables:
+      sha_tag: "{{ sha_tag }}"
   phases:
     build:
       commands:

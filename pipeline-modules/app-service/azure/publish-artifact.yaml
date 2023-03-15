@@ -29,18 +29,19 @@ inputs:
     feed_name:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed Name
-      type: string      
+      type: string
+      default: "$(CPI__artifact_feed)"       
     working_dir:
       title: Working directory
       description: The current working directory to execute command
       type: string
-      default: repo      
+      default: repo    
+      
   internal:
     - applicationName
     - sha_tag
     - working_dir
-  required:
-    - feed_name
+
     
 template: |-
   steps:
