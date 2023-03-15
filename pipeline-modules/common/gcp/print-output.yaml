@@ -19,6 +19,7 @@ inputs:
 template: |
   steps:
   - name: 'cldcvr/cpi-config'
+    dir: {{ working_dir }}
     args:
     - '-c'
     - |-

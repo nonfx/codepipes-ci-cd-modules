@@ -21,4 +21,5 @@ template: |
   phases:
     post_build:
       commands:
-          outputs.sh print
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - outputs.sh print
