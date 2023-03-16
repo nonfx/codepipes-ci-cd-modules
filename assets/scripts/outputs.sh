@@ -8,19 +8,19 @@ output_file="output.txt"
 header="###pipeline-summary-start###"
 footer="###pipeline-summary-end###"
 
-# check if file exists, if not create it
-if [ ! -f "$output_file" ]; then
-    touch "$output_file"
-fi
+# make sure that the file exists, if not create it
+touch "$output_file"
 
 function help() {
     script_name="$0"
     echo "Usage: $script_name add <variable name> <value>"
     echo "Usage: $script_name run <json string>"
+    echo "Usage: $script_name fetch <variable name>"
+    echo "Usage: $script_name remove <variable name>"
     echo "Usage: $script_name print"
 }
 
-# check if user wants to add a new variable and value
+# add a new variable and value
 function add () {
     var_name=$1
     var_val=$2
@@ -36,7 +36,7 @@ function add () {
     fi
 }
 
-# check if user wants to print all the collected variables and values
+# print all the collected variables and values
 function print_output() {
     # check if output file is not empty
     if [ -s "$output_file" ]; then
@@ -52,7 +52,7 @@ function print_output() {
     fi
 }
 
-# check if user wants to run a command on a JSON collection
+# run a commands from a JSON collection and save outputs
 function run_command_on_json() {
     json_str=$1
     # check if JSON is provided
@@ -76,15 +76,15 @@ function run_command_on_json() {
     fi
 }
 
-# function to fetch the value of a variable from the output file
-fetch() {
+# fetch the value of a variable from the output file
+function fetch() {
     varname="$1"
     # search for variable name in output file and extract its value
     grep "^$varname=" "$output_file" | sed "s/$varname=//"
 }
 
-# function to remove a variable from the output file
-remove() {
+# remove a variable from the output file
+function remove() {
     varname="$1"
     # delete line containing variable name from output file
     sed -i "/^$varname=/d" "$output_file"
