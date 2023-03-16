@@ -1,0 +1,24 @@
+provisioner: azure
+name: print-output
+version: 1
+revision: 1
+displayName: Print pipeline output
+description: Print all the outputs collected within the pipeline
+target: ""
+keywords:
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+  internal:
+    - working_dir
+template: |
+  steps:
+    - script: |
+        outputs.sh print
+      displayName: "Print output"
+      workingDirectory: {{ workingDir }}
