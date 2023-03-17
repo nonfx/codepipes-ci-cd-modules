@@ -81,6 +81,10 @@ inputs:
             title: IsPrivateIngress
             type: boolean
             default: false  
+          ingressTimeoutSec:
+            title: IngressTimeoutSecond
+            type: string
+            default: "60"          
 
   required:
     - cluster
@@ -203,7 +207,35 @@ template: |
       {% else %}
       kubectl delete -f istio_ingress_manage_certificate.yaml ;
       {% endif %}
-     
+
+      echo "Creating Ingress backendconfig....."
+      echo "
+      apiVersion: cloud.google.com/v1
+      kind: BackendConfig
+      metadata:
+        name: istio-gke-ingress-backendconfig
+        namespace: istio-system
+      spec:
+      {% for ing in ingress %}
+      {% if ing.ingressTimeoutSec != ""%}
+        timeoutSec: {{ing.ingressTimeoutSec}}
+      {% endif %}
+      {% endfor %}
+      " >> istio_ingress_backendconfig.yaml ;
+      cat istio_ingress_backendconfig.yaml ;
+      {% if job_type == 'deploy' %}
+      kubectl apply -f istio_ingress_backendconfig.yaml;
+      {% else %}
+      kubectl delete -f istio_ingress_backendconfig.yaml ;
+      {% endif %}
+      
+      {% for ing in ingress %}  
+      {% if ing.ingressTimeoutSec != "" %}                  
+      echo 'Add annotatation on istio-ingressgateway SVC to increase Istio Timeout '
+      kubectl annotate svc istio-ingressgateway -n istio-system cloud.google.com/backend-config='{"default": "istio-gke-ingress-backendconfig"}'
+      {% endif %} 
+      {% endfor %} 
+
       echo "Creating GKE Ingress....."
       echo "
       apiVersion: networking.k8s.io/v1
@@ -212,7 +244,7 @@ template: |
         name: {{ projectName | lower }}-istio-ingress
         namespace: istio-system
         annotations:
-        {% for ing in ingress %}        
+        {% for ing in ingress %}     
           # Enable use of manually pre-defined global static IP
           {% if ing.staticIPName %}
           kubernetes.io/ingress.global-static-ip-name: '{{ ing.staticIPName }}'
