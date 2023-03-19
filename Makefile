@@ -64,3 +64,6 @@ endif
 
 migrate:
 	go run ./scripts/migrate_script/main.go
+
+modules-fix:  # find module diff
+	go run ./scripts/find_diff
