@@ -43,10 +43,11 @@ template: |
   - id: go_unittest
     name: golang:{{ go_version }}
     dir: {{ working_dir }}
-    env: ["GOPATH=/workspace", "CGO_ENABLED=${CGO_ENABLED:-0}"]
+    env: ["GOPATH=/workspace"]
     entrypoint: /bin/bash
     args:
       - -c
       - |
         set -x
+        export CGO_ENABLED=$${CGO_ENABLED:-0}
         go test -v -coverprofile={{ coverage_file }} -coverpkg ./... {% for arg in go_test_args %} {{ arg }} {% endfor %} ./...

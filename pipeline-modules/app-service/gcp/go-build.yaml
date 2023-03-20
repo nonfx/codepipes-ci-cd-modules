@@ -38,11 +38,12 @@ template: |
   - id: 'Go Build'
     name: golang:{{ go_version }}
     dir: {{ working_dir }}
-    env: ["GOPATH=/workspace", "CGO_ENABLED=${CGO_ENABLED:-0}"]
+    env: ["GOPATH=/workspace"]
     entrypoint: /bin/bash
     args:
       - -c
       - |
         set -x
+        export CGO_ENABLED=$${CGO_ENABLED:-0}
         go version
         go build -v {% for arg in go_build_args %} {{ arg }} {% endfor %}
