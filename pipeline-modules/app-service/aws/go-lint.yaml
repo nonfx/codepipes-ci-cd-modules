@@ -1,0 +1,44 @@
+provisioner: aws
+name: go-lint
+version: 1
+revision: 1
+displayName: Go Lint
+description: Runs linters in parallel, reuses Go build cache and caches analysis results
+target: ""
+category: Lint
+keywords:
+  - Go
+  - lint
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    go_lint_args:
+      title: Go lint args
+      description: Arguments for Go lint command
+      type: array
+      items:
+        type: string
+      default: ["run"]
+    golint_version:
+      title: Go lint version
+      description: Golint version https://github.com/golangci/golangci-lint
+      type: string
+      default: 1.52.2
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
+    - working_dir
+template: |
+  version: 0.2
+  phases:
+    build:
+      commands:
+        - cd $CODEBUILD_SRC_DIR/{{working_dir}}
+        - echo Installing Golint
+        - wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v{{golint_version}}
+        - ./bin/golangci-lint --version
+        - ./bin/golangci-lint {% for arg in go_lint_args %} {{ arg }} {% endfor %}
