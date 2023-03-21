@@ -103,6 +103,7 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}  
 
   version: 0.2
   phases:
@@ -129,12 +130,40 @@ template: |
           c=$((c+1)) #Incrementing the counter
           done;
           echo "}" >> env.json;
+
+          #Delete all secrets
+          secret_list=$(aws secretsmanager list-secrets --query 'SecretList[?Description && starts_with(Description, `{{applicationName}}-{{environment}}-`) == `true`].[ARN]' --output text)
+          # Delete each secret in the list
+          for secret_arn in $secret_list
+          do
+            aws secretsmanager delete-secret --secret-id $secret_arn
+          done
+          
+          sc=1; #Rest Counter to check if its the last element in file
+          sl=$(cat {{pipeline_secret_file}} | wc -l);
+          echo "{" >> env_secrets.json; #start of the json file
+          cat {{pipeline_secret_file}} | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            arn=$(aws secretsmanager create-secret --name "cp-$(date +%s)-$RANDOM" --description "{{applicationName}}-{{environment}}-$name" --secret-string $value --query 'Service.ServiceUrl' --query ARN --output text)
+            if [ $sc -ge $sl ] #Check to add or remove trailing comma while writing JSON
+            then
+                printf '"%s":"%s"\n' "$name" "$arn" >> env_secrets.json
+                break;
+            else
+                printf '"%s":"%s",\n' "$name" "$arn" >> env_secrets.json
+            fi
+          sc=$((sc+1)) #Incrementing the counter
+          done;
+          echo "}" >> env_secrets.json;
+          secretsJSON=$(cat env_secrets.json);
           envJSON=$(cat env.json);
           JSON_FMT='{
               "ImageRepository": {
                   "ImageIdentifier": "{{repository}}:{{tag}}",
                   "ImageConfiguration": {
                       "RuntimeEnvironmentVariables": %s,
+                      "RuntimeEnvironmentSecrets": %s,
                       "Port": "{{port}}"
                   },
                   "ImageRepositoryType": {% if repository|slice:":7" == 'public.' %}"ECR_PUBLIC"{% else %}"ECR"{% endif %}
@@ -144,8 +173,8 @@ template: |
                 "AccessRoleArn": "{{ecr_role}}"
               }{% else %}{% endif %}
           }';
-          # Replaces the %s in JSON_FMT with environment variable json created
-          printf "$JSON_FMT" "$envJSON" >> app.json
+          # Replaces envs and secrets
+          printf "$JSON_FMT" "$envJSON" "$secretsJSON">> app.json
         - |
           echo '{
             "Cpu": "{{cpu}}",
@@ -170,7 +199,12 @@ template: |
             {% endif %}
             }
           }' >> network.json
-        - serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --tags Key=codepipes,Value={{environment}}-{{project}} --query 'Service.ServiceUrl')
+          sa=$(aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text)
+          if [ -z "$sa" ]; then
+              serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
+          else
+              serviceUrl=$(aws apprunner update-service --service-arn $sa --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
+          fi
     post_build:
       commands:
         - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
