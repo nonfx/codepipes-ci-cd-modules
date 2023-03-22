@@ -21,4 +21,4 @@ template: |
     - script: |
         outputs.sh print
       displayName: "Print output"
-      workingDirectory: {{ workingDir }}
+      workingDirectory: {{ working_dir }}
