@@ -14,12 +14,36 @@ inputs:
       title: Working directory
       description: The current working directory to execute command
       type: string
+      default: ""
+    pipeline_summary_var:
+      title: Pipeline Summary
+      description: This will create pipeline summary as per user request
+      type: array
+      default: []
+      items:
+        type: object
+        required: [Command, Name]
+        properties:
+          Command:
+            title: Command
+            type: string
+          Name:
+            title: Name
+            type: string
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
   internal:
     - working_dir
+    - pipeline_summary_var
+    - job_type
 template: |
   version: 0.2
   phases:
     post_build:
       commands:
         - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        {% if job_type == 'deploy' -%}- outputs.sh run {{ pipeline_summary_var | cpi_quote }} {% endif %}
         - outputs.sh print

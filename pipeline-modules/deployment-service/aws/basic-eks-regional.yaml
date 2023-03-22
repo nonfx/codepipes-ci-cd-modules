@@ -83,21 +83,6 @@ inputs:
       title: Role ARN
       description: Role for deployment in EKS
       type: string
-    pipeline_summary_var:
-      title: Pipeline Summary
-      description: This will create pipeline summary as per user request
-      type: array
-      default: []
-      items:
-        type: object
-        required: [Command, Name]
-        properties:
-          Command:
-            title: Command
-            type: string
-          Name:
-            title: Name
-            type: string
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -162,7 +147,6 @@ inputs:
     - project
     - customer_bucket
     - job_type
-    - pipeline_summary_var
 
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
@@ -313,48 +297,15 @@ template: |
         - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
         - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
 
-    post_build:
-      commands:
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-        {% if pipeline_summary_var %}
-        {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
-        {% endif %}
-        {% if ports %}
-        - echo '#!/bin/bash' >> test.sh
-        - echo 'summary=""' >> test.sh
-        - echo 'count=30' >> test.sh
-        - echo 'while [ true ]; do' >> test.sh
-        - {% if ingress %}
-          {% if ingress.0.domain %}
-          echo "sleep 2; summary=$(kubectl get ingress -n {{applicationName}} -o=jsonpath='{.items[*].metadata.annotations.external-dns\.alpha\.kubernetes\.io\/hostname}')">> test.sh
+          {% if ingress && ingress.0.domain %}
+          {% set kube_out_path="{.items[*].metadata.annotations.external-dns\\.alpha\\.kubernetes\\.io\\/hostname}" %}
+          {% set url_protocol= "https" %}
           {% else %}
-          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
+          {% set kube_out_path="{.items[*].status.loadBalancer.ingress[*].hostname}" %}
+          {% set url_protocol= "http" %}
           {% endif %}
-          {% else %}
-          echo 'sleep 2; summary=`kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].hostname}`' >> test.sh
-          {% endif %}
-        - echo 'if [ ! -z "$summary" ]; then' >> test.sh
-        - {% if ingress %}
-          {% if ingress.0.domain %}
-          echo 'echo "Service URL=https://"$summary >> summary.txt; break' >> test.sh
-          {% else %}
-          echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
-          {% endif %}
-          {% else %}
-          echo 'echo "Service URL=http://"$summary >> summary.txt; break' >> test.sh
-          {% endif %}
-        - echo 'fi' >> test.sh
-        - echo 'if [ $count -eq 0 ]; then' >> test.sh
-        - echo 'break' >> test.sh
-        - echo 'fi' >> test.sh
-        - echo 'count=`expr $count - 1`' >> test.sh
-        - echo 'done' >> test.sh
-        - chmod 755 ./test.sh
-        - cat ./test.sh
-        - ./test.sh
-        {% endif %}
-        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-        - cat summary.txt
+        - summary=$(retry.sh 'kubectl get ingress -n {{ applicationName | cpi_quote }} -o=jsonpath={{ kube_out_path | cpi_quote }}' 30 2)
+        - outputs.sh add "Service URL" "{{url_protocol}}://$summary"
       {% else %}
         - helm uninstall {{applicationName}}-{{environment}}
       {% endif %}

@@ -34,25 +34,9 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-    pipeline_summary_var:
-      title: Pipeline Summary
-      description: This will create pipeline summary as per user request
-      type: array
-      default: []
-      items:
-        type: object
-        required: [Command, Name]
-        properties:
-          Command:
-            title: Command
-            type: string
-          Name:
-            title: Name
-            type: string
   required:
     - bash_script
   internal:
-    - pipeline_summary_var
     - repo_dir
     - job_type
 template: |
@@ -73,10 +57,4 @@ template: |
         - ./{{ bash_script }} {% for param in script_parameters %}{{param}} {% endfor %}
     post_build:
       commands:
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1
-        {% if pipeline_summary_var %}
-        - {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
-        {% endif %}
-        - echo "Completion Status=[bash script completed {{ job_type }} at $(date)]" >> summary.txt 2>&1
-        - echo "###pipeline-summary-end###" >> summary.txt 2>&1
-        - cat summary.txt
+        - outputs.sh add "Completion Status" "[bash script completed {{ job_type }} at $(date)]"

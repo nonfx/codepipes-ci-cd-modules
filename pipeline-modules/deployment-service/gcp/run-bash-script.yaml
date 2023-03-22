@@ -34,26 +34,10 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-    pipeline_summary_var:
-      title: Pipeline Summary
-      description: This will create pipeline summary as per user request
-      type: array
-      default: []
-      items:
-        type: object
-        required: [Command, Name]
-        properties:
-          Command:
-            title: Command
-            type: string
-          Name:
-            title: Name
-            type: string
   required:
     - bash_script
   internal:
     - job_type
-    - pipeline_summary_var
     - repo_dir
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
@@ -75,16 +59,8 @@ template: |
     env:
     - 'CODEPIPES_DEPLOY_ACTION={{ job_type }}'
   - id: 'Extract summary vars'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
+    name: 'cldcvr/cpi-config'
     args:
     - '-c'
     - |
-      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-      {% if pipeline_summary_var %}
-      {% for summary in pipeline_summary_var %}
-      {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
-      {% endif %}
-      echo "Completion Status=[bash script completed {{ job_type }} at $(date)]" >> summary.txt 2>&1;
-      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-      cat summary.txt;
+      outputs.sh add "Completion Status" "[bash script completed {{ job_type }} at $(date)]"
