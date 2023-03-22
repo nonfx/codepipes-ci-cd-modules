@@ -1,4 +1,4 @@
-provisioner: aws
+provisioner: gcp
 name: sonar-cloud
 version: 1
 revision: 1
@@ -25,11 +25,13 @@ inputs:
     sonar_cloud_url:
       title: SonarCloud URL
       description: URL for SonarCloud endpoint
+      cloud: [aws, gcp]
       type: string
       default: "https://sonarcloud.io"
     sonar_cloud_login_token:
       title: Sonar Login Token
       description: User generated token used to authenticate with Sonar Cloud
+      cloud: [aws, gcp]
       type: string
     sonar_cloud_org:
       title: Sonar Organization Key
@@ -61,24 +63,21 @@ inputs:
     - sonar_cloud_login_token
     - sonar_cloud_org
 template: |
-  version: 0.2
-
-  phases:
-    build:
-      commands:
-        - docker run --rm
-          -v $CODEBUILD_SRC_DIR:/usr/src
-          public.ecr.aws/p0k3r4s4/sonar-scanner-cli
-          -Dsonar.host.url={{ sonar_cloud_url }}
-          -Dsonar.login={{ sonar_cloud_login_token }}
-          -Dsonar.organization={{ sonar_cloud_org }}
-          {% if sonar_config_file -%}
-          -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }}
-          {% else -%}
-          -Dsonar.projectKey={{ sonar_cloud_project_key }}
-          {%- endif %}
-          -Dsonar.projectBaseDir={{ git_local_path }}
-          -Dsonar.branch.name={{ git_checkout_target }}
-          -Dsonar.go.coverage.reportPaths={{ coverage_file }}
-          -Dsonar.qualitygate.wait=true
-          -Dsonar.verbose={{ sonar_verbose_log }}
+  steps:
+  - id: 'Run scan on SonarCloud'
+    name: gcr.io/codepipes-staging/sonar-scanner-cli
+    args:
+    - 'sonar-scanner'
+    - '-Dsonar.host.url={{ sonar_cloud_url }}'
+    - '-Dsonar.login={{ sonar_cloud_login_token }}'
+    - '-Dsonar.organization={{ sonar_cloud_org }}'
+    {% if sonar_config_file -%}
+    - '-Dproject.settings={{ git_local_path }}/{{ sonar_config_file }}'
+    {% else -%}
+    - '-Dsonar.projectKey={{ sonar_cloud_project_key }}'
+    {%- endif %}
+    - '-Dsonar.projectBaseDir={{ git_local_path }}'
+    - '-Dsonar.branch.name={{ git_checkout_target }}'
+    - '-Dsonar.go.coverage.reportPaths={{ coverage_file }}'
+    - '-Dsonar.qualitygate.wait=true'
+    - '-Dsonar.verbose={{ sonar_verbose_log }}'

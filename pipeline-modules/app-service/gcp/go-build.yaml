@@ -30,7 +30,7 @@ inputs:
       title: Golang version
       description: The version of Golang to use
       type: string
-      default: latest
+      default: "1.15.15"
   internal:
     - working_dir
 template: |

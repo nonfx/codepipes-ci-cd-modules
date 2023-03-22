@@ -1,5 +1,5 @@
 provisioner: azure
-name: pipeline-config
+name: pipeline-config-azure
 version: 1
 revision: 1
 displayName: Configure Pipeline
@@ -44,6 +44,8 @@ inputs:
       description: Mapping of globally available variables to encrypted values.
       type: object
       default: {}
+  required:
+    - variable_group_name
   internal:
     - variable_group_name
     - pipeline_env

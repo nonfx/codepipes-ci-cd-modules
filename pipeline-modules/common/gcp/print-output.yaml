@@ -14,7 +14,7 @@ inputs:
       title: Working directory
       description: The current working directory to execute command
       type: string
-      default: "/workspace"
+      default: ""
     pipeline_summary_var:
       title: Pipeline Summary
       description: This will create pipeline summary as per user request

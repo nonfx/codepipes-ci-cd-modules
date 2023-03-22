@@ -30,12 +30,12 @@ inputs:
       default: ["run"]
     gosec_version:
       title: Go sec version
-      description: Gosec version https://github.com/securego/gosece, eg. 2.9.6
+      description: Gosec version https://github.com/securego/gosec
       type: string
       default: 2.9.6
     golint_version:
       title: Go lint version
-      description: Golint version https://github.com/golangci/golangci-lint, eg. 1.44.0
+      description: Golint version https://github.com/golangci/golangci-lint
       type: string
       default: 1.44.0
     working_dir:

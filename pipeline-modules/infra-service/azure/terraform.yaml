@@ -25,6 +25,7 @@ inputs:
       title: Artifact Bucket
       description: Name of the bucket to store Terraform artifacts.
       type: string
+      pattern: "[a-z0-9\\-.]{3,63}"
     artifact_dir:
       title: Artifact Directory
       description: Name of the root directory in the artifact bucket.
@@ -88,8 +89,6 @@ inputs:
     - artifact_bucket
     - artifact_dir
     - tf_action
-    - pipeline_env
-    - storage_account_name
   internal:
     - iac_checkout_src
     - iac_checkout_target

@@ -55,7 +55,6 @@ inputs:
     - sha_tag
     - working_dir
     - pipeline_secret_env
-    - sha_tag
 template: |
   steps:
     {% for target in targets %}

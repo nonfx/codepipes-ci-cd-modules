@@ -69,6 +69,20 @@ inputs:
         - ERROR
         - JSON
       default: DEBUG
+    storage_account_name:
+      title: Storage Account Name
+      description: Storage Account to Store Build Artifacts.
+      type: string
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available secret variable id.
+      type: object
+      default: {}
+    pipeline_env:
+      title: Global Environment
+      description: Mapping of globally available variables to values.
+      type: object
+      default: {}
   required:
     - iac_checkout_src
     - iac_checkout_target
@@ -84,7 +98,9 @@ inputs:
     - tf_action
     - tf_state_file
     - tf_plan_file
-    - tf_version
+    - pipeline_secret_env
+    - pipeline_env
+    - storage_account_name
 template: |
   {% set artifact_root_path = artifact_bucket|add:"/"|add:artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
   {% set artifact_build_path = artifact_root_path|add:"/"|add:"$CODEBUILD_BUILD_ID" %}  {# <artifact_bucket>/<artifact_dir>/<build_id> #}

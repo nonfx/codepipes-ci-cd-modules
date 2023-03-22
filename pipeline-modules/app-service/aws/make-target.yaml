@@ -42,13 +42,19 @@ inputs:
             description: Working directory for this target
             type: string
             default: "."
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available secret variable id.
+      type: object
+      default: {}
     sha_tag:
       title: SHA Git commit tag
-      description: Resloved Commit hash for Input git artifact
+      description: Resolved Commit hash for Input git artifact
       type: string
   internal:
-  - working_dir
-  - sha_tag
+    - sha_tag
+    - working_dir
+    - pipeline_secret_env
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
 

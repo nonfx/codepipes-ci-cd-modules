@@ -1,5 +1,5 @@
 provisioner: aws
-name: pipeline-config
+name: pipeline-config-aws
 version: 1
 revision: 1
 displayName: Configure Pipeline
@@ -39,7 +39,12 @@ inputs:
       title: Run Timeout [min]
       description: Amount of time in minutes the pipeline will be allowed to run.
       type: integer
-      default: 60
+      default: 480
+    pipeline_queue_timeout_min:
+      title: Queue Timeout [min]
+      description: Amount of time in minutes the pipeline will be allowed to be queued waiting to run.
+      type: integer
+      default: 480
     pipeline_secret_env:
       title: Global Secret Environment
       description: Mapping of globally available secret variable id.
@@ -88,7 +93,6 @@ inputs:
       title: Pipeline module git repo revision
       description: git revision for cloning the pipeline module repo.
       type: string
-
   internal:
     - pipeline_logs_bucket
     - pipeline_env
@@ -97,10 +101,6 @@ inputs:
     - pipeline_module_git
     - pipeline_module_git_rev
 template: |
-  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-
   artifacts:
     type: "NO_ARTIFACTS"
   badgeenabled: null
@@ -114,10 +114,7 @@ template: |
     computetype: "{{ pipeline_compute_type }}"
     environmentvariables:
     - name: "__VG_EXPORTED_ENV_NAMES"
-      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}"
-      type: "PLAINTEXT"
-    - name: "__VG_EXPORTED_SECRET_ENV_NAMES"
-      value: "{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
+      value: "{% for env_key in pipeline_env %} {{env_key}} {% endfor %}{% for env_key in pipeline_secret_env %} {{env_key}} {% endfor %}"
       type: "PLAINTEXT"
     {% for env_key, env_value in pipeline_env %}
     - name: {{ env_key|cpi_quote }}
@@ -129,7 +126,7 @@ template: |
       value: "{{ env_value }}"
       type: "SECRETS_MANAGER"
     {% endfor %}
-    image: "aws/codebuild/standard:4.0"
+    image: "aws/codebuild/standard:5.0"
     imagepullcredentialstype: "CODEBUILD"
     privilegedmode: {{ privileged_mode }}
     registrycredential: null
@@ -151,17 +148,7 @@ template: |
   source:
     auth: null
     buildstatusconfig: null
-    buildspec: |
-      env:
-        shell: bash
-      phases:
-        pre_build:
-          commands:
-            - echo "Cloning the pipeline modules..."
-            - mkdir -p {{pipeline_modules_path}}
-            - git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
-            - export PATH={{ common_scripts_path }}:$PATH
-            - install-jq.sh
+    buildspec: ""
     gitclonedepth: null
     gitsubmodulesconfig: null
     insecuressl: null

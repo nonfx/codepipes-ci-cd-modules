@@ -34,9 +34,15 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available secret variable id.
+      type: object
+      default: {}
   required:
     - bash_script
   internal:
+    - pipeline_secret_env
     - repo_dir
     - job_type
 template: |

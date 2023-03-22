@@ -39,16 +39,21 @@ inputs:
       default: repo
     node_js_version:
       title: Node.js Version
-      description: The version of Node.js like 18.x
+      description: The version of Node.js being used (From https://hub.docker.com/_/node/)
       type: string
-      default: '18.x'  
+      default: '18.x'
     sha_tag:
       title: SHA Git commit tag
       description: Resolved Commit hash for Input git artifact
-      type: string           
+      type: string
+    package_manager_version:
+      title: Package manager version
+      description: The version of package manager being used
+      type: string
+      default: latest
   internal:
     - working_dir
-    - sha_tag       
+    - sha_tag
 template: |
   steps:
   - task: NodeTool@0
@@ -60,6 +65,6 @@ template: |
       echo "Start install & building node app......"
     {% for arg in npm_build_args %}
       {{ package_manager }} {{ arg }}
-    {% endfor %}      
+    {% endfor %}
     workingDirectory: {{ working_dir }}
     displayName: 'Node App build'

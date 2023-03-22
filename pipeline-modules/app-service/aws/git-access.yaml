@@ -26,6 +26,9 @@ inputs:
   required:
     - git_remote_path
     - git_login
+  internal:
+    - git_remote_path
+    - git_login
 template: |
   {% set git_creds_path = '$HOME/.git-credentials' %}
   {% set git_config_path = '$HOME/.gitconfig' %}

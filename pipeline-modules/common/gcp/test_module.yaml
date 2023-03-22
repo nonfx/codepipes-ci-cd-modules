@@ -39,16 +39,11 @@ inputs:
       title: Echo String value
       description: The string to echo to the log.
       type: string
-    check_secret:
-      title: Check secret string value
-      description: Value must be "Hello World"
-      type: string
-      default: "${TEST_SECRET:-}"
     working_dir:
       title: Working directory
       description: The current working directory to execute command
       type: string
-      default: /workspace
+      default: ""
   required:
     - echo_string
     - echo_int
@@ -73,7 +68,7 @@ template: |
       {% for list_value in echo_list %}
       echo "    {{ list_value }}"
       {% endfor %}
-      check_secret_result=$(if [ {{check_secret | cpi_quote}} = "Hello World" ]; then echo "PASS"; else echo "FAIL"; fi)
+      check_secret_result=$(if [ "${TEST_SECRET:-}" = "Hello World" ]; then echo "PASS"; else echo "FAIL"; fi)
       echo "check_secret=$check_secret_result"
 
       var_prefix="test_module"

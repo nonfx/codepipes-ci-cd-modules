@@ -43,14 +43,19 @@ inputs:
       title: Node.js Version
       description: The version of Node.js being used (From https://hub.docker.com/_/node/)
       type: string
-      default: 18.12.0-alpine
+      default: 18.x
     package_manager_version:
       title: Package manager version
       description: The version of package manager being used
       type: string
       default: latest
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resolved Commit hash for Input git artifact
+      type: string
   internal:
     - working_dir
+    - sha_tag
 template: |
   steps:
   - id: 'Node Build'

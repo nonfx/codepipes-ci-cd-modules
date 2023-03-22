@@ -17,7 +17,7 @@ ifeq ($(VG_PIPELINE_MODULE_GIT_REV),)
 export VG_PIPELINE_MODULE_GIT_REV=$(shell git log -n1 --pretty=format:%H)
 endif
 
-CLOUD_BUILDERS_DIR=cloud-builders
+CLOUD_BUILDERS_DIR=./tools/cloud-builders
 CLOUD_BUILDER_NAMES=$(shell find $(CLOUD_BUILDERS_DIR) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
 CLOUD_BUILDER_PLATFORMS="linux/arm64/v8,linux/amd64"
 CLOUD_BUILDER_REPOBASE="cldcvr/"
@@ -33,12 +33,14 @@ ifneq (${GIT_TOKEN},)
 	git config --global url.https://${GIT_TOKEN}@github.com/.insteadOf https://github.com/
 endif
 
-db-update:
-	./cpi-module-seed/create-common-links.sh
-	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed run
+common-links:
+	./tools/cpi-module-seed/create-common-links.sh
+
+db-update: common-links
+	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./tools/cpi-module-seed run
 
 help-seed:
-	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./cpi-module-seed help
+	$(GO_BIN_DIR)/godotenv -f $(DOTENV_FILE) go run ./tools/cpi-module-seed help
 
 clean:
 	find pipeline-modules -type l -name "cmn-*.yaml" -delete
@@ -59,3 +61,9 @@ ifeq (${CPU_ARCH},amd64)
 else
 	@echo "This target must be run from amd64 architecture - current is $(CPU_ARCH)"
 endif
+
+migrate:
+	go run ./tools/migrate_script/main.go
+
+modules-fix:  # find module diff
+	go run ./tools/find_diff

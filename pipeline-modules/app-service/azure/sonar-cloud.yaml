@@ -25,6 +25,7 @@ inputs:
     sonar_cloud_service_connection:
       title: Sonar service connection
       description: Azure DevOps service connection for Sonar cloud. Create it from project settings > service connection. Use sonar token from account > security
+      cloud: [azure]
       type: string
     sonar_cloud_org:
       title: Sonar Organization Key
@@ -45,14 +46,16 @@ inputs:
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
       default: "coverage.out"
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+    sonar_verbose_log:
+      title: Sonar log verbosity
+      description: Increase the verbosity of the Sonar log
+      type: boolean
+      default: false
   required:
     - sonar_cloud_service_connection
     - sonar_cloud_org
+  internal:
+    - git_checkout_target
 template: |
   steps:
     - script: |

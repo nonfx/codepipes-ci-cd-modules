@@ -11,7 +11,7 @@ keywords:
 author: CloudCover
 meta:
   inputArtifactType:
-    - git
+    - ContainerImage
 
 inputs:
   properties:
@@ -37,21 +37,15 @@ inputs:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: kube-system
-    publicIP:
-      title: Public IP
-      description: This is Public IP to be alloted to the Load Balancer
-      type: string
+      default: akv2k8s
     pool_name:
       title: Pool Name
-      description: Use  Azure selfhosted agent by proving agent pool name.
+      description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""      
-
   required:
     - cluster
     - resourceGroup
-    - publicIP
   internal:
     - app_env
     - files
@@ -77,18 +71,14 @@ template: |
       workingDirectory: {{ workingDir }}
     {% if job_type == 'deploy' %}
     - script: |
-          helm repo add csi-secrets-store-provider-azure https://azure.github.io/secrets-store-csi-driver-provider-azure/charts
+          helm repo add spv-charts https://charts.spvapi.no
           helm repo update
-          helm install csi csi-secrets-store-provider-azure/csi-secrets-store-provider-azure --namespace {{namespace}}
-          kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
-          kubectl create secret generic secrets-store-creds --from-literal clientid=$(ARM_CLIENT_ID) --from-literal clientsecret=$(ARM_CLIENT_SECRET)
-          kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
+          helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace {{namespace}} --create-namespace 
       displayName: "Helm Deploy {{applicationName}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
-            helm uninstall csi --namespace {{namespace}};
-            kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
+            helm uninstall akv2k8s --namespace {{namespace}};
       displayName: "Helm Uninstall {{applicationName}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

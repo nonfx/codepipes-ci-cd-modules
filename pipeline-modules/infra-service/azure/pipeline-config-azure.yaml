@@ -1,5 +1,5 @@
 provisioner: azure
-name: pipeline-config
+name: pipeline-config-azure
 version: 1
 revision: 1
 displayName: Configure Pipeline
@@ -25,10 +25,32 @@ inputs:
       description: Use selfhosted agent by proving agent pool name.
       type: string
       default: ""
+    pipeline_module_git:
+      title: Pipeline module git repo url
+      description: git url for cloning the pipeline module repo.
+      type: string
+    pipeline_module_git_rev:
+      title: Pipeline module git repo revision
+      description: git revision for cloning the pipeline module repo.
+      type: string
+    pipeline_env:
+      title: Global Environment
+      description: Mapping of globally available variables to values.
+      type: object
+      default: {}
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available variables to encrypted values.
+      type: object
+      default: {}
   required:
     - variable_group_name
   internal:
     - variable_group_name
+    - pipeline_env
+    - pipeline_secret_env
+    - pipeline_module_git
+    - pipeline_module_git_rev
 template: |
   pool:
   {% if pool_name %}

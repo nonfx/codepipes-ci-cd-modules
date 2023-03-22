@@ -11,6 +11,16 @@ keywords:
   - cp-internal
 author: CloudCover
 meta: {}
+inputs:
+  properties:
+    pipeline_secret_env:
+      title: Global Secret Environment
+      description: Mapping of globally available secret variable id.
+      type: object
+      default: {}
+internal:
+  - pipeline_secret_env
+
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}

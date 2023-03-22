@@ -1,5 +1,5 @@
 provisioner: gcp
-name: pipeline-config
+name: pipeline-config-gcp
 version: 1
 revision: 1
 displayName: Configure Pipeline
@@ -11,7 +11,6 @@ keywords:
   - secret
   - config
   - configuration
-  - cp_internal
 author: CloudCover
 meta:
   gcpRoles:
@@ -60,9 +59,9 @@ inputs:
       title: Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to run.
       type: integer
-      minimum: 0
-      maximum: 86400 # 24*60*60
       default: 4000
+      maximum: 86400 # 24*60*60
+      minimum: 0
     pipeline_queue_timeout_sec:
       title: Queue Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to be queued waiting to run.
@@ -98,38 +97,6 @@ inputs:
     - repo_dir
     - repository
 template: |
-  {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set google_credentials_path = workspace|add:'/codepipes-user-sa.json' %}
-
-  steps:
-  - id: 'Switch gcloud auth'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      # If GOOGLE_CLOUD_KEYFILE_JSON isn't set, this pipeline doesn't require gcloud auth
-      [[ -z $$GOOGLE_CLOUD_KEYFILE_JSON ]] && echo "GOOGLE_CLOUD_KEYFILE_JSON is empty...skipping gcloud auth" && exit 0
-
-      # make sure GOOGLE_APPLICATION_CREDENTIALS is set
-      export GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-'{{ google_credentials_path }}' }
-
-      # write the service-account json to file at GOOGLE_APPLICATION_CREDENTIALS
-      printf '%s' "$$GOOGLE_CLOUD_KEYFILE_JSON" > $$GOOGLE_APPLICATION_CREDENTIALS
-
-      # activate gcloud cli tools to use GOOGLE_APPLICATION_CREDENTIALS
-      gcloud auth activate-service-account --key-file $$GOOGLE_APPLICATION_CREDENTIALS
-
-  - id: 'Init setup'
-    name: 'cldcvr/cpi-config'
-    args:
-    - '-c'
-    - |
-      set -e
-      echo "Cloning the pipeline modules..."
-      mkdir -p {{pipeline_modules_path}}
-      git clone {{pipeline_module_git}} --branch {{pipeline_module_git_rev}} --single-branch {{pipeline_modules_path}}
   timeout: {{ pipeline_timeout_sec }}s
   queueTtl: {{ pipeline_queue_timeout_sec }}s
   {% if pipeline_logs_bucket %}logsBucket: 'gs://{{ pipeline_logs_bucket }}'{% endif %}
@@ -141,8 +108,6 @@ template: |
    {% if pipeline_machine_type %}machineType: {{ pipeline_machine_type }}{% endif %}
    {% if pipeline_disk_size_gb %}diskSizeGb: '{{ pipeline_disk_size_gb }}'{% endif %}
    env:
-   - '__VG_EXPORTED_ENV_NAMES={% for env_key in pipeline_env %}{{env_key}} {% endfor %}'
-   - '__VG_EXPORTED_SECRET_ENV_NAMES={% for env_key in pipeline_secret_env %}{{env_key}} {% endfor %}'
    {% for env_key, env_value in pipeline_env %}
    - '{{env_key}}={{ env_value }}'
    {% endfor %}

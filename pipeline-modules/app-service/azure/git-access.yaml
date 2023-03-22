@@ -23,6 +23,9 @@ inputs:
       title: Repository URL
       description: The repository to configure access to.
       type: string
+  required:
+    - git_remote_path
+    - git_login
   internal:
     - git_remote_path
     - git_login
