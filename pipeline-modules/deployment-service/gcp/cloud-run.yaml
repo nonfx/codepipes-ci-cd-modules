@@ -90,6 +90,8 @@ template: |
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set application_name = applicationName|lower %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
 
   steps:
   {% if job_type == 'deploy' %}
@@ -168,11 +170,8 @@ template: |
     args:
     - '-c'
     - |
-      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-      summary=`gcloud run services describe {{application_name}} --platform managed --region {{region}} --format 'value(status.url)'`
-      echo "Service URL="$summary >> summary.txt
-      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-      cat summary.txt;
+      export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
+      outputs.sh add "Service URL" `gcloud run services describe {{application_name}} --platform managed --region {{region}} --format 'value(status.url)'`
   {% else %}
   - id: 'Remove cloud run application'
     name: 'gcr.io/cloud-builders/gcloud'

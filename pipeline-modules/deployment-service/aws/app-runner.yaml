@@ -98,7 +98,7 @@ inputs:
 template: |
   ########################################################################################################################################################
   # The module creates json config file for source configuration and instance configuration                                                              #
-  # The module recieves a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
+  # The module receives a formatted list of pipeline env in {{ pipeline_env_file }},                                                                     #
   # So we don't have to worry about character escaping in this module.                                                                                   #
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
@@ -205,12 +205,9 @@ template: |
           else
               serviceUrl=$(aws apprunner update-service --service-arn $sa --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
           fi
-    post_build:
-      commands:
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-        - echo "Service URL=https://"$serviceUrl | tr -d '"' >> summary.txt;
-        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-        - cat summary.txt
+
+        - serviceUrl=$(echo $serviceUrl | tr -d '"') # remove the extra ""
+        - outputs.sh add "Service URL" "https://$serviceUrl"
       {% else %}
         - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
       {% endif %}

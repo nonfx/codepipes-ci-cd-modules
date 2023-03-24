@@ -61,21 +61,6 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-    pipeline_summary_var:
-      title: Pipeline Summary
-      description: This will create pipeline summary as per user request
-      type: array
-      default: []
-      items:
-        type: object
-        required: [Command, Name]
-        properties:
-          Command:
-            title: Command
-            type: string
-          Name:
-            title: Name
-            type: string
     ports:
       title: Ports
       description: Port used in services
@@ -149,7 +134,6 @@ inputs:
     - applicationName
     - environment
     - job_type
-    - pipeline_summary_var
 
 template: |
   {% set workspace = '' %}   {# has to be a persistent volume #}
