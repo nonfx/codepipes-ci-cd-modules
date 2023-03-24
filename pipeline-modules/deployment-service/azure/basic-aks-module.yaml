@@ -65,21 +65,6 @@ inputs:
       title: Cluster Resource Group
       description: Resource Group where cluster is located
       type: string
-    pipeline_summary_var:
-      title: Pipeline Summary
-      description: This will create pipeline summary as per user request
-      type: array
-      default: []
-      items:
-        type: object
-        required: [Name, Command]
-        properties:
-          Command:
-            title: Command
-            type: string
-          Name:
-            title: Name
-            type: string
     app_env:
       title: Application Environment
       description: Application Related Envs
@@ -148,7 +133,6 @@ inputs:
     - project
     - customer_bucket
     - job_type
-    - pipeline_summary_var
 
 template: |
   {% set workspace = '' %}   {# has to be a persistent volume #}
@@ -270,19 +254,7 @@ template: |
     {% if ports %}
     - script: |
             summary_command=$(kubectl get svc -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip})
-            cat <<EOF >>summary.txt
-            ###pipeline-summary-start###
-            {% if pipeline_summary_var -%}
-            {% for summary in pipeline_summary_var %}
-            $({{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s" {% endfor %})
-            {% else %}
-            Service URL=http://$summary_command
-            {% endif %}
-            ###pipeline-summary-end###
-            EOF
-            awk 'NF' summary.txt  > tmp.txt
-            mv tmp.txt summary.txt
-            cat summary.txt
+            outputs.sh add "Service URL" "http://$summary_command"
       displayName: "Pipeline Summary for {{applicationName}}"
       workingDirectory: {{ workingDir }}
       {% endif %}

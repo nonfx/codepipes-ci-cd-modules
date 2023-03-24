@@ -127,15 +127,6 @@ template: |
       helm repo add {{helm_chart_repo}} {{helm_chart_url}}
       helm upgrade --install {{applicationName}}-{{environment}} {{helm_chart_repo}}/{{helm_chart_name}} {%- if helm_chart_version != '' %}--version {{helm_chart_version}}{%- endif %} {%- if helm_values_path != '' %} -f {{helm_values_path}} {%- endif %} --namespace {{namespace}} --atomic --timeout {{deployment_timeout}}
       {%- endif %}
-  - id: 'Extract summary vars'
-    name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-      echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-      cat summary.txt;
   {% else %}
   - id: 'Uninstall application'
     name: 'gcr.io/$PROJECT_ID/helm'

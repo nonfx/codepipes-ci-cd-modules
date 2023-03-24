@@ -4,12 +4,10 @@ version: 1
 revision: 1
 displayName: Test Module
 description: Module for the integration test
-target: "test"
+target: ""
 keywords:
-  - test
 author: CloudCover
 meta: {}
-
 inputs:
   properties:
     echo_float:
@@ -24,27 +22,45 @@ inputs:
       title: Echo List value
       description: The List to echo to the log.
       type: array
+      default: []
       items:
         type: string
     echo_map:
       title: Echo Map value
       description: The Map to echo to the log.
       type: object
-      default: {"key":"val"}
+      default: {}
+      properties:
+        foo:
+          title: Foo
+          type: string
+          default: ""
     echo_string:
       title: Echo String value
       description: The string to echo to the log.
       type: string
+    check_secret:
+      title: Check secret string value
+      description: Value must be "Hello World"
+      type: string
+      default: "${TEST_SECRET:-}"
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: ""
   required:
     - echo_string
     - echo_int
     - echo_float
-    - echo_list
+  internal:
+    - working_dir
 template: |
   version: 0.2
   phases:
     build:
       commands:
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
         - echo "stringVal={{ echo_string }}"
         - echo "intVal={{ echo_int }}"
         - echo "floatVal={{ echo_float }}"
@@ -56,13 +72,13 @@ template: |
         {% for list_value in echo_list %}
         - echo "    {{ list_value }}"
         {% endfor %}
-    post_build:
-      commands:
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1
-        {% if pipeline_summary_var %}
-        - {% for summary in pipeline_summary_var %} {{ summary.Command }} | xargs -0 printf "{{ summary.Name }}=%s\n" >>  summary.txt 2>&1; {% endfor %}
-        {% endif %}
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1
-        - echo "Service URL=[test_module succeeded $(date)]" >> summary.txt 2>&1
-        - echo "###pipeline-summary-end###" >> summary.txt 2>&1
-        - cat summary.txt
+        - check_secret_result=$(if [ {{check_secret | cpi_quote}} = "Hello World" ]; then echo "PASS"; else echo "FAIL"; fi)
+        - echo "check_secret=$check_secret_result"
+        - |
+          var_prefix="test_module"
+          outputs.sh add "$var_prefix.echo_string" "{{ echo_string | cpi_quote }}"
+          outputs.sh add "$var_prefix.echo_int" "{{ echo_int }}"
+          outputs.sh add "$var_prefix.check_secret_result" "$check_secret_result"
+          outputs.sh add "$var_prefix.echo_float" "{{ echo_float }}"
+          outputs.sh add "$var_prefix.echo_map" "{{ echo_map | cpi_json | cpi_quote }}"
+          outputs.sh add "$var_prefix.echo_list" "{{ echo_list | cpi_json | cpi_quote }}"

@@ -144,18 +144,3 @@ template: |
       {% else %}
         - serverless remove
       {% endif %}
-    {% if job_type == 'deploy' %}
-    post_build:
-      commands:
-        - echo "###pipeline-summary-start###" >> summary.txt 2>&1;
-        - |
-          grab=$(sls info | sed -n "/endpoint:/,/functions:/p" | sed 's/endpoint:/ /g' | sed 's/functions:/ /g' | xargs)
-          count=1
-          while IFS= read -r line; do
-              replaceTxt='='
-              echo "$count ${line/ - /$replaceTxt}" >> summary.txt 
-              let "count+=1" 
-          done <<< "$grab"
-        - echo "###pipeline-summary-end###" >> summary.txt 2>&1;
-        - cat summary.txt
-    {% endif %}
