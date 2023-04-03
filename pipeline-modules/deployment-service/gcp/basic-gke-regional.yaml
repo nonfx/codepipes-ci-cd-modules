@@ -267,7 +267,7 @@ template: |
     - |
       
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
-      summary=$(retry.sh "kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}" 30 2)
+      summary=$(retry.sh run "kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}" 30 2)
       if [ ! -z "$summary" ]; then
         outputs.sh add "Service URL" "http://$summary"
       fi
