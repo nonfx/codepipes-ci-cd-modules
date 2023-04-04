@@ -304,7 +304,10 @@ template: |
           {% set kube_out_path="{.items[*].status.loadBalancer.ingress[*].hostname}" %}
           {% set url_protocol= "http" %}
           {% endif %}
-        - summary=$(retry.sh run 'kubectl get ingress -n {{ applicationName | cpi_quote }} -o=jsonpath={{ kube_out_path | cpi_quote }}' 30 2)
+        - cd {{workspace}}
+        - |
+          echo 'kubectl get ingress -n {{ applicationName| cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
+          summary=$(retry.sh run "bash ./cmd.sh" 30 2)
         - outputs.sh add "Service URL" "{{url_protocol}}://$summary"
       {% else %}
         - helm uninstall {{applicationName}}-{{environment}}
