@@ -297,18 +297,20 @@ template: |
         - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
         - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
 
-          {% if ingress && ingress.0.domain %}
-          {% set kube_out_path="{.items[*].metadata.annotations.external-dns\\.alpha\\.kubernetes\\.io\\/hostname}" %}
-          {% set url_protocol= "https" %}
-          {% else %}
-          {% set kube_out_path="{.items[*].status.loadBalancer.ingress[*].hostname}" %}
-          {% set url_protocol= "http" %}
-          {% endif %}
+          {% if ports %}
+            {% if ingress && ingress.0.domain %}
+              {% set kube_out_path="{.items[*].metadata.annotations.external-dns\\.alpha\\.kubernetes\\.io\\/hostname}" %}
+              {% set url_protocol= "https" %}
+            {% else %}
+              {% set kube_out_path="{.items[*].status.loadBalancer.ingress[*].hostname}" %}
+              {% set url_protocol= "http" %}
+            {% endif %}
         - cd {{workspace}}
         - |
           echo 'kubectl get ingress -n {{ applicationName| cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
           summary=$(retry.sh run "bash ./cmd.sh" 30 2)
         - outputs.sh add "Service URL" "{{url_protocol}}://$summary"
+          {% endif %}
       {% else %}
         - helm uninstall {{applicationName}}-{{environment}}
       {% endif %}
