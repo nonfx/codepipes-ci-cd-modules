@@ -1,0 +1,97 @@
+provisioner: azure
+name: azure-web-app-container-deploy
+version: 1
+revision: 1
+displayName: "Azure web app deployment with Container"
+description: "Deploy web app with Container Image"
+target: "deployment-template"
+keywords: ["serverless","web-app"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - ContainerImage
+inputs:
+  type: object
+  properties:
+    applicationName:
+      title: Application name
+      description: A Code Pipes application name
+      type: string
+      default: latest
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""      
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    web_app_name:
+      title: Web App Name
+      description: Web App Name, to link this variable to a terraform output use this syntax ${terraform.webapp_name.value} where webapp_name is output variable key.
+      type: string
+    pool_name:
+      title: Pool Name
+      description: Use selfhosted agent by proving agent pool name.
+      type: string
+      default: ""
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    service_connection_string:
+      title: Service Connection String Name
+      description: Service Connection Name which created on Azure devops
+      type: string
+      default: "$(CPI__azure_subscription)"
+
+  required: ["web_app_name"]
+  internal:
+    - applicationName
+    - job_type
+    - repo_dir
+    - tag
+    - repository    
+template: |
+  {% set workspace = '$(Build.SourcesDirectory)' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  steps:
+  - script: |
+        cat .env | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            echo "-$name $value " >> config.txt
+        done;
+        cat .secret.env | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            echo "-$name $value " >> config.txt
+        done;
+        ls -la
+        config_var="$(cat config.txt | tr -d '\n')"
+        echo "##vso[task.setvariable variable=config_map]$config_var"
+    displayName: 'Setting up appSettings Env '    
+  {% if job_type == 'deploy' %}
+  - task: AzureWebAppContainer@1
+    displayName: 'Azure Web App on Container Deploy'
+    inputs:
+      azureSubscription: {{service_connection_string}}
+      appName: {{ web_app_name }}
+      imageName: {{repository}}:{{tag}}      
+      appSettings: '$(CONFIG_MAP)'
+  {% else %}
+  - script: |
+        echo "Please update the IAC to remove web-app" 
+  {% endif %}
+
+
