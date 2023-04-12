@@ -21,7 +21,7 @@ inputs:
       default: latest
     deployment_method:
       title: Artifact Type
-      description: Define The artifact type as ZIP or Container which deploy on Webapp
+      description: Choose artifact type as ZIP or Container which deploy on Webapp
       type: string
       default: Container
       enum:
