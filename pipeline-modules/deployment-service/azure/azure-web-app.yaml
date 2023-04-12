@@ -21,7 +21,7 @@ inputs:
       default: latest
     deployment_method:
       title: Artifact Type
-      description: The artifact type you want to deploy to your WebApp ZIP file or Container Image
+      description: Define The artifact type as ZIP or Container which deploy on Webapp
       type: string
       default: Container
       enum:
@@ -47,7 +47,7 @@ inputs:
       default: deploy
     feed_name:
       title: Artifact Feed Name
-      description: Azure devops Artifact Feed name where App artifact will download as ZIP
+      description: Azure devops Artifact Feed name where App artifact will download as ZIP.Note:This value is required if Artifact Type:Zip
       type: string
       default: "$(CPI__artifact_feed)"      
     repository:
@@ -57,7 +57,7 @@ inputs:
       default: ""      
     tag:
       title: Container tag
-      description: Tagged container will deploy ,this parameter required with deploy artifact type is container
+      description: Tagged container will deploy ,this parameter required with deploy artifact type is container 
       type: string
       default: latest
     service_connection_string:
