@@ -131,7 +131,7 @@ template: |
 
   {% if deployment_method == 'Container' %}   
   - task: AzureWebAppContainer@1
-    displayName: 'Deploy Conatiner to WebApp'
+    displayName: 'Deploy Container to WebApp'
     inputs:
       azureSubscription: {{service_connection_string}}
       appName: {{ web_app_name }}
