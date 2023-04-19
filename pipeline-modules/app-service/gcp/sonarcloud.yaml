@@ -64,18 +64,9 @@ template: |
   steps:
   - id: 'Run scan on SonarCloud'
     name: gcr.io/codepipes-staging/sonar-scanner-cli
+    entrypoint: 'bash'
     args:
-    - 'sonar-scanner'
-    - '-Dsonar.host.url={{ sonar_cloud_url }}'
-    - '-Dsonar.login={{ sonar_cloud_login_token }}'
-    - '-Dsonar.organization={{ sonar_cloud_org }}'
-    {% if sonar_config_file -%}
-    - '-Dproject.settings={{ git_local_path }}/{{ sonar_config_file }}'
-    {% else -%}
-    - '-Dsonar.projectKey={{ sonar_cloud_project_key }}'
-    {%- endif %}
-    - '-Dsonar.projectBaseDir={{ git_local_path }}'
-    - '-Dsonar.branch.name={{ git_checkout_target }}'
-    - '-Dsonar.go.coverage.reportPaths={{ coverage_file }}'
-    - '-Dsonar.qualitygate.wait=true'
-    - '-Dsonar.verbose={{ sonar_verbose_log }}'
+    - '-c'
+    - |
+      export SONAR_TOKEN={{sonar_cloud_login_token}} 
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} 
