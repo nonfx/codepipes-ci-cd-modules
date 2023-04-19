@@ -55,8 +55,31 @@ inputs:
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
       default: "coverage.out"
+    event_type:
+      title: Sonar Run on
+      description: Choose option from Branch or PR on which sonar scan will run.
+      type: string
+      default: Branch
+      enum:
+        - Branch
+        - PR
+    sonar_pullrequest_base:
+      title: Sonar pullrequest base branch
+      description: Here define the base branch from which created your PR. This value only required when Sonar Run on PR
+      type: string
+      default: "main"        
+    sha_tag:
+      title: SHA Git commit tag
+      description: Resloved Commit hash for Input git artifact
+      type: string 
+    pr_number:
+      title: PR Number ID
+      description: Enter PR number ID
+      type: string
+      default: "99"                        
   internal:
     - git_checkout_target
+    - sha_tag
   required:
     - sonar_cloud_login_token
     - sonar_cloud_org
@@ -68,5 +91,10 @@ template: |
     args:
     - '-c'
     - |
-      export SONAR_TOKEN={{sonar_cloud_login_token}} 
-      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} 
+      export SONAR_TOKEN={{sonar_cloud_login_token}}
+      {% if event_type == 'Branch' %}
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
+      {% endif %}
+      {% if event_type == 'PR' %}
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key={{pr_number}} -Dsonar.pullrequest.branch={{ git_checkout_target }} -Dsonar.pullrequest.base={{sonar_pullrequest_base}}
+      {% endif %}
