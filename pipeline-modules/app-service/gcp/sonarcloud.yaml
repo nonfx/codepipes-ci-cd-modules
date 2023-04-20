@@ -51,8 +51,8 @@ inputs:
       type: string
       default: "coverage.out"
     event_type:
-      title: Sonar Run on
-      description: Choose option from Branch or PR on which sonar scan will run.
+      title: SonarQube analysis on
+      description: Choose option for SonarQube analysis on Branch or PR .
       type: string
       default: PR
       enum:
@@ -91,7 +91,7 @@ template: |
       {% if event_type == 'Branch' %}
       sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir=. -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
       {% endif %}
-      
+
       {% if event_type == 'PR' %}
       export PR_NUMBER=$(git ls-remote |grep '{{sha_tag}}'|awk '/refs\/pull\/.*\/./{split($2,a,"/");print a[3]}')
       echo "PR Number: $$PR_NUMBER"
