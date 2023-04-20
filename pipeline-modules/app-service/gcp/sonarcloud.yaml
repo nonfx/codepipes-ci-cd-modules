@@ -60,7 +60,7 @@ inputs:
         - PR
     sonar_pullrequest_base:
       title: Sonar pull request base branch
-      description: Here define the base branch from which created your PR. This value only required when Sonar Run on PR
+      description: Here define the base branch from which created your PR. This value only required when SonarQube analysis on on PR
       type: string
       default: "main"        
     sha_tag:
