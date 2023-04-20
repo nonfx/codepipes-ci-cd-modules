@@ -17,11 +17,6 @@ inputs:
       description: Git branch, tag or commit hash to checkout.
       type: string
       default: ""
-    git_local_path:
-      title: Local Clone Directory
-      description: The name of a new directory to clone into.
-      type: string
-      default: repo
     sonar_cloud_url:
       title: SonarCloud URL
       description: URL for SonarCloud endpoint
@@ -59,12 +54,12 @@ inputs:
       title: Sonar Run on
       description: Choose option from Branch or PR on which sonar scan will run.
       type: string
-      default: Branch
+      default: PR
       enum:
         - Branch
         - PR
     sonar_pullrequest_base:
-      title: Sonar pullrequest base branch
+      title: Sonar pull request base branch
       description: Here define the base branch from which created your PR. This value only required when Sonar Run on PR
       type: string
       default: "main"        
@@ -72,14 +67,14 @@ inputs:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
       type: string 
-    pr_number:
-      title: PR Number ID
-      description: Enter PR number ID
-      type: string
-      default: "99"                        
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string                            
   internal:
     - git_checkout_target
     - sha_tag
+    - working_dir    
   required:
     - sonar_cloud_login_token
     - sonar_cloud_org
@@ -88,13 +83,17 @@ template: |
   - id: 'Run scan on SonarCloud'
     name: gcr.io/codepipes-staging/sonar-scanner-cli
     entrypoint: 'bash'
+    dir: {{ working_dir }}
     args:
     - '-c'
     - |
       export SONAR_TOKEN={{sonar_cloud_login_token}}
       {% if event_type == 'Branch' %}
-      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir=. -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
       {% endif %}
       {% if event_type == 'PR' %}
-      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ git_local_path }}/{{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{ git_local_path }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key={{pr_number}} -Dsonar.pullrequest.branch={{ git_checkout_target }} -Dsonar.pullrequest.base={{sonar_pullrequest_base}}
+
+      export PR_NUMBER=$(git ls-remote |grep '{{sha_tag}}'|awk '/refs\/pull\/.*\/./{split($2,a,"/");print a[3]}')
+      echo "PR Number: $$PR_NUMBER"
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir=. -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key=$$PR_NUMBER -Dsonar.pullrequest.branch={{ git_checkout_target }} -Dsonar.pullrequest.base={{sonar_pullrequest_base}}
       {% endif %}
