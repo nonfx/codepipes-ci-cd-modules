@@ -80,6 +80,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
   steps:
   - script: |
         cat .env | while IFS= read -r line; do
@@ -111,7 +112,7 @@ template: |
       downloadDirectory: '$(System.DefaultWorkingDirectory)'
       feedsToUse: 'internal'
       vstsFeed: '{{feed_name}}'
-      vstsFeedPackage: '{{applicationName}}.zip'
+      vstsFeedPackage: '{{fmt_app_name}}.zip'
       vstsPackageVersion: '*'
       publishedPackageVar: 'codepipes'
   {% endif %}    
@@ -124,7 +125,7 @@ template: |
       azureSubscription: {{service_connection_string}}
       appType: webApp
       appName: {{ web_app_name }}
-      package: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
+      package: $(System.DefaultWorkingDirectory)/{{fmt_app_name}}.zip
       appSettings: '$(CONFIG_MAP)'
       deploymentMethod: 'auto'
   {% endif %}

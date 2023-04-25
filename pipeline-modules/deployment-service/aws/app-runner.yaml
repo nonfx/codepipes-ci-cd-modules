@@ -103,7 +103,8 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}  
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -132,7 +133,7 @@ template: |
           echo "}" >> env.json;
 
           #Delete all secrets
-          secret_list=$(aws secretsmanager list-secrets --query 'SecretList[?Description && starts_with(Description, `{{applicationName}}-{{environment}}-`) == `true`].[ARN]' --output text)
+          secret_list=$(aws secretsmanager list-secrets --query 'SecretList[?Description && starts_with(Description, `{{service_name}}-`) == `true`].[ARN]' --output text)
           # Delete each secret in the list
           for secret_arn in $secret_list
           do
@@ -145,7 +146,7 @@ template: |
           cat {{pipeline_secret_file}} | while IFS= read -r line; do
             value=${line#*=}
             name=${line%%=*}
-            arn=$(aws secretsmanager create-secret --name "cp-$(date +%s)-$RANDOM" --description "{{applicationName}}-{{environment}}-$name" --secret-string $value --query 'Service.ServiceUrl' --query ARN --output text)
+            arn=$(aws secretsmanager create-secret --name "cp-$(date +%s)-$RANDOM" --description "{{service_name}}-$name" --secret-string $value --query 'Service.ServiceUrl' --query ARN --output text)
             if [ $sc -ge $sl ] #Check to add or remove trailing comma while writing JSON
             then
                 printf '"%s":"%s"\n' "$name" "$arn" >> env_secrets.json
@@ -199,9 +200,9 @@ template: |
             {% endif %}
             }
           }' >> network.json
-          sa=$(aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text)
+          sa=$(aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{service_name}}`].ServiceArn' --output text)
           if [ -z "$sa" ]; then
-              serviceUrl=$(aws apprunner create-service --service-name  {{applicationName}}-{{environment}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
+              serviceUrl=$(aws apprunner create-service --service-name  {{service_name}} --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
           else
               serviceUrl=$(aws apprunner update-service --service-arn $sa --source-configuration file://app.json --instance-configuration file://instance.json --network-configuration file://network.json --query 'Service.ServiceUrl')
           fi
@@ -209,5 +210,5 @@ template: |
         - serviceUrl=$(echo $serviceUrl | tr -d '"') # remove the extra ""
         - outputs.sh add "Service URL" "https://$serviceUrl"
       {% else %}
-        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{applicationName}}-{{environment}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
+        - aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`{{service_name}}`].ServiceArn' --output text |  xargs -I{} aws apprunner delete-service --service-arn {}
       {% endif %}

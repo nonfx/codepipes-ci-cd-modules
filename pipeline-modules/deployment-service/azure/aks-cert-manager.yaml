@@ -141,7 +141,11 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/cert-manager" %}
-
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial:"-" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
+  {% set fmt_proj_name = projectName | cpi_replacespecial:"-" %}
+  {% set fmt_proj = project | cpi_replacespecial:"-" %}
   steps:
     - task: HelmInstaller@0
       inputs:
@@ -166,10 +170,10 @@ template: |
           cd {{helm_chart_path}} ;
           touch .helmignore;
           rm -f values.yaml;
-          echo "projectName: {{projectName}}
-          applicationName: {{applicationName}} #auto
-          environment:  {{environment}} #auto
-          project: {{project}} #auto
+          echo "projectName: {{fmt_proj_name}}
+          applicationName: {{fmt_app_name}} #auto
+          environment:  {{fmt_env_name}} #auto
+          project: {{fmt_proj}} #auto
           managedCertificate: {{managedCertificate}}
           azure:
               clientID: $(ARM_CLIENT_ID)
@@ -203,14 +207,14 @@ template: |
     - script: |
             cd {{helm_chart_path}} ;
             cat values.yaml;
-            helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
-      displayName: "Helm Deploy {{applicationName}}"
+            helm upgrade --install -f values.yaml {{service_name}} . #--atomic --timeout {{deployment_timeout}} --create-namespace
+      displayName: "Helm Deploy {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             cd {{helm_chart_path}} ;
             helm list;
-            helm uninstall {{applicationName}}-{{environment}};
-      displayName: "Helm Uninstall {{applicationName}}"
+            helm uninstall {{service_name}};
+      displayName: "Helm Uninstall {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% endif %}
