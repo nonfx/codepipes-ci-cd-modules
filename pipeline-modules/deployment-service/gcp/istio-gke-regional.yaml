@@ -294,6 +294,10 @@ template: |
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/istio-gke" %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial:"-" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
+  {% set fmt_proj = project | cpi_replacespecial:"-" %}
 
   steps:
   - id: 'gcloud container setup'
@@ -343,9 +347,9 @@ template: |
       fi
 
       echo "projectName: {{projectName}}
-      applicationName: {{applicationName}} #auto
-      environment:  {{environment}} #auto
-      project: {{project}} #auto
+      applicationName: {{fmt_app_name}} #auto
+      environment:  {{fmt_env_name}} #auto
+      project: {{fmt_proj}} #auto
       {% if istioInjection %}
       istioInjection: enabled
       {% else %}
@@ -479,9 +483,9 @@ template: |
     - '-c'
     - |
       cd {{helm_chart_path}} ;
-      helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}}
-      kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
-      kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
+      helm upgrade --install -f values.yaml {{service_name}} . --atomic --timeout {{deployment_timeout}}
+      kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
+      kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}
   - id: 'Extract summary vars'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -489,7 +493,7 @@ template: |
     - '-c'
     - |
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
-      summary=$(retry.sh run "kubectl get ingress -n {{applicationName}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}" 30 2)
+      summary=$(retry.sh run "kubectl get ingress -n {{fmt_app_name}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}" 30 2)
       if [ ! -z "$summary" ]; then
         outputs.sh add "Service URL" "http://$summary"
       fi
@@ -502,5 +506,5 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm list;
-      helm uninstall {{applicationName}}-{{environment}};
+      helm uninstall {{service_name}};
   {% endif %}

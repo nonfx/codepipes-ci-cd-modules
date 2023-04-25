@@ -92,6 +92,8 @@ template: |
   {% set application_name = applicationName|lower %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
+  {% set fmt_proj = project | cpi_replacespecial:"-" %}
 
   steps:
   {% if job_type == 'deploy' %}
@@ -123,8 +125,8 @@ template: |
         template:
           metadata:
             labels:
-              codepipes-project: {{project}}
-              codepipes-environment: {{environment}}
+              codepipes-project: {{fmt_proj}}
+              codepipes-environment: {{fmt_env_name}}
             {%- if vpcConnector %}
             annotations:
               run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}

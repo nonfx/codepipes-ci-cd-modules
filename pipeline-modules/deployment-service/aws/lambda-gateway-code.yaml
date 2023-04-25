@@ -106,6 +106,8 @@ template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -119,12 +121,12 @@ template: |
       commands:
         - |
           echo "
-          service: {{applicationName}}
+          service: {{fmt_app_name}}
           useDotenv: true
           frameworkVersion: '3'
           provider:
             name: aws
-            stage: {{environment}}
+            stage: {{fmt_env_name}}
             runtime: {{runtime}}
             memorySize: {{memory}}
             timeout: {{timeout}}
