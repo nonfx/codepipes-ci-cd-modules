@@ -82,16 +82,16 @@ template: |
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   steps:
   - script: |
-        cat .env | while IFS= read -r line; do
-            value=${line#*=}
-            name=${line%%=*}
-            echo
-        cat .secret.env | while IFS= read -r line; do
+        cat {{pipeline_env_file}} | while IFS= read -r line; do
             value=${line#*=}
             name=${line%%=*}
             echo "-$name $value " >> config.txt
         done;
-        ls -la
+        cat .secret.env | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            echo "-$name $value " >> config.txt
+        done;        
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
         cd {{source_code_path}}/{{repo_dir}}
