@@ -1,0 +1,47 @@
+provisioner: gcp
+name: docker-scan
+version: 1
+revision: 1
+displayName: Docker Scan
+description: Scans docker image vulnarabilities using trivy
+target: ""
+category: security
+keywords:
+  - docker
+  - Scan
+  - security
+  - vulnarabilities
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
+template: |
+  steps:
+  - id: 'Docker Scan image'  
+    name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    dir: {{ working_dir }}
+    args:
+    - '-c'
+    - |
+      echo  "Run Trivy to scan the Docker image for vulnerabilities..."
+      curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.40.0
+      trivy  --version
+      trivy image '{{container_repository}}:{{container_tag}}'
