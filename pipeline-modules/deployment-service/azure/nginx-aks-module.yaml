@@ -63,6 +63,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
 
   steps:
     - task: HelmInstaller@0
@@ -81,13 +82,13 @@ template: |
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update
           helm install ingress-nginx ingress-nginx/ingress-nginx --create-namespace --namespace $NAMESPACE --set controller.service.loadBalancerIP={{publicIP}} --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-resource-group"={{resourceGroup}}
-      displayName: "Helm Deploy {{applicationName}}"
+      displayName: "Helm Deploy {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             NAMESPACE={{namespace}}
             helm uninstall nginx-ingress --namespace {{namespace}};
             kubectl delete ns {{namespace}};
-      displayName: "Helm Uninstall {{applicationName}}"
+      displayName: "Helm Uninstall {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

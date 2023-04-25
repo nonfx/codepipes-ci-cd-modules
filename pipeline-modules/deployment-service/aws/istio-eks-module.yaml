@@ -281,6 +281,11 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/istio-eks" %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial:"-" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
+  {% set fmt_proj_name = projectName | cpi_replacespecial:"-" %}
+  {% set fmt_proj = project | cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -316,10 +321,10 @@ template: |
           export docker_registry="index.docker.io"
           fi
 
-          echo "projectName: {{projectName}}
-          applicationName: {{applicationName}} #auto
-          environment:  {{environment}} #auto
-          project: {{project}} #auto
+          echo "projectName: {{fmt_proj_name}}
+          applicationName: {{fmt_app_name}} #auto
+          environment:  {{fmt_env_name}} #auto
+          project: {{fmt_proj}} #auto
           manageCertificate: {{manageCertificate}}
           {% if istioInjection %}
           istioInjection: enabled
@@ -435,11 +440,11 @@ template: |
           printf '  %s: %s\n' $name $value >> values.yaml
           done; 
   
-        - helm upgrade --install -f values.yaml {{applicationName}}-{{environment}} . #--atomic --timeout {{deployment_timeout}}
-        - kubectl rollout restart deployment {{applicationName}}-deployment -n {{applicationName}}
-        - kubectl rollout status deployment {{applicationName}}-deployment   -n {{applicationName}}
+        - helm upgrade --install -f values.yaml {{service_name}} . #--atomic --timeout {{deployment_timeout}}
+        - kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
+        - kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}
 
       {% else %}
         - helm list 
-        - helm uninstall {{applicationName}}-{{environment}}
+        - helm uninstall {{service_name}}
       {% endif %}

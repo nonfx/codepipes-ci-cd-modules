@@ -63,6 +63,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
 
   steps:
     - task: HelmInstaller@0
@@ -83,12 +84,12 @@ template: |
           kubectl apply -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer-windows.yaml
           kubectl create secret generic secrets-store-creds --from-literal clientid=$(ARM_CLIENT_ID) --from-literal clientsecret=$(ARM_CLIENT_SECRET)
           kubectl label secret secrets-store-creds secrets-store.csi.k8s.io/used=true
-      displayName: "Helm Deploy {{applicationName}}"
+      displayName: "Helm Deploy {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             helm uninstall csi --namespace {{namespace}};
             kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
-      displayName: "Helm Uninstall {{applicationName}}"
+      displayName: "Helm Uninstall {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

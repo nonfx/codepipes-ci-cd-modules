@@ -57,6 +57,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
 
   steps:
     - task: HelmInstaller@0
@@ -74,11 +75,11 @@ template: |
           helm repo add spv-charts https://charts.spvapi.no
           helm repo update
           helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace {{namespace}} --create-namespace 
-      displayName: "Helm Deploy {{applicationName}}"
+      displayName: "Helm Deploy {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% else %}
     - script: |
             helm uninstall akv2k8s --namespace {{namespace}};
-      displayName: "Helm Uninstall {{applicationName}}"
+      displayName: "Helm Uninstall {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% endif %}

@@ -84,6 +84,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set source_code_path = workspace|add:'/source_code' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   steps:
   - id: 'gcloud container setup'
@@ -113,7 +114,7 @@ template: |
       kubectl create ns {{namespace}}
       {% endif %}
       cd {{source_code_path}}/{{helm_chart_path}} ;
-      helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{applicationName}}-{{environment}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
+      helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{service_name}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
   {% else %}
   - id: 'Uninstall application'
     name: 'gcr.io/$PROJECT_ID/helm'
@@ -122,5 +123,5 @@ template: |
     - '-c'
     - |
       cd {{source_code_path}}/{{helm_chart_path}} ;
-      helm uninstall {{applicationName}}-{{environment}} --namespace {{namespace}};
+      helm uninstall {{service_name}} --namespace {{namespace}};
   {% endif %}
