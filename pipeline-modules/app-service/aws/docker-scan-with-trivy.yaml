@@ -1,0 +1,65 @@
+provisioner: aws
+name: docker-scan-with-trivy
+version: 1
+revision: 1
+displayName: Docker Scan witg Trivy
+description: Scans docker image vulnarabilities using Trivy
+target: ""
+category: security
+keywords:
+  - docker
+  - Scan
+  - security
+  - vulnarabilities
+  - trivy
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    trivy_version:
+      title: Trivy Version
+      description: Trivy Version in i.e- vX.X.X
+      type: string
+      default: v0.40.0
+    severity:
+      title: Severity
+      description: The severities (CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN) to include in the scan (comma sperated). Defaults to CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN
+      type: string
+      default: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+    trivy_args:
+      title: Extra Trivy Arguments
+      description: Arguments for Trivy command
+      type: array
+      default: []
+      items:
+        type: string
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
+template: |
+  version: 0.2
+  env:
+    shell: bash
+  phases:
+    install:
+      commands:
+      - echo  "Running Trivy to scan the Docker image for vulnerabilities..."
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin {{trivy_version}}
+      - trivy  --version
+    build:
+      commands:
+      - trivy image {% if severity %} --severity {{severity}}  {% endif %}  {% for arg in trivy_args %} {{ arg }} {% endfor %} '{{container_repository}}:{{container_tag}}'
