@@ -62,5 +62,4 @@ template: |
       echo  "Running Trivy to scan the Docker image for vulnerabilities..."
       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin {{trivy_version}}
       trivy  --version
-      trivy  --help 
       trivy image {% if severity %} --severity {{severity}}  {% endif %}  {% for arg in trivy_args %} {{ arg }} {% endfor %} '{{container_repository}}:{{container_tag}}'
