@@ -2,7 +2,7 @@ provisioner: aws
 name: docker-scan-with-trivy
 version: 1
 revision: 1
-displayName: Docker Scan witg Trivy
+displayName: Docker Scan with Trivy
 description: Scans docker image vulnarabilities using Trivy
 target: ""
 category: security
