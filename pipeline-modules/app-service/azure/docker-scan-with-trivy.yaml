@@ -38,7 +38,7 @@ inputs:
       title: Severity
       description: The severities (CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN) to include in the scan (comma sperated). Defaults to CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN
       type: string
-      default: 'HIGH,CRITICAL'
+      default: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
     trivy_args:
       title: Extra Trivy Arguments
       description: Arguments for Trivy command
@@ -46,11 +46,6 @@ inputs:
       default: []
       items:
         type: string
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
   internal:
     - container_repository
     - container_tag
