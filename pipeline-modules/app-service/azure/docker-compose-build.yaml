@@ -1,0 +1,68 @@
+provisioner: azure
+name: docker-compose-build
+version: 1
+revision: 1
+displayName: Docker Compose Build
+description: Build docker image with docker compose
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+  - Push
+  - Docker-compose
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_compose_service_name:
+      title: Service Name
+      description: "Service Name which need to build
+        \ ,Note: Make sure Service name  must pe present in docker-compose.yaml"
+      type: string
+    enable_docker_buildkit:
+      title: Enable docker  build kit
+      description: This input enable DOCKER_BUILDKIT
+      type: boolean
+      default: true
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+  required:
+    - docker_compose_service_name      
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
+template: |
+  steps:
+  - script: |
+      pwd
+      ls -la
+      echo after
+      cd .. && ls -la 
+    displayName: 'Test Build'
+    workingDirectory: {{ working_dir }}
+
+  - script: |
+      {% if enable_docker_buildkit == true %}
+      export DOCKER_BUILDKIT=1
+      {% endif %}
+      set -e
+      docker compose build {{ docker_compose_service_name }}
+      {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}
+      echo Docker compose created the image- $image_name ......
+      echo Tagging image with container_tag - {{container_repository}}:{{container_tag}}
+      docker tag $image_name {{container_repository}}:{{container_tag}}
+    displayName: 'Docker Compose Build'
+    workingDirectory: {{ working_dir }}
