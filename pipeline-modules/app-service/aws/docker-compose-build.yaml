@@ -1,0 +1,73 @@
+provisioner: aws
+name: docker-compose-build
+version: 1
+revision: 1
+displayName: Docker Compose Build
+description: Build the container image using docker compose
+target: ""
+category: containerise
+keywords:
+  - Docker
+  - Build
+  - Push
+  - Docker-compose
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    docker_compose_service_name:
+      title: Service Name
+      description: "Service Name which need to build
+
+        \ ,Note: Make sure Service name  must pe present in docker-compose.yaml"
+      type: string
+    enable_docker_buildkit:
+      title: Enable docker  build kit
+      description: This input enable DOCKER_BUILDKIT
+      type: boolean
+      default: true
+    container_repository:
+      title: Container repository
+      description: Complete repository path
+      type: string
+    container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+  required:
+    - docker_compose_service_name      
+  internal:
+    - container_repository
+    - container_tag
+    - working_dir
+template: |
+  version: 0.2
+  env:
+    shell: bash
+  phases:
+    install:
+      commands:
+        - DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+        - mkdir -p $DOCKER_CONFIG/cli-plugins
+        - curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+        - chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose        
+    build:
+      commands:
+          {% if enable_docker_buildkit == true %}
+        - export DOCKER_BUILDKIT=1
+          {% endif %}
+        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - ls -la
+        - set -e  
+        - docker compose build {{ docker_compose_service_name }}
+        - {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}
+        - echo "Docker compose created the image- $image_name ......"
+        - echo "Tagging image with container_tag - {{container_repository}}:{{container_tag}}"
+        - docker tag $image_name {{container_repository}}:{{container_tag}}
+
