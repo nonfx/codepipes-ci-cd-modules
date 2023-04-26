@@ -47,14 +47,6 @@ inputs:
 template: |
   steps:
   - script: |
-      pwd
-      ls -la
-      echo after
-      cd .. && ls -la 
-    displayName: 'Test Build'
-    workingDirectory: {{ working_dir }}
-
-  - script: |
       {% if enable_docker_buildkit == true %}
       export DOCKER_BUILDKIT=1
       {% endif %}
