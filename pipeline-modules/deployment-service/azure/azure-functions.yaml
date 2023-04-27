@@ -57,7 +57,15 @@ inputs:
       description: Service Connection Name which created on Azure devops
       type: string
       default: "$(CPI__azure_subscription)"
- 
+    deployment_method:
+      title: Deployment method 
+      description: Choose Value from auto (Auto-detect), zipDeploy (Zip Deploy), runFromPackage (Zip Deploy with Run From Package(with this option Files in the wwwroot folder become read-only)).Default value- auto
+      type: string
+      default: auto
+      enum:
+        - auto
+        - zipDeploy
+        - runFromPackage 
   required: 
     - function_app_name
   internal:
@@ -69,7 +77,9 @@ inputs:
 template: |
   {% set workspace = '$(Build.SourcesDirectory)' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
+  {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   steps:
   - script: |
         cat {{pipeline_env_file}} | while IFS= read -r line; do
@@ -77,6 +87,11 @@ template: |
             name=${line%%=*}
             echo "-$name $value " >> config.txt
         done;
+        cat .secret.env | while IFS= read -r line; do
+            value=${line#*=}
+            name=${line%%=*}
+            echo "-$name $value " >> config.txt
+        done;        
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
         cd {{source_code_path}}/{{repo_dir}}
@@ -104,15 +119,15 @@ template: |
       rootFolderOrFile: "$(System.DefaultWorkingDirectory)/azure-functions-code"
       includeRootFolder: false
       archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}-$(sha_tag).zip"
-  
+
   - script: |
         echo 'List the file'
         cd '$(System.DefaultWorkingDirectory)/azure-functions-code' && ls -la     
         echo 'list zip file'
         cd $(System.DefaultWorkingDirectory)
         ls -la
-    displayName: "List file"
-              
+    displayName: "List file" 
+
   {% if job_type == 'deploy' %}
   - task: AzureFunctionApp@1
     displayName: 'Deploy Azure function'
@@ -122,6 +137,7 @@ template: |
       appName: {{ function_app_name }}
       package: "$(System.DefaultWorkingDirectory)/{{applicationName}}-$(sha_tag).zip"
       appSettings: '$(CONFIG_MAP)'
+      deploymentMethod: '{{deployment_method}}'
   {% else %}
   - script: |
         echo "Please delete the function from the Class and redeploy" 
