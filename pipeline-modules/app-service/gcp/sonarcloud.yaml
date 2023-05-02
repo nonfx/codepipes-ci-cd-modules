@@ -76,7 +76,7 @@ template: |
     - |
       export SONAR_TOKEN={{sonar_cloud_login_token}}
       echo "Webhook Event event_type : $$event_type"
-
+      set -x
       if [ "$$event_type" == "pull_request" ]; then
       echo "Sonar analysis type: Pull request"
       echo "PR Number: $$git_pr_key"
