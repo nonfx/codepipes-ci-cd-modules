@@ -55,31 +55,41 @@ inputs:
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
       default: "coverage.out"
-    event_type:
+    analysis_type:
       title: SonarQube analysis on
       description: Choose option for SonarQube analysis on Branch or PR .
       type: string
       default: PR
       enum:
         - Branch
-        - PR
-    sonar_pullrequest_base:
-      title: Sonar pull request base branch
-      description: Here define the base branch from which created your PR. This value only required when SonarQube analysis on on PR
-      type: string
-      default: "main"        
-    sha_tag:
-      title: SHA Git commit tag
-      description: Resloved Commit hash for Input git artifact
-      type: string 
+        - PR       
     working_dir:
       title: Working directory
       description: The current working directory to execute command
-      type: string                            
+      type: string
+    event_type:
+      title: Webhook Event type
+      description: Webhook Event type pull_request or push.
+      type: string
+    pr_number:
+      title: Pull request Number
+      description: Pull request Number
+      type: string 
+    base_branch:
+      title: Pull request Base Branch
+      description: Pull request Base Branch from  where PR has been created.
+      type: string 
+    pull_req_branch:
+      title: Pull request Branch
+      description: Pull request branch
+      type: string                                                     
   internal:
     - git_checkout_target
-    - sha_tag
-    - working_dir    
+    - working_dir
+    - event_type
+    - pr_number
+    - base_branch
+    - pull_req_branch     
   required:
     - sonar_cloud_login_token
     - sonar_cloud_org
@@ -93,13 +103,17 @@ template: |
     - '-c'
     - |
       export SONAR_TOKEN={{sonar_cloud_login_token}}
-      {% if event_type == 'Branch' %}
+      echo "event_type : {{event_type}}"
+      {% if event_type=='push'  %}
+      echo "Sonar analysis type: Branch"
       sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
       {% endif %}
 
-      {% if event_type == 'PR' %}
-      export PR_NUMBER=$(git ls-remote |grep '{{sha_tag}}'|awk '/refs\/pull\/.*\/./{split($2,a,"/");print a[3]}')
-      echo "PR Number: $$PR_NUMBER"
-      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key=$$PR_NUMBER -Dsonar.pullrequest.branch={{ git_checkout_target }} -Dsonar.pullrequest.base={{sonar_pullrequest_base}}
+      {% if event_type=='pull_request'  %}
+      echo "Sonar analysis type: Pull request"
+      echo "PR Number: {{pr_number}}"
+      echo "PR : {{base_branch}}"
+      echo "PR Branch: {{pull_req_branch}}"
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key={{pr_number}} -Dsonar.pullrequest.branch={{pull_req_branch}} -Dsonar.pullrequest.base={{base_branch}}
       {% endif %}
 
