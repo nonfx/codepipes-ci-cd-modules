@@ -17,11 +17,11 @@ inputs:
       description: Git branch, tag or commit hash to checkout.
       type: string
       default: ""
-    git_local_path:
-      title: Local Clone Directory
-      description: The name of a new directory to clone into.
+    project_base_directory:
+      title: Project Folder
+      description: Project Base directory where sonar-scanner will run
       type: string
-      default: repo
+      default: "." 
     sonar_cloud_url:
       title: SonarCloud URL
       description: URL for SonarCloud endpoint
@@ -54,9 +54,14 @@ inputs:
       title: Code Coverage file
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
-      default: "coverage.out"
+      default: "coverage.out"    
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string                                                   
   internal:
     - git_checkout_target
+    - working_dir
   required:
     - sonar_cloud_login_token
     - sonar_cloud_org
@@ -64,18 +69,22 @@ template: |
   steps:
   - id: 'Run scan on SonarCloud'
     name: gcr.io/codepipes-staging/sonar-scanner-cli
+    entrypoint: 'bash'
+    dir: {{ working_dir }}
     args:
-    - 'sonar-scanner'
-    - '-Dsonar.host.url={{ sonar_cloud_url }}'
-    - '-Dsonar.login={{ sonar_cloud_login_token }}'
-    - '-Dsonar.organization={{ sonar_cloud_org }}'
-    {% if sonar_config_file -%}
-    - '-Dproject.settings={{ git_local_path }}/{{ sonar_config_file }}'
-    {% else -%}
-    - '-Dsonar.projectKey={{ sonar_cloud_project_key }}'
-    {%- endif %}
-    - '-Dsonar.projectBaseDir={{ git_local_path }}'
-    - '-Dsonar.branch.name={{ git_checkout_target }}'
-    - '-Dsonar.go.coverage.reportPaths={{ coverage_file }}'
-    - '-Dsonar.qualitygate.wait=true'
-    - '-Dsonar.verbose={{ sonar_verbose_log }}'
+    - '-c'
+    - |
+      export SONAR_TOKEN={{sonar_cloud_login_token}}
+      echo "Webhook Event event_type : $$event_type"
+      set -x
+      if [ "$$event_type" == "pull_request" ]; then
+      echo "Sonar analysis type: Pull request"
+      echo "PR Number: $$git_pr_key"
+      echo "PR Base Branch: $$git_pr_base"
+      echo "PR Branch: $$git_pr_head"
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key=$$git_pr_key -Dsonar.pullrequest.branch=$$git_pr_head -Dsonar.pullrequest.base=$$git_pr_base
+      
+      else
+      echo "Sonar analysis type: Branch"
+      sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}
+      fi
