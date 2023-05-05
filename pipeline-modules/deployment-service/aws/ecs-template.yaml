@@ -100,7 +100,8 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  
+  {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
+
   version: 0.2
   phases:
     install:
@@ -118,6 +119,12 @@ template: |
         - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"{{execution_role_arn}}","taskRoleArn":"{{execution_role_arn}}","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":{{container_mem}},"cpu":{{container_cpu}},"portMappings":[{"containerPort":{{container_port}},"hostPort":{{host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
+          done
+        - |
+          cat {{pipeline_secret_env_file}} | while IFS= read -r line; do
           value=${line#*=}
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
