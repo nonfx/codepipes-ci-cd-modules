@@ -126,6 +126,12 @@ template: |
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
+        - |
+          cat {{pipeline_secret_env_file}} | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
+          done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
         - cat containerDef.json
