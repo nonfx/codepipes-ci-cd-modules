@@ -124,6 +124,19 @@ template: |
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
+        - function update_task_definition_secrets() {
+            task_definition_file="$1"
+            secret_name="$2"
+            secret_arn=$(get_secret_arn "$secret_name")
+            secret_content=$(get_secret_content "$secret_name")
+            
+            jq --arg secret_arn "$secret_arn" ".secrets = [$(jq -c 'to_entries | map({name: .key, valueFrom: "\($secret_arn):\(.key)"})' --arg secret_arn "$secret_arn" <<< "$secret_content")]" "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
+          }
+        - aws_secret_manager.sh
+        - secret_name="{{applicationName}}{{environment}}secrets"
+        - env_vars=$(load_env_variables ".secret.env")
+        - create_or_update_secret "$secret_name" "$env_vars"
+        - update_task_definition_secrets "containerDef.json" "$secret_name"
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
