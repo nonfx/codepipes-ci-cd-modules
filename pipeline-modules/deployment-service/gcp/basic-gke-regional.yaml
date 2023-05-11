@@ -136,15 +136,6 @@ template: |
     - '-c'
     - |
       gcloud container clusters get-credentials {{cluster}} --region {{region}}
-  - id: 'Install helm'
-    name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
-      cd cloud-builders-community/helm;
-      docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
   {% if job_type == 'deploy' %}
   - id: 'Setup helm values'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -255,7 +246,7 @@ template: |
       printf '  %s: %s\n' $name $value >> values.yaml
       done;
   - id: 'Install Application'
-    name: 'gcr.io/$PROJECT_ID/helm'
+    name: 'cldcvr/cpi-helm'
     entrypoint: 'bash'
     args:
     - '-c'
@@ -277,7 +268,7 @@ template: |
       fi
   {% else %}
   - id: 'Uninstall application'
-    name: 'gcr.io/$PROJECT_ID/helm'
+    name: 'cldcvr/cpi-helm'
     entrypoint: 'bash'
     args:
     - '-c'
