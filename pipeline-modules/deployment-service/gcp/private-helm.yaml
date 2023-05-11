@@ -94,18 +94,9 @@ template: |
     - '-c'
     - |
       gcloud container clusters get-credentials {{cluster}} --region {{region}}
-  - id: 'Install helm'
-    name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    args:
-    - '-c'
-    - |
-      git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git;
-      cd cloud-builders-community/helm;
-      docker build -t gcr.io/$PROJECT_ID/helm:latest . ;
   {% if job_type == 'deploy' %}
   - id: 'Install Application'
-    name: 'gcr.io/$PROJECT_ID/helm'
+    name: 'cldcvr/cpi-helm'
     entrypoint: 'bash'
     args:
     - '-c'
@@ -114,10 +105,14 @@ template: |
       kubectl create ns {{namespace}}
       {% endif %}
       cd {{source_code_path}}/{{helm_chart_path}} ;
+      {%- if helm_values_path != '' %}
+      cp {{source_code_path}}/{{helm_values_path}} values_presub.yml
+      cat values_presub.yml | envsubst > {{source_code_path}}/{{helm_values_path}}
+      {%- endif %}
       helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{service_name}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
   {% else %}
   - id: 'Uninstall application'
-    name: 'gcr.io/$PROJECT_ID/helm'
+    name: 'cldcvr/cpi-helm'
     entrypoint: 'bash'
     args:
     - '-c'
