@@ -12,7 +12,7 @@ echo "=== ${sn}: Creating ${ENV_FILE_NAME}"
 
 for name in ${EXPORTED_ENV_NAMES}
 do
-    printf "$name=%s\n" "$(eval printf "%s" "\$$name" | jq -aRs .)" >> $ENV_FILE_NAME
+    printf "$name=%s\n" "$(eval printf "%s" "\"\$$name\"" | jq -aRs .)" >> $ENV_FILE_NAME
     printf "Exporting variable '$name'\n"
 done
 
