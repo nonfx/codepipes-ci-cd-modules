@@ -54,7 +54,7 @@ cloud-builders:
 push-module-containers:
 ifeq (${CPU_ARCH},amd64)
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/p0k3r4s4
-	gcloud auth configure-docker
+	gcloud auth configure-docker us-docker.pkg.dev
 	cd scripts/container-load && ./container-load.sh
 else
 	@echo "This target must be run from amd64 architecture - current is $(CPU_ARCH)"

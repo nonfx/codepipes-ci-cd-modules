@@ -1,6 +1,6 @@
 registries:
   - public.ecr.aws/p0k3r4s4
-  - gcr.io/codepipes-staging
+  - us-docker.pkg.dev/codepipes-staging/ci-cd
 
 images:
   - name: sonarsource/sonar-scanner-cli
@@ -10,5 +10,5 @@ images:
     tags: [latest]
     target_name: alpine
   - name: golang
-    tags: [1.17-alpine]
+    tags: [1.17-alpine, 1.19-alpine]
     target_name: golang
