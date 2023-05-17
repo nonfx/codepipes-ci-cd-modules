@@ -7,7 +7,7 @@ The script processes a manifest file - container-manifest.yaml - This contains t
 ```
 registries:
   - public.ecr.aws/p0k3r4s4
-  - gcr.io/codepipes-staging
+  - us-docker.pkg.dev/codepipes-staging/ci-cd
 
 images:
   - name: sonarsource/sonar-scanner-cli
@@ -15,7 +15,7 @@ images:
     target_name: sonar-scanner-cli
 ```
 
-This will push the DockerHub image sonar-scanner-cli up to ECR and GCR with tag latest, 4 and 4.8.
+This will push the DockerHub image sonar-scanner-cli up to ECR and GCR (Artifact Registry) with tag latest, 4 and 4.8.
 
 Requirements:
 

@@ -68,7 +68,7 @@ inputs:
 template: |
   steps:
   - id: 'Run scan on SonarCloud'
-    name: gcr.io/codepipes-staging/sonar-scanner-cli
+    name: us-docker.pkg.dev/codepipes-staging/ci-cd/sonar-scanner-cli
     entrypoint: 'bash'
     dir: {{ working_dir }}
     args:
