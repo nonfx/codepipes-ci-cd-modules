@@ -115,23 +115,6 @@ template: |
       commands:
         {% if job_type == 'deploy' %}
         - |
-          c=1; #Counter to check if its the last element in file
-          length=$(cat {{pipeline_env_file}} | wc -l); #Finds out the number of elements to put in json
-          echo "{" >> env.json; #start of the json file
-          cat {{pipeline_env_file}} | while IFS= read -r line; do
-            value=${line#*=}
-            name=${line%%=*}
-            if [ $c -ge $length ] #Check to add or remove trailing comma while writing JSON
-            then
-                printf '"%s":%s\n' "$name" "$value" >> env.json
-                break;
-            else
-                printf '"%s":%s,\n' "$name" "$value" >> env.json
-            fi
-          c=$((c+1)) #Incrementing the counter
-          done;
-          echo "}" >> env.json;
-
           #Delete all secrets
           secret_list=$(aws secretsmanager list-secrets --query 'SecretList[?Description && starts_with(Description, `{{service_name}}-`) == `true`].[ARN]' --output text)
           # Delete each secret in the list
@@ -140,25 +123,14 @@ template: |
             aws secretsmanager delete-secret --secret-id $secret_arn
           done
           
-          sc=1; #Rest Counter to check if its the last element in file
-          sl=$(cat {{pipeline_secret_file}} | wc -l);
-          echo "{" >> env_secrets.json; #start of the json file
-          cat {{pipeline_secret_file}} | while IFS= read -r line; do
+          secretsJSON='{}'
+          while IFS= read -r line; do
             value=${line#*=}
             name=${line%%=*}
             arn=$(aws secretsmanager create-secret --name "cp-$(date +%s)-$RANDOM" --description "{{service_name}}-$name" --secret-string $value --query 'Service.ServiceUrl' --query ARN --output text)
-            if [ $sc -ge $sl ] #Check to add or remove trailing comma while writing JSON
-            then
-                printf '"%s":"%s"\n' "$name" "$arn" >> env_secrets.json
-                break;
-            else
-                printf '"%s":"%s",\n' "$name" "$arn" >> env_secrets.json
-            fi
-          sc=$((sc+1)) #Incrementing the counter
-          done;
-          echo "}" >> env_secrets.json;
-          secretsJSON=$(cat env_secrets.json);
-          envJSON=$(cat env.json);
+            secretsJSON=$(printf "%s" $secretsJSON | jq --arg k "$name" --arg v "$arn" '. + {($k): $v}')
+          done < <(env.sh all --secrets) # non-quoted values as it is to be used in arguments;
+          envJSON=$(env.sh all --non-secrets --json);
           JSON_FMT='{
               "ImageRepository": {
                   "ImageIdentifier": "{{repository}}:{{tag}}",
