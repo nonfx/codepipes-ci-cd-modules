@@ -1,4 +1,16 @@
 #!/bin/bash
+
+##############################################
+# Deprecated Notice - Please Use env.sh Script
+##############################################
+
+# This script is deprecated. Please use env.sh for environment variable management.
+
+# Migration Instructions:
+# - Replace 'cat {{ pipeline_env_file }}' with 'env.sh all --non-secrets --quoted'
+# - Replace 'cat {{ pipeline_secret_file }}' with 'env.sh all --secrets --quoted'
+# - Additional options are available. Run 'env.sh --help' to learn more.
+
 set -e
 sn=`basename $0`
 

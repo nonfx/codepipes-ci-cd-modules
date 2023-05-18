@@ -103,11 +103,13 @@ template: |
     args:
     - '-c'
     - |
-      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
+      export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
+      env.sh all --secrets | while IFS= read -r line; do
+        # non-quoted values as it is to be used in arguments
         value=${line#*=}
         name=${line%%=*}
         gcloud secrets delete {{application_name}}-$name --quiet || true
-        printf $value | gcloud secrets create {{application_name}}-$name --data-file=- --replication-policy=user-managed --locations={{region}}
+        printf "%s" "$value" | gcloud secrets create {{application_name}}-$name --data-file=- --replication-policy=user-managed --locations={{region}}
       done;
   - id: 'Create cloud run application'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -115,6 +117,7 @@ template: |
     args:
     - '-c'
     - |
+      export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
       client_email=$$(gcloud config list account --format "value(core.account)")
       echo "
       apiVersion: serving.knative.dev/v1
@@ -139,16 +142,13 @@ template: |
               - name: http1
                 containerPort: {{containerPort}}
               env:" >> app.yaml
-      cat {{ pipeline_env_file }} | while IFS= read -r line; do
-        value=${line#*=}
-        name=${line%%=*}
-        printf '        - name: %s\n          value: %s\n' "$name" "$value" >>  app.yaml
-      done;
-      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
-        value=${line#*=}
+
+      env.sh all --non-secrets --quoted --template '        - name: %s\n          value: %s\n' >> app.yaml
+      env.sh all --secrets | while IFS= read -r line; do
         name=${line%%=*}
         printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{application_name}}-$name" >>  app.yaml
       done;
+
       cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
       {% if domain %}
@@ -181,8 +181,9 @@ template: |
     args:
     - '-c'
     - |
+      export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
       gcloud beta run services delete {{application_name}} --region {{region}} --platform managed --quiet;
-      cat {{ pipeline_secret_file }} | while IFS= read -r line; do
+      env.sh all --secrets | while IFS= read -r line; do
         value=${line#*=}
         name=${line%%=*}
         gcloud secrets delete {{application_name}}-$name --quiet || true
