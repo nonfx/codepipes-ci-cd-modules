@@ -1,10 +1,10 @@
 module github.com/cldcvr/codepipes-ci-cd-modules/cpi-module-seed
 
-go 1.18
+go 1.20
 
 require (
 	github.com/cldcvr/vanguard-api v0.31.0
-	github.com/spf13/viper v1.14.0
+	github.com/spf13/viper v1.15.0
 )
 
 require (
@@ -97,7 +97,7 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lib/pq v1.10.7 // indirect
-	github.com/magiconair/properties v1.8.6 // indirect
+	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/microsoft/azure-devops-go-api/azuredevops/v6 v6.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -106,7 +106,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -120,7 +119,7 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/stretchr/stew v0.0.0-20130812190256-80ef0842b48b // indirect
 	github.com/stretchr/testify v1.8.2 // indirect
-	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	github.com/xanzy/go-gitlab v0.59.0 // indirect
