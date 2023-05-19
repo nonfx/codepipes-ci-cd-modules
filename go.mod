@@ -3,7 +3,7 @@ module github.com/cldcvr/codepipes-ci-cd-modules/cpi-module-seed
 go 1.18
 
 require (
-	github.com/cldcvr/vanguard-api v0.30.1-0.20230510175730-7a011e285c62
+	github.com/cldcvr/vanguard-api v0.31.0
 	github.com/spf13/viper v1.14.0
 )
 
@@ -45,10 +45,10 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cldcvr/cc-go-libs v1.41.0 // indirect
 	github.com/cldcvr/strato-service-definition v0.1.3 // indirect
-	github.com/cloudflare/circl v1.2.0 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/devigned/tab v0.1.1 // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/flosch/pongo2/v6 v6.0.0 // indirect
