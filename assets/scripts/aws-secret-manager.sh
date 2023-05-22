@@ -20,10 +20,15 @@ function create_or_update_secret() {
   secret_name=$1
   env_vars="$2"
 
+  # Split env_vars into an array of key-value pairs
+  IFS=' ' read -ra env_array <<< "$env_vars"
+
+  # Construct the secret_string using the key-value pairs
   secret_string="{"
-  while IFS="=" read -r key value; do
+  for pair in "${env_array[@]}"; do
+    IFS='=' read -r key value <<< "$pair"
     secret_string+="\"$key\":\"$value\","
-  done <<< "$env_vars"
+  done
   secret_string="${secret_string%,}"
   secret_string+="}"
   echo "Secret String: $secret_string"
