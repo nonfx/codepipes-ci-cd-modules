@@ -5,7 +5,7 @@ set -e
 function load_env_variables() {
   file_path="$1"
   env_vars=$(<"$file_path")
-  echo "$env_vars"
+  echo $env_vars
 }
 
 # Check if the secret already exists in AWS Secrets Manager
@@ -17,8 +17,8 @@ function check_secret_exists() {
 
 # Create or update the secret in AWS Secrets Manager
 function create_or_update_secret() {
-  secret_name="$1"
-  env_vars="$2"
+  secret_name=$1
+  env_vars=$2
 
   secret_string="{"
   while IFS="=" read -r key value; do
