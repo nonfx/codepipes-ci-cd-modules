@@ -18,14 +18,15 @@ function check_secret_exists() {
 # Create or update the secret in AWS Secrets Manager
 function create_or_update_secret() {
   secret_name=$1
-  env_vars=$2
+  env_vars="$2"
 
   secret_string="{"
   while IFS="=" read -r key value; do
-    secret_string+="\"$key\":\"$value\","
+    secret_string+="\"$key\":$value,"
   done <<< "$env_vars"
-  secret_string="${secret_string%,}}"
-  echo $secret_string
+  secret_string="${secret_string%,}"
+  secret_string+="}"
+  echo "Secret String: $secret_string"
   if check_secret_exists "$secret_name"; then
     # Clear the existing secret content
     aws secretsmanager update-secret --secret-id $secret_name --secret-string "{}"
@@ -47,6 +48,6 @@ function get_secret_arn() {
 # Get the secret content
 function get_secret_content() {
   secret_name=$1
-  aws secretsmanager get-secret-value --secret-id $secret_name | jq -r '.SecretString'
+  aws secretsmanager get-secret-value --secret-id $secret_name --output json | jq -r '.SecretString'
 }
 
