@@ -5,7 +5,7 @@ set -e
 function load_env_variables() {
   file_path="$1"
   env_vars=$(<"$file_path")
-  echo $env_vars
+  echo "$env_vars"
 }
 
 # Check if the secret already exists in AWS Secrets Manager
@@ -17,20 +17,15 @@ function check_secret_exists() {
 
 # Create or update the secret in AWS Secrets Manager
 function create_or_update_secret() {
-  secret_name=$1
+  secret_name="$1"
   env_vars="$2"
 
-  # Split env_vars into an array of key-value pairs
-  IFS=' ' read -ra env_array <<< "$env_vars"
-
-  # Construct the secret_string using the key-value pairs
   secret_string="{"
-  for pair in "${env_array[@]}"; do
-    IFS='=' read -r key value <<< "$pair"
+  while IFS="=" read -r key value; do
     secret_string+="\"$key\":\"$value\","
-  done
-  secret_string="${secret_string%,}"
-  secret_string+="}"
+  done <<< "$env_vars"
+  secret_string="${secret_string%,}}"
+
   echo "Secret String: $secret_string"
   if check_secret_exists "$secret_name"; then
     # Clear the existing secret content
