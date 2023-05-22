@@ -22,6 +22,8 @@ function create_or_update_secret() {
 
   secret_string="{"
   while IFS="=" read -r key value; do
+    # Remove the surrounding quotes from the value
+    value=${value//\"/}
     secret_string+="\"$key\":\"$value\","
   done <<< "$env_vars"
   secret_string="${secret_string%,}}"
