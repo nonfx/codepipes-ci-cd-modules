@@ -22,7 +22,7 @@ function create_or_update_secret() {
 
   secret_string="{"
   while IFS="=" read -r key value; do
-    secret_string+="\"$key\":$value,"
+    secret_string+="\"$key\":\"$value\","
   done <<< "$env_vars"
   secret_string="${secret_string%,}"
   secret_string+="}"
