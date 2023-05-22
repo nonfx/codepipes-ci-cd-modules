@@ -1,5 +1,5 @@
-provisioner: aws
-name: ecs-container-deploy
+provisioner: "aws"
+name: "ecs-container-deploy"
 version: 1
 revision: 1
 displayName: "ECS App deployment"
@@ -124,12 +124,12 @@ template: |
           done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
-        - function update_task_definition_secrets() {
+        - |
+          function update_task_definition_secrets() {
             task_definition_file="$1"
             secret_name="$2"
             secret_arn=$(get_secret_arn "$secret_name")
             secret_content=$(get_secret_content "$secret_name")
-            
             jq --arg secret_arn "$secret_arn" ".secrets = [$(jq -c 'to_entries | map({name: .key, valueFrom: "\($secret_arn):\(.key)"})' --arg secret_arn "$secret_arn" <<< "$secret_content")]" "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
           }
         - aws_secret_manager.sh
@@ -143,4 +143,3 @@ template: |
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
-

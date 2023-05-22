@@ -61,7 +61,7 @@ inputs:
       type: object
       default: {}
       properties:
-        securityGroupIds:
+        securitygroupids:
           title: Security Group IDs
           description: "A list of one or more security groups IDs in your Amazon VPC."
           type: array
@@ -75,7 +75,7 @@ inputs:
           default: []
           items:
             type: string
-        vpcId:
+        vpcid:
           title: VPC ID
           description: "The ID of the Amazon VPC."
           type: string
@@ -176,7 +176,7 @@ template: |
     value: "{{ tag_value }}"
   {% endfor %}
   timeoutinminutes: {{ pipeline_run_timeout_min }}
-  {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcId == "" %}
+  {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcid == "" %}
   vpcconfig: null
   {% else %}
   vpcconfig: {{ vpc_config|cpi_json }}
