@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Load environment variables from .secret.env file
 function load_env_variables() {

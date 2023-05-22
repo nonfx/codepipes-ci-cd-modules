@@ -132,7 +132,7 @@ template: |
             secret_content=$(get_secret_content "$secret_name")
             jq --arg secret_arn "$secret_arn" ".secrets = [$(jq -c 'to_entries | map({name: .key, valueFrom: "\($secret_arn):\(.key)"})' --arg secret_arn "$secret_arn" <<< "$secret_content")]" "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
           }
-        - aws_secret_manager.sh
+        - aws-secret-manager.sh
         - secret_name="{{applicationName}}{{environment}}secrets"
         - env_vars=$(load_env_variables ".secret.env")
         - create_or_update_secret "$secret_name" "$env_vars"
