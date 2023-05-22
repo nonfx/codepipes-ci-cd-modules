@@ -144,8 +144,8 @@ template: |
           echo "Loading environment variables..." 
           env_vars=$(load_env_variables ".secret.env")
           echo "Environment Variables: $env_vars"  # For debugging
-          create_or_update_secret "$secret_name" "$env_vars"
-          update_task_definition_secrets "containerDef.json" "$secret_name"
+          create_or_update_secret $secret_name $env_vars
+          update_task_definition_secrets containerDef.json $secret_name
         - echo "after"
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 

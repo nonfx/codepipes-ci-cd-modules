@@ -25,7 +25,7 @@ function create_or_update_secret() {
     secret_string+="\"$key\":\"$value\","
   done <<< "$env_vars"
   secret_string="${secret_string%,}}"
-
+  echo $secret_string
   if check_secret_exists "$secret_name"; then
     # Clear the existing secret content
     aws secretsmanager update-secret --secret-id $secret_name --secret-string "{}"
