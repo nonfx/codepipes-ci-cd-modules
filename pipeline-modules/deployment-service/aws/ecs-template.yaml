@@ -84,7 +84,7 @@ inputs:
       description: "The Memory to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
       type: integer
       default: 2048
-  required: ["task_name","service_name","cluster_name","execution_role_arn"]
+  required: ["task_name","ecs_service_name","cluster_name","execution_role_arn"]
   internal:
     - repository
     - tag
