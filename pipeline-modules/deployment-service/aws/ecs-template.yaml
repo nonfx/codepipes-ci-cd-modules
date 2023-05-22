@@ -52,7 +52,7 @@ inputs:
       title: Task Name
       description: The ECS Task Name to update
       type: string
-    service_name:
+    ecs_service_name:
       title: Service Name
       description: The ECS Service Name to deploy to
       type: string
@@ -135,7 +135,7 @@ template: |
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
-        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
+        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
 
