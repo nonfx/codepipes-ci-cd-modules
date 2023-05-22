@@ -52,7 +52,7 @@ inputs:
       title: Task Name
       description: The ECS Task Name to update
       type: string
-    service_name:
+    ecs_service_name:
       title: Service Name
       description: The ECS Service Name to deploy to
       type: string
@@ -84,7 +84,7 @@ inputs:
       description: "The Memory to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
       type: integer
       default: 2048
-  required: ["task_name","service_name","cluster_name","execution_role_arn"]
+  required: ["task_name","ecs_service_name","cluster_name","execution_role_arn"]
   internal:
     - repository
     - tag
@@ -135,7 +135,7 @@ template: |
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
-        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
+        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "done" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
 
