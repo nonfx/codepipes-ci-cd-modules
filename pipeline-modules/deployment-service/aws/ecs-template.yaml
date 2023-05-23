@@ -134,7 +134,7 @@ template: |
             secret_name="$2"
             secret_arn=$(get_secret_arn "$secret_name")
             secret_content=$(get_secret_content "$secret_name")
-            secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: ($secret_arn+":"+.key)}]' <<< "$secret_content")
+            secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: $secret_arn }]' <<< "$secret_content")
             jq --arg secret_arn "$secret_arn" --argjson keys "$secret_content_keys" '(.containerDefinitions[] | .secrets) = (.secrets // []) + $keys' "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
           }
           chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
