@@ -1,0 +1,61 @@
+provisioner: aws
+name: lambda-update
+version: 1
+revision: 1
+displayName: "AWS Lambda update with code"
+description: "Update Lambda function with code"
+target: "deployment-template"
+keywords: ["bash", "linux","functions"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - GitCode
+inputs:
+  type: object
+  properties:
+    region:
+      title: Region name
+      description: Region name for lambda deployment
+      type: string
+    functionName:
+      title: Function Name
+      description: Name of the lambda function to update
+      type: string
+    repo_dir:
+      title: Repo Dir
+      description:  Repo Dir
+      type: string
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+  required: ["region","functionName"]
+  internal:
+    - job_type
+    - repo_dir
+template: |
+  ########################################################################################################################################################
+  # This template updates a pre-existing lambda function keeping all other configuration in place                                                                                                 #
+  ########################################################################################################################################################
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+
+  version: 0.2
+  phases:
+    install:
+      commands:
+        - aws configure set region {{region}}
+    build: 
+      commands:
+        - |
+        {% if job_type == 'deploy' %}
+          cd {{source_code_path}}/{{repo_dir}}/
+          zip -r function.zip *
+          aws lambda update-function-code \
+          --function-name {{functionName}} \
+          --zip-file fileb://./function.zip
+        {% else %}
+           echo 'there is no undeploy flow'
+        {% endif %}
