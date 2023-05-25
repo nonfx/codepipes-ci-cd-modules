@@ -101,6 +101,11 @@ inputs:
       description: Time to wait for pods to be ready before terming deployment as unsuccessful
       type: string
       default: 300s
+    cloudbuild_private_worker_pool:
+      title: Cloud Build Worker Pool
+      description: Name of Cloud Build Private Worker Pool .i.e projects/WORKERPOOL_PROJECT_ID/locations/REGION/workerPools/my-pool
+      type: string
+      default: ""        
   required:
     - cluster
     - region
@@ -284,5 +289,10 @@ template: |
     - |
       cd {{helm_chart_path}} ;
       helm list;
-      helm uninstall {{service_name}};
+      helm uninstall {{service_name}};      
   {% endif %}
+  {% if cloudbuild_private_worker_pool != "" %}    
+  options:
+    workerPool: {{ cloudbuild_private_worker_pool }}
+    diskSizeGb:  '20'
+  {% endif %}  
