@@ -286,4 +286,3 @@ template: |
       helm list;
       helm uninstall {{service_name}};
   {% endif %}
-  
