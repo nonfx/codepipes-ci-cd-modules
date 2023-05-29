@@ -21,7 +21,7 @@ variables:
   - group: CodePipes-Int-Prod-DB
 
 steps:
-  - template: templates/ci-cd-modules-release.yml@templates
+  - template: templates/run-db-update.yml@templates
     parameters:
       gcpSACreds: $(GCP_SA_CREDS)
       DBInstanceConnectionName: $(DB_INSTANCE_CONNECTION_NAME)
