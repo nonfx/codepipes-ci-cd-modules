@@ -129,7 +129,7 @@ template: |
       value: "{{ env_value }}"
       type: "SECRETS_MANAGER"
     {% endfor %}
-    image: "aws/codebuild/standard:4.0"
+    image: "aws/codebuild/standard:7.0"
     imagepullcredentialstype: "CODEBUILD"
     privilegedmode: {{ privileged_mode }}
     registrycredential: null
