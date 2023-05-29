@@ -149,5 +149,8 @@ template: |
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
-        - echo "done" 
+        - echo "Waiting for new container to be live"
+        - sleep 30
+        - aws ecs wait services-stable --cluster {{cluster_name}} --services {{service_name}}
+        - echo "New container is live now!" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
