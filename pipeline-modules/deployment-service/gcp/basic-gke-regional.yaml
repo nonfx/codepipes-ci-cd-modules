@@ -122,10 +122,10 @@ template: |
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/gcp/basic-gke" %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial:"-" %}
-  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
-  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
-  {% set fmt_proj = project | cpi_replacespecial:"-" %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
+  {% set fmt_env_name = environment | cpi_replacespecial %}
+  {% set fmt_proj = project | cpi_replacespecial %}
 
 
   steps:

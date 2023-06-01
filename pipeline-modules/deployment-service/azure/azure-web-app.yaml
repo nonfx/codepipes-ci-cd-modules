@@ -80,7 +80,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set source_code_path = workspace|add:'/source_code' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
-  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
   steps:
   - script: |
         cat .env | while IFS= read -r line; do

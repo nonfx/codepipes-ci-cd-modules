@@ -57,7 +57,7 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/azure/istio-aks" %}
-  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
 
   steps:
     - task: HelmInstaller@0

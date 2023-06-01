@@ -102,9 +102,9 @@ template: |
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set secret_name = "secret-"|add:environment|add:"-"|add:applicationName|cpi_trimlength:64|cpi_replacespecial:"-" %}
+  {% set secret_name = "secret-"|add:environment|add:"-"|add:applicationName|cpi_trimlength:64|cpi_replacespecial %}
 
 
   version: 0.2
