@@ -92,8 +92,8 @@ template: |
   {% set application_name = applicationName|lower %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
-  {% set fmt_proj = project | cpi_replacespecial:"-" %}
+  {% set fmt_env_name = environment | cpi_replacespecial %}
+  {% set fmt_proj = project | cpi_replacespecial %}
 
   steps:
   {% if job_type == 'deploy' %}

@@ -56,11 +56,13 @@ inputs:
   internal:
     - working_dir
 template: |
+  {% set service_name = echo_string|add:"-"|add:echo_string|cpi_trimlength:40|cpi_replacespecial %}
   version: 0.2
   phases:
     build:
       commands:
         - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - echo "service_name={{ service_name }}"
         - echo "stringVal={{ echo_string }}"
         - echo "intVal={{ echo_int }}"
         - echo "floatVal={{ echo_float }}"

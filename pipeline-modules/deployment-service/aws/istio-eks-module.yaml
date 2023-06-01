@@ -281,11 +281,11 @@ template: |
   {% set pipeline_secret_file = workspace|add:'.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/istio-eks" %}
-  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial:"-" %}
-  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
-  {% set fmt_env_name = environment | cpi_replacespecial:"-" %}
-  {% set fmt_proj_name = projectName | cpi_replacespecial:"-" %}
-  {% set fmt_proj = project | cpi_replacespecial:"-" %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
+  {% set fmt_env_name = environment | cpi_replacespecial %}
+  {% set fmt_proj_name = projectName | cpi_replacespecial %}
+  {% set fmt_proj = project | cpi_replacespecial %}
 
   version: 0.2
   phases:
