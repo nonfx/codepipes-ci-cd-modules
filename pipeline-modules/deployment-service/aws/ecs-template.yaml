@@ -111,6 +111,7 @@ template: |
         - aws configure set region $AWS_DEFAULT_REGION
     build:
       commands:
+        {% if job_type == 'deploy' %}
         - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
         - echo $taskDetails
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
@@ -155,3 +156,58 @@ template: |
         - aws ecs wait services-stable --cluster {{cluster_name}} --services {{ecs_service_name}}
         - echo "New container is live now!" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
+        {% else %}
+        - echo "Undeploying ECS Service"
+        - aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --desired-count 0
+        - |
+          # Set the initial status to ACTIVE
+          status="ACTIVE"
+
+          # Loop until the service is inactive
+          while [ "$status" != "INACTIVE" ]
+          do
+            # Get the service status
+            status=$(aws ecs describe-services --cluster {{cluster_name}} --services {{ecs_service_name}} | jq -r '.services[0].status')
+
+            # If the service is still active, stop any running tasks associated with the service
+            if [ "$status" = "ACTIVE" ]; then
+              # Get the ARN of the running tasks
+              task_arns=$(aws ecs list-tasks --cluster {{cluster_name}} --service-name {{ecs_service_name}} --desired-status RUNNING | jq -r '.taskArns[]')
+
+              # Stop the running tasks if there are any
+              if [ -n "$task_arns" ]; then
+                for task_arn in $task_arns
+                do
+                  aws ecs stop-task --cluster {{cluster_name}} --task $task_arn
+                done
+              fi
+            fi
+
+            # If there are no running tasks, exit the loop
+            if [ "$status" = "ACTIVE" ] && [ -z "$task_arns" ]; then
+              break
+            fi
+
+            # Wait for 10 seconds before checking the status again
+            sleep 10
+          done
+
+          echo "Service is now undeployed"
+        - | 
+          echo "Deleting Secret from Secret Manager used in the Service"
+          # Source the aws-secret-manager.sh script to get the get_secret_arn function
+          source aws-secret-manager.sh
+
+          # Set the name of the secret to delete
+          secret_name="{{applicationName}}{{environment}}secrets"
+
+          # Get the ARN of the secret using the get_secret_arn function
+          secret_arn=$(get_secret_arn "$secret_name")
+
+          # Delete the secret using the AWS CLI delete-secret command
+          aws secretsmanager delete-secret --secret-id $secret_arn --force-delete-without-recovery
+
+          # Print a message indicating that the secret has been deleted
+          echo "Secrets deleted"
+      {% endif %}
+
