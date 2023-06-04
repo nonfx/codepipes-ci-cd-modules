@@ -52,7 +52,7 @@ inputs:
       title: Task Name
       description: The ECS Task Name to update
       type: string
-    service_name:
+    ecs_service_name:
       title: Service Name
       description: The ECS Service Name to deploy to
       type: string
@@ -84,7 +84,7 @@ inputs:
       description: "The Memory to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
       type: integer
       default: 2048
-  required: ["task_name","service_name","cluster_name","execution_role_arn"]
+  required: ["task_name","ecs_service_name","cluster_name","execution_role_arn"]
   internal:
     - repository
     - tag
@@ -100,8 +100,9 @@ template: |
   ########################################################################################################################################################
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -130,12 +131,12 @@ template: |
         - echo "before"
         - |
           function update_task_definition_secrets() {
-            task_definition_file="$1"
-            secret_name="$2"
-            secret_arn=$(get_secret_arn "$secret_name")
-            secret_content=$(get_secret_content "$secret_name")
-            secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: $secret_arn }]' <<< "$secret_content")
-            jq --arg secret_arn "$secret_arn" --argjson keys "$secret_content_keys" '(.containerDefinitions[] | .secrets) = (.secrets // []) + $keys' "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
+              task_definition_file="$1"
+              secret_name="$2"
+              secret_arn=$(get_secret_arn "$secret_name")
+              secret_content=$(get_secret_content "$secret_name")
+              secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: ($secret_arn + ":" + .key + "::") }]' <<< "$secret_content")
+              jq --argjson keys "$secret_content_keys" '(.containerDefinitions[] | .secrets) = (.secrets // []) + $keys' "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
           }
           chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
           source aws-secret-manager.sh
@@ -148,9 +149,9 @@ template: |
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
-        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{service_name}} --task-definition {{task_name}} --force-new-deployment) 
+        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment) 
         - echo "Waiting for new container to be live"
         - sleep 30
-        - aws ecs wait services-stable --cluster {{cluster_name}} --services {{service_name}}
+        - aws ecs wait services-stable --cluster {{cluster_name}} --services {{ecs_service_name}}
         - echo "New container is live now!" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
