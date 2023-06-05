@@ -104,8 +104,6 @@ template: |
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
 
   version: 0.2
   phases:
@@ -125,12 +123,6 @@ template: |
         - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"{{execution_role_arn}}","taskRoleArn":"{{execution_role_arn}}","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":{{container_mem}},"cpu":{{container_cpu}},"portMappings":[{"containerPort":{{container_port}},"hostPort":{{host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
-          value=${line#*=}
-          name=${line%%=*}
-          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
-          done
-        - |
-          cat {{pipeline_secret_env_file}} | while IFS= read -r line; do
           value=${line#*=}
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
