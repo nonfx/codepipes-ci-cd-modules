@@ -200,9 +200,6 @@ template: |
           # Source the aws-secret-manager.sh script to get the get_secret_arn function
           source aws-secret-manager.sh
 
-          # Set the name of the secret to delete
-          secret_name="{{applicationName}}{{environment}}secrets"
-
           # Get the ARN of the secret using the get_secret_arn function
           secret_arn=$(get_secret_arn {{secret_name}})
 
