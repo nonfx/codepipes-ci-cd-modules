@@ -104,6 +104,7 @@ template: |
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set secret_name = "secret-"|add:environment|add:"-"|add:applicationName|cpi_trimlength:64|cpi_replacespecial:"-" %}
 
 
   version: 0.2
@@ -149,11 +150,10 @@ template: |
           }
           chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
           source aws-secret-manager.sh
-          secret_name="{{applicationName}}{{environment}}secrets"
           echo "Loading environment variables..." 
           env_vars=$(load_env_variables ".secret.env")
-          create_or_update_secret $secret_name "$env_vars"
-          update_task_definition_secrets "containerDef.json" $secret_name
+          create_or_update_secret {{secret_name}} "$env_vars"
+          update_task_definition_secrets "containerDef.json" {{secret_name}}
         - echo "after"
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
@@ -210,7 +210,7 @@ template: |
           secret_name="{{applicationName}}{{environment}}secrets"
 
           # Get the ARN of the secret using the get_secret_arn function
-          secret_arn=$(get_secret_arn "$secret_name")
+          secret_arn=$(get_secret_arn {{secret_name}})
 
           # Delete the secret using the AWS CLI delete-secret command
           aws secretsmanager delete-secret --secret-id $secret_arn --force-delete-without-recovery
