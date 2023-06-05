@@ -20,6 +20,9 @@ function create_or_update_secret() {
   secret_name=$1
   env_vars=$2
 
+  echo $secret_name
+  echo $env_vars
+
   secret_string="{"
   while IFS="=" read -r key value; do
     # Remove the surrounding quotes from the value
