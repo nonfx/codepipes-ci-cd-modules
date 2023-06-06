@@ -1,5 +1,5 @@
-provisioner: aws
-name: ecs-container-deploy
+provisioner: "aws"
+name: "ecs-container-deploy"
 version: 1
 revision: 1
 displayName: "ECS App deployment"
@@ -101,7 +101,11 @@ template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_env_file = workspace|add:'/.secret.env' %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial:"-" %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set secret_name = "secret-"|add:environment|add:"-"|add:applicationName|cpi_trimlength:64|cpi_replacespecial:"-" %}
+
 
   version: 0.2
   phases:
@@ -110,6 +114,7 @@ template: |
         - aws configure set region $AWS_DEFAULT_REGION
     build:
       commands:
+        {% if job_type == 'deploy' %}
         - taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
         - echo $taskDetails
         - containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
@@ -124,18 +129,84 @@ template: |
           name=${line%%=*}
           printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
           done
-        - |
-          cat {{pipeline_secret_env_file}} | while IFS= read -r line; do
-          value=${line#*=}
-          name=${line%%=*}
-          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
-          done
         - sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
         - echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
+        - cat containerDef.json
+        - echo "before"
+        - |
+          function update_task_definition_secrets() {
+              task_definition_file="$1"
+              secret_name="$2"
+              secret_arn=$(get_secret_arn "$secret_name")
+              secret_content=$(get_secret_content "$secret_name")
+              secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: ($secret_arn + ":" + .key + "::") }]' <<< "$secret_content")
+              jq --argjson keys "$secret_content_keys" '(.containerDefinitions[] | .secrets) = (.secrets // []) + $keys' "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
+          }
+          chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
+          source aws-secret-manager.sh
+          echo "Loading environment variables..." 
+          env_vars=$(load_env_variables ".secret.env")
+          create_or_update_secret {{secret_name}} "$env_vars"
+          update_task_definition_secrets "containerDef.json" {{secret_name}}
+        - echo "after"
         - cat containerDef.json
         - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
         - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
         - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment) 
-        - echo "done" 
+        - echo "Waiting for new container to be live"
+        - sleep 30
+        - aws ecs wait services-stable --cluster {{cluster_name}} --services {{ecs_service_name}}
+        - echo "New container is live now!" 
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
+        {% else %}
+        - echo "Undeploying ECS Service"
+        - aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --desired-count 0
+        - |
+          # Set the initial status to ACTIVE
+          status="ACTIVE"
+
+          # Loop until the service is inactive
+          while [ "$status" != "INACTIVE" ]
+          do
+            # Get the service status
+            status=$(aws ecs describe-services --cluster {{cluster_name}} --services {{ecs_service_name}} | jq -r '.services[0].status')
+
+            # If the service is still active, stop any running tasks associated with the service
+            if [ "$status" = "ACTIVE" ]; then
+              # Get the ARN of the running tasks
+              task_arns=$(aws ecs list-tasks --cluster {{cluster_name}} --service-name {{ecs_service_name}} --desired-status RUNNING | jq -r '.taskArns[]')
+
+              # Stop the running tasks if there are any
+              if [ -n "$task_arns" ]; then
+                for task_arn in $task_arns
+                do
+                  aws ecs stop-task --cluster {{cluster_name}} --task $task_arn
+                done
+              fi
+            fi
+
+            # If there are no running tasks, exit the loop
+            if [ "$status" = "ACTIVE" ] && [ -z "$task_arns" ]; then
+              break
+            fi
+
+            # Wait for 10 seconds before checking the status again
+            sleep 10
+          done
+
+          echo "Service is now undeployed"
+        - | 
+          echo "Deleting Secret from Secret Manager used in the Service"
+          # Source the aws-secret-manager.sh script to get the get_secret_arn function
+          source aws-secret-manager.sh
+
+          # Get the ARN of the secret using the get_secret_arn function
+          secret_arn=$(get_secret_arn {{secret_name}})
+
+          # Delete the secret using the AWS CLI delete-secret command
+          aws secretsmanager delete-secret --secret-id $secret_arn --force-delete-without-recovery
+
+          # Print a message indicating that the secret has been deleted
+          echo "Secrets deleted"
+      {% endif %}
 
