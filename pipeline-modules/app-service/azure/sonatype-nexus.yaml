@@ -30,14 +30,16 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+      default: ""
   internal:
     - applicationName
 template: |
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
   steps:
     - task: NexusIqPipelineTask@1
       inputs:
         nexusIqService: $(CPI__NEXUS_SERVICE_CONNECTION)
         organizationId: $(CPI__NEXUS_ORG_ID)
-        applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ applicationName }}{% endif %}
+        applicationId: {% if nexus_application_id %} {{ nexus_application_id }}{% else %}{{ fmt_app_name }}{% endif %}
         stage: 'Build'
-        scanTargets: $(System.DefaultWorkingDirectory)/{{applicationName}}.zip
+        scanTargets: $(System.DefaultWorkingDirectory)/{{fmt_app_name}}.zip

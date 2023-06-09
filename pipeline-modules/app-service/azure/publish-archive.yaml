@@ -32,4 +32,4 @@ template: |
     inputs:
       rootFolderOrFile: "$(System.DefaultWorkingDirectory)/{{ working_dir }}"
       includeRootFolder: false
-      archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}-{{sha_tag}}.zip"
+      archiveFile: "$(System.DefaultWorkingDirectory)/{{fmt_app_name}}-{{sha_tag}}.zip"
