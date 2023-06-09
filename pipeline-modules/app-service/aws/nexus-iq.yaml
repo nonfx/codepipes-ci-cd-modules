@@ -36,10 +36,12 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+      default: ""
   internal:
     - applicationName
     - working_dir
 template: |
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
   phases:
     install:
       commands:
@@ -47,9 +49,9 @@ template: |
     build:
       commands:
         - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
-        - zip -r {{applicationName}}.zip .
+        - zip -r {{fmt_app_name}}.zip .
         - wget https://download.sonatype.com/clm/scanner/latest.jar
-        - java -jar ./latest.jar -i {{nexus_application_id}} -s {{nexus_server_host}} -a {{nexus_username}}:'{{nexus_password}}' ./{{applicationName}}.zip -r results.json
+        - java -jar ./latest.jar -i {{nexus_application_id}} -s {{nexus_server_host}} -a {{nexus_username}}:'{{nexus_password}}' ./{{fmt_app_name}}.zip -r results.json
         - sleep 100
         - cat results.json
         - if [ $(jq -r '.totalComponentCount' result.json) > 0 ] ; then $CODEBUILD_BUILD_SUCCEEDING -eq 1 ;fi

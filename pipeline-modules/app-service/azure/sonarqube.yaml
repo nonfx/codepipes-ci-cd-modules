@@ -19,6 +19,7 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+      default: ""
     git_local_path:
       title: Local Clone Directory
       description: The name of a new directory to clone into.
@@ -43,6 +44,7 @@ inputs:
     - working_dir
     - applicationName
 template: |
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
   steps:
     - task: NodeTool@0
       inputs:
@@ -58,7 +60,7 @@ template: |
         SonarQube: $(CPI__SONARQUBE_SERVICE_CONNECTION)
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ applicationName }}{% endif %}
+        cliProjectKey: {% if sonarQube_application_id %} {{ sonarQube_application_id }}{% else %}{{ fmt_app_name }}{% endif %}
         cliSources: $(System.DefaultWorkingDirectory)/{{working_dir}}
         extraProperties: |
             sonar.exclusions=**/*.bin

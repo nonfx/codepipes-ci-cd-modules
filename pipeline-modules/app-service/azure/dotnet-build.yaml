@@ -26,10 +26,13 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+      default: ""
   internal:
     - working_dir
     - applicationName
 template: |
+  {% set fmt_app_name = applicationName | cpi_replacespecial:"-" %}
+
   steps:
     - task: UseDotNet@2
       displayName: 'Use DotNet 3.x'
@@ -50,4 +53,4 @@ template: |
       inputs:
         rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
         includeRootFolder: false
-        archiveFile: "$(System.DefaultWorkingDirectory)/{{applicationName}}.zip"
+        archiveFile: "$(System.DefaultWorkingDirectory)/{{fmt_app_name}}.zip"

@@ -26,6 +26,7 @@ inputs:
       title: Application name
       description: Code Pipes application name
       type: string
+      default: ""
     feed_name:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed Name
@@ -44,6 +45,7 @@ inputs:
 
     
 template: |-
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
   steps:
   - task: UniversalPackages@0
     inputs:
@@ -51,7 +53,7 @@ template: |-
       publishDirectory: '$(System.DefaultWorkingDirectory)/{{working_dir}}'
       feedsToUsePublish: 'internal'
       vstsFeedPublish: '{{feed_name}}'
-      vstsFeedPackagePublish: '{{applicationName}}-{{sha_tag}}.zip'
+      vstsFeedPackagePublish: '{{fmt_app_name}}-{{sha_tag}}.zip'
       packagePublishDescription: 'sha_tag:{{sha_tag}}'
       versionOption: 'minor'
       publishedPackageVar: 'codepipes'
