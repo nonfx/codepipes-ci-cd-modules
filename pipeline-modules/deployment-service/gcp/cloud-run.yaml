@@ -89,7 +89,7 @@ template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
   {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
-  {% set application_name = applicationName|lower %}
+  {% set fmt_app_name = applicationName | lower | cpi_replacespecial | cpi_trimlength:63 %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
   {% set fmt_env_name = environment | cpi_replacespecial %}
@@ -108,8 +108,8 @@ template: |
         # non-quoted values as it is to be used in arguments
         value=${line#*=}
         name=${line%%=*}
-        gcloud secrets delete {{application_name}}-$name --quiet || true
-        printf "%s" "$value" | gcloud secrets create {{application_name}}-$name --data-file=- --replication-policy=user-managed --locations={{region}}
+        gcloud secrets delete {{fmt_app_name}}-$name --quiet || true
+        printf "%s" "$value" | gcloud secrets create {{fmt_app_name}}-$name --data-file=- --replication-policy=user-managed --locations={{region}}
       done;
   - id: 'Create cloud run application'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -123,7 +123,7 @@ template: |
       apiVersion: serving.knative.dev/v1
       kind: Service
       metadata:
-        name: {{application_name}}
+        name: {{fmt_app_name}}
       spec:
         template:
           metadata:
@@ -146,13 +146,13 @@ template: |
       env.sh all --non-secrets --quoted --template '        - name: %s\n          value: %s\n' >> app.yaml
       env.sh all --secrets | while IFS= read -r line; do
         name=${line%%=*}
-        printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{application_name}}-$name" >>  app.yaml
+        printf "        - name: %s\n          valueFrom:\n            secretKeyRef:\n              key: '1'\n              name: %s\n" "$name" "{{fmt_app_name}}-$name" >>  app.yaml
       done;
 
       cat app.yaml
       gcloud run services replace app.yaml --region {{region}}
       {% if domain %}
-      gcloud beta run domain-mappings create --service {{application_name}} --domain {{domain}} --region {{region}} --quiet || true
+      gcloud beta run domain-mappings create --service {{fmt_app_name}} --domain {{domain}} --region {{region}} --quiet || true
       {% endif %}
   {% if allowUnauthenticated == true %}
   - id: 'Allow public access'
@@ -165,7 +165,7 @@ template: |
             - members:
               - allUsers
               role: roles/run.invoker" >> policy.yaml
-      gcloud run services set-iam-policy {{application_name}} policy.yaml  --quiet --region {{region}}
+      gcloud run services set-iam-policy {{fmt_app_name}} policy.yaml  --quiet --region {{region}}
   {% else %}  {% endif %}
   - name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
@@ -173,7 +173,7 @@ template: |
     - '-c'
     - |
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
-      outputs.sh add "Service URL" `gcloud run services describe {{application_name}} --platform managed --region {{region}} --format 'value(status.url)'`
+      outputs.sh add "Service URL" `gcloud run services describe {{fmt_app_name}} --platform managed --region {{region}} --format 'value(status.url)'`
   {% else %}
   - id: 'Remove cloud run application'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -182,10 +182,10 @@ template: |
     - '-c'
     - |
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
-      gcloud beta run services delete {{application_name}} --region {{region}} --platform managed --quiet;
+      gcloud beta run services delete {{fmt_app_name}} --region {{region}} --platform managed --quiet;
       env.sh all --secrets | while IFS= read -r line; do
         value=${line#*=}
         name=${line%%=*}
-        gcloud secrets delete {{application_name}}-$name --quiet || true
+        gcloud secrets delete {{fmt_app_name}}-$name --quiet || true
       done;
   {% endif %}
