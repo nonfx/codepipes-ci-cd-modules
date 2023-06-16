@@ -33,3 +33,4 @@ template: |
       rootFolderOrFile: "$(System.DefaultWorkingDirectory)/{{ working_dir }}"
       includeRootFolder: false
       archiveFile: "$(System.DefaultWorkingDirectory)/{{fmt_app_name}}-{{sha_tag}}.zip"
+      quiet: true
