@@ -1,0 +1,52 @@
+provisioner: gcp
+name: python-build
+version: 1
+revision: 1
+displayName: Python Build
+description: This plugin is for building or testing your  Python app with version
+target: ""
+category: build
+keywords:
+  - python3
+  - python
+  - pip
+  - Install
+  - Build
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    python_cmd:
+      title: List of Python commmand
+      description: List of Python commmand - python test.py
+      type: array
+      default: ["python --version"]
+      items:
+        type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
+    python_version:
+      title: Python Version
+      description: The version of python being used (From https://hub.docker.com/_/python/tags)
+      type: string
+      default: 3.9.17-alpine
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""      
+  internal:
+    - working_dir
+template: |
+  steps:
+  - id: 'Python Build'
+    name: python:{{ python_version }}
+    script: |
+      export git_branch={{git_checkout_target}}
+      {% for arg in python_cmd %}
+        {{ arg }}
+      {% endfor %}
+    dir: {{ working_dir }}
