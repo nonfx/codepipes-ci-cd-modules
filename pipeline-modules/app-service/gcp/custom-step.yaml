@@ -3,7 +3,7 @@ name: custom-step
 version: 1
 revision: 1
 displayName: Custom Step
-description: This plugin is designed to execute any script or command within a custom docker image.
+description: This plugin is to run any script or command within a personalized/custom/Any docker image.
 target: ""
 category: common
 keywords:

@@ -46,7 +46,6 @@ template: |
   - id: 'Python Build'
     name: python:{{ python_version }}
     script: |
-      export git_ref={{git_checkout_target}}
       {% for arg in python_cmd %}
         {{ arg }}
       {% endfor %}
