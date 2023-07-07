@@ -37,15 +37,16 @@ inputs:
       title: Checkout Target
       description: Git branch, tag or commit hash to checkout.
       type: string
-      default: ""      
+      default: ""         
   internal:
     - working_dir
+    - git_checkout_target
 template: |
   steps:
   - id: 'Python Build'
     name: python:{{ python_version }}
     script: |
-      export git_branch={{git_checkout_target}}
+      export git_ref={{git_checkout_target}}
       {% for arg in python_cmd %}
         {{ arg }}
       {% endfor %}

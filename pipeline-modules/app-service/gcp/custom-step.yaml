@@ -1,0 +1,62 @@
+provisioner: gcp
+name: custom-step
+version: 1
+revision: 1
+displayName: Custom Step
+description: This plugin is designed to execute any script or command within a custom docker image.
+target: ""
+category: common
+keywords:
+  - custom
+  - docker
+  - bash
+
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    step_id: 
+      title: Cloud build Step name
+      description: Define your Cloud build step name
+      type: string
+      default: Command run
+    command:
+      title: List of command
+      description: List of shell command
+      default: [""]
+      type: array
+      items:
+        type: string
+    custom_container_repository:
+      title: Container repository
+      description: Complete  Container repository path which you want to use
+      type: string
+      default: ubuntu
+    cutsom_container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest      
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""   
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo               
+  internal:
+    - working_dir
+    - git_checkout_target
+template: |
+  steps:
+  - id: {{step_id}}
+    name: {{custom_container_repository}}:{{ cutsom_container_tag }}
+    script: |
+      export git_ref={{git_checkout_target}}
+      {% for arg in command %}
+        {{ arg }}
+      {% endfor %}
+    dir: {{ working_dir }}
