@@ -15,7 +15,7 @@ author: CloudCover
 meta: {}
 inputs:
   properties:
-    step_id: 
+    step_name: 
       title: Step name
       description: Define your step name
       type: string
