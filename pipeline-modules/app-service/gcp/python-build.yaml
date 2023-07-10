@@ -3,7 +3,7 @@ name: python-build
 version: 1
 revision: 1
 displayName: Python Build
-description: This plugin is for building or testing your  Python app with version
+description: This plugin is for building or testing your Python app with version
 target: ""
 category: build
 keywords:
@@ -17,15 +17,15 @@ meta: {}
 inputs:
   properties:
     python_cmd:
-      title: List of Python commmand
-      description: List of Python commmand - python test.py
+      title: List of Python commmands
+      description: List of Python commmands - python test.py
       type: array
       default: ["python --version"]
       items:
         type: string
     working_dir:
       title: Working directory
-      description: The current working directory to execute command
+      description: The current working directory to execute the commands in
       type: string
       default: repo
     python_version:

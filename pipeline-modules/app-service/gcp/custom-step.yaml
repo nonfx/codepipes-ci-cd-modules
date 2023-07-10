@@ -19,24 +19,24 @@ inputs:
       title: Cloud build Step name
       description: Define your Cloud build step name
       type: string
-      default: Command run
+      default: Commands run
     command:
-      title: List of command
-      description: List of shell command
+      title: List of commands
+      description: List of shell commands
       default: [""]
       type: array
       items:
         type: string
     custom_container_repository:
       title: Container repository
-      description: Complete  Container repository path which you want to use
+      description: Complete Container repository path which you want to use
       type: string
       default: ubuntu
     custom_container_tag:
       title: Image Tag
       description: Tag name for the container image
       type: string
-      default: latest      
+      default: latest    
     git_checkout_target:
       title: Checkout Target
       description: Git branch, tag or commit hash to checkout.
