@@ -32,7 +32,7 @@ inputs:
       description: Complete  Container repository path which you want to use
       type: string
       default: ubuntu
-    cutsom_container_tag:
+    custom_container_tag:
       title: Image Tag
       description: Tag name for the container image
       type: string
@@ -53,7 +53,7 @@ inputs:
 template: |
   steps:
   - id: {{step_id}}
-    name: {{custom_container_repository}}:{{ cutsom_container_tag }}
+    name: {{custom_container_repository}}:{{ custom_container_tag }}
     script: |
       export git_ref={{git_checkout_target}}
       {% for arg in command %}
