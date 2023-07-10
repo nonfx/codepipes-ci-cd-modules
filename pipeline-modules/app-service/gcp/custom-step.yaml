@@ -16,8 +16,8 @@ meta: {}
 inputs:
   properties:
     step_id: 
-      title: Cloud build Step name
-      description: Define your Cloud build step name
+      title: Step name
+      description: Define your step name
       type: string
       default: Commands run
     command:
