@@ -52,7 +52,7 @@ inputs:
     - git_checkout_target
 template: |
   steps:
-  - id: {{step_id}}
+  - id: {{step_name}}
     name: {{custom_container_repository}}:{{ custom_container_tag }}
     script: |
       export git_ref={{git_checkout_target}}
