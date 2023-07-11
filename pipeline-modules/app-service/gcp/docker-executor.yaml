@@ -1,0 +1,62 @@
+provisioner: gcp
+name: docker-executor
+version: 1
+revision: 1
+displayName: Docker Executor
+description: This plugin is to run any script or command within a personalized/custom/Any docker image.
+target: ""
+category: containerise
+keywords:
+  - custom
+  - docker
+  - bash
+
+author: CloudCover
+meta: {}
+inputs:
+  properties:
+    step_name: 
+      title: Step name
+      description: Define your step name
+      type: string
+      default: Commands run
+    command:
+      title: List of commands
+      description: List of shell commands
+      default: [""]
+      type: array
+      items:
+        type: string
+    custom_container_repository:
+      title: Container repository
+      description: Complete Container repository path which you want to use
+      type: string
+      default: ubuntu
+    custom_container_tag:
+      title: Image Tag
+      description: Tag name for the container image
+      type: string
+      default: latest    
+    git_checkout_target:
+      title: Checkout Target
+      description: Git branch, tag or commit hash to checkout.
+      type: string
+      default: ""   
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo               
+  internal:
+    - working_dir
+    - git_checkout_target
+template: |
+  steps:
+  - id: {{step_name}}
+    name: {{custom_container_repository}}:{{ custom_container_tag }}
+    script: |
+      export git_ref={{git_checkout_target}}
+      {% for arg in command %}
+        {{ arg }}
+      {% endfor %}
+    dir: {{ working_dir }}
