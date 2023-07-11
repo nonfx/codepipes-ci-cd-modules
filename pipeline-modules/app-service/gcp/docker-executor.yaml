@@ -1,11 +1,11 @@
 provisioner: gcp
-name: custom-step
+name: docker-executor
 version: 1
 revision: 1
-displayName: Custom Step
+displayName: Docker Executor
 description: This plugin is to run any script or command within a personalized/custom/Any docker image.
 target: ""
-category: common
+category: containerise
 keywords:
   - custom
   - docker
