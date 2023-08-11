@@ -108,6 +108,7 @@ template: |
       {%- if helm_values_path != '' %}
       cp {{source_code_path}}/{{helm_values_path}} values_presub.yml
       cat values_presub.yml | envsubst > {{source_code_path}}/{{helm_values_path}}
+      rm -f values_presub.yml
       {%- endif %}
       helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{service_name}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
   {% else %}
