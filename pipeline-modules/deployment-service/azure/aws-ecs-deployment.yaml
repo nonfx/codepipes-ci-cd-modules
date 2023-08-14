@@ -1,0 +1,169 @@
+provisioner: azure
+name: azure-aws-ecs
+version: 1
+revision: 1
+displayName: "AWS ECS app deployment"
+description: "Deploy ecs app from azdo"
+target: "deployment-template"
+keywords: ["container","ecs-app"]
+author: "CloudCover"
+meta:
+  inputArtifactType:
+    - GitCode
+    - ContainerImage
+inputs:
+  type: object
+  properties:
+    app_env:
+      title: Application Environment
+      description: Application Related Envs
+      type: object
+      default: {}
+    repository:
+      title: Container Repository
+      description: Enter Full container url without tag
+      type: string
+      default: ""
+    tag:
+      title: Container tag
+      description: Tagged container will deploy
+      type: string
+      default: latest
+    applicationName:
+      title: Application name
+      description: This is vanguard application name
+      type: string
+      default: latest
+    environment:
+      title: Environment Name
+      description: This is vanguard environment name
+      type: string
+      default: latest
+    project:
+      title: Project Name
+      description: This is a vanguard project name
+      type: string
+      default: latest
+    job_type:
+      title: Job Type
+      description: This is to deploy or undeploy application
+      type: string
+      default: deploy
+    task_name:
+      title: Task Name
+      description: The ECS Task Name to update
+      type: string
+    ecs_service_name:
+      title: Service Name
+      description: The ECS Service Name to deploy to
+      type: string
+    cluster_name:
+      title: Cluster Name
+      description: The ECS Cluster Name to Deploy to
+      type: string
+    host_port:
+      title: Host Port
+      description: "The ECS Port to use."
+      type: integer
+      default: 8000
+    container_port:
+      title: Container Port
+      description: "The Container Port to use."
+      type: integer
+      default: 8000
+    execution_role_arn:
+      title: Execution Role Arn
+      description: "The execution Role ARN which allows to deploy to ECS."
+      type: string
+    container_cpu:
+      title: Container CPU
+      description: "The CPU to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
+      type: integer
+      default: 1024
+    container_mem:
+      title: Container Memory
+      description: "The Memory to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
+      type: integer
+      default: 2048
+  required: ["task_name","ecs_service_name","cluster_name","execution_role_arn"]
+  internal:
+    - repository
+    - tag
+    - applicationName
+    - environment
+    - project
+    - job_type
+
+template: |
+  {% set workspace = '$(Build.SourcesDirectory)' %}
+  {% set pipeline_env_file = workspace|add:'/.env' %}
+  {% set pipeline_secret_file = workspace|add:'.secret.env' %}
+  {% set source_code_path = workspace|add:'/source_code' %}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
+  {% set fmt_app_name = applicationName | cpi_replacespecial %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+  {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:40|cpi_replacespecial %}
+  {% set secret_name = "secret-"|add:environment|add:"-"|add:applicationName|cpi_trimlength:64|cpi_replacespecial %}
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.8'
+    displayName: 'Use Python 3.8'
+  - script: |
+      pip install awscli
+      sudo apt-get update && sudo apt-get install -y jq
+    displayName: 'Install AWS CLI & JQ'
+  {% if job_type == 'deploy' %}
+  - script: |
+      aws configure set region $AWS_REGION
+      taskDetails=$(aws ecs describe-task-definition --task-definition {{task_name}})
+      echo $taskDetails
+      containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
+      logConfiguration=$(echo $taskDetails | jq -r -c '.taskDefinition.containerDefinitions[].logConfiguration')
+      echo $logConfiguration
+      echo $containerName
+      echo "Setting configurations"
+      echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"{{execution_role_arn}}","taskRoleArn":"{{execution_role_arn}}","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":{{container_mem}},"cpu":{{container_cpu}},"portMappings":[{"containerPort":{{container_port}},"hostPort":{{host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
+      cat {{pipeline_env_file}} | while IFS= read -r line; do
+        value=${line#*=}
+        name=${line%%=*}
+        printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
+      done
+      sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp containerDef.json
+      echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"{{container_cpu}}","memory":"{{container_mem}}"}' >> containerDef.json
+      cat containerDef.json
+      echo "before"
+      function update_task_definition_secrets() {
+          task_definition_file="$1"
+          secret_name="$2"
+          secret_arn=$(get_secret_arn "$secret_name")
+          secret_content=$(get_secret_content "$secret_name")
+          secret_content_keys=$(jq --arg secret_arn "$secret_arn" -c '[to_entries[] | {name: .key, valueFrom: ($secret_arn + ":" + .key + "::") }]' <<< "$secret_content")
+          jq --argjson keys "$secret_content_keys" '(.containerDefinitions[] | .secrets) = (.secrets // []) + $keys' "$task_definition_file" > "tmp_task_definition.json" && mv "tmp_task_definition.json" "$task_definition_file"
+      }
+      chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
+      source aws-secret-manager.sh
+      echo "Loading environment variables..."
+      env_vars=$(load_env_variables ".secret.env")
+      create_or_update_secret {{secret_name}} "$env_vars"
+      update_task_definition_secrets "containerDef.json" {{secret_name}}
+      echo "after"
+      cat containerDef.json
+      NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json)
+      NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision')
+      NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment)
+      echo "Waiting for new container to be live"
+      sleep 30
+      aws ecs wait services-stable --cluster {{cluster_name}} --services {{ecs_service_name}}
+      echo "New container is live now!"
+      echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
+    displayName: 'AWS ECS deployment'
+    env:
+        AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+  {% else %}
+  - script: |
+        echo "Please update the IAC to remove web-app"
+  {% endif %}
+
+
