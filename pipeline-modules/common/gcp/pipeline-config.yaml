@@ -88,6 +88,11 @@ inputs:
       title: Artifact repository
       description: Artifact repository (docker repo for containerImage or Git repo for GitCode)
       type: string
+    worker_pool:
+      title: Cloud Build Worker Pool
+      description: Name of Cloud Build Private Worker Pool .i.e projects/WORKERPOOL_PROJECT_ID/locations/REGION/workerPools/my-pool
+      type: string
+      default: ""      
   internal:
     - pipeline_env
     - pipeline_secret_env
@@ -138,8 +143,12 @@ template: |
   - {{tag}}
   {% endfor %}
   options:
+  {% if worker_pool %}
+   workerPool: {{ worker_pool }}
+  {% else %}
    {% if pipeline_machine_type %}machineType: {{ pipeline_machine_type }}{% endif %}
    {% if pipeline_disk_size_gb %}diskSizeGb: '{{ pipeline_disk_size_gb }}'{% endif %}
+  {% endif %}
    env:
    - '__VG_EXPORTED_ENV_NAMES={% for env_key in pipeline_env %}{{env_key}} {% endfor %}'
    - '__VG_EXPORTED_SECRET_ENV_NAMES={% for env_key in pipeline_secret_env %}{{env_key}} {% endfor %}'
