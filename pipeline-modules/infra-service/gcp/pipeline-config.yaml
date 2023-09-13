@@ -23,6 +23,7 @@ inputs:
       type: integer
       default: 300
       maximum: 1000
+      minimum: 1
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
@@ -61,11 +62,13 @@ inputs:
       type: integer
       default: 4000
       maximum: 86400 # 24*60*60
+      minimum: 1
     pipeline_queue_timeout_sec:
       title: Queue Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to be queued waiting to run.
       type: integer
       default: 7200
+      minimum: 1
   internal:
     - pipeline_env
     - pipeline_secret_env
