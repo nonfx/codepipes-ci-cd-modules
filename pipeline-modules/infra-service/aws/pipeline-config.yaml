@@ -40,11 +40,13 @@ inputs:
       description: Amount of time in minutes the pipeline will be allowed to run.
       type: integer
       default: 480
+      minimum: 1
     pipeline_queue_timeout_min:
       title: Queue Timeout [min]
       description: Amount of time in minutes the pipeline will be allowed to be queued waiting to run.
       type: integer
       default: 480
+      minimum: 1
     pipeline_secret_env:
       title: Global Secret Environment
       description: Mapping of globally available secret variable id.

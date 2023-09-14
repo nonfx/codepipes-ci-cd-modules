@@ -22,6 +22,7 @@ inputs:
       title: Disk Size [GB]
       description: Amount of disk space in GB allocated for the pipeline.
       type: integer
+      minimum: 1
       default: 300
       maximum: 1000
     pipeline_env:
@@ -60,13 +61,14 @@ inputs:
       title: Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to run.
       type: integer
-      minimum: 0
+      minimum: 1
       maximum: 86400 # 24*60*60
       default: 4000
     pipeline_queue_timeout_sec:
       title: Queue Timeout [s]
       description: Amount of time in seconds the pipeline will be allowed to be queued waiting to run.
       type: integer
+      minimum: 1
       default: 7200
     pipeline_module_git:
       title: Pipeline module git repo url
@@ -92,7 +94,7 @@ inputs:
       title: Cloud Build Worker Pool
       description: Name of Cloud Build Private Worker Pool .i.e projects/WORKERPOOL_PROJECT_ID/locations/REGION/workerPools/my-pool
       type: string
-      default: ""      
+      default: ""
   internal:
     - pipeline_env
     - pipeline_secret_env
