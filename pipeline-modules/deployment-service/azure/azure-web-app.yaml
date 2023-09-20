@@ -35,11 +35,7 @@ inputs:
       title: Web App Name
       description: Web App Name, to link this variable to a terraform output use this syntax ${terraform.webapp_name.value} where webapp_name is output variable key.
       type: string
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application

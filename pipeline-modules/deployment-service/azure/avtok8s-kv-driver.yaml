@@ -38,11 +38,7 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: akv2k8s
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""      
+      
   required:
     - cluster
     - resourceGroup

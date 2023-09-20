@@ -117,11 +117,7 @@ inputs:
       description: Name of the Azure DNS Hosted Zone for CertManager for which certificate is required
       type: string
       default: ""
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""      
+      
   required:
     - cluster
     - resourceGroup
