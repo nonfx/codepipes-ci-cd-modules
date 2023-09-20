@@ -60,6 +60,7 @@ inputs:
       title: VPC Config
       description: "VpcConfig enables CodeBuild to access resources in an Amazon VPC."
       type: object
+      required: [securitygroupids, subnets , vpcid]
       default: {}
       properties:
         securitygroupids:
