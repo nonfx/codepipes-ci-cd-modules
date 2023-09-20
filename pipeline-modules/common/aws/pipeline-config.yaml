@@ -97,6 +97,8 @@ inputs:
     - privileged_mode
     - pipeline_module_git
     - pipeline_module_git_rev
+    - pipeline_job_id
+
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
