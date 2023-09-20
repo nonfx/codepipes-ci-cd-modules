@@ -267,11 +267,7 @@ inputs:
       description: This will deploy acme certificate issuer with letsencrypt as signing authority
       type: boolean
       default: false
-    pool_name:
-      title: Pool Name
-      description: Use  Azure selfhosted agent by proving agent pool name.
-      type: string
-      default: ""      
+    
   required:
     - cluster
     - resourceGroup

@@ -31,11 +31,6 @@ inputs:
       description: The version of Golang to use
       type: string
       default: "1.15.15"
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by providing agent pool name.
-      type: string
-      default: ""
   internal:
     - working_dir
 template: |
