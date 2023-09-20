@@ -45,11 +45,7 @@ inputs:
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
       default: "coverage.out"
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
   required:
     - sonar_cloud_service_connection
     - sonar_cloud_org

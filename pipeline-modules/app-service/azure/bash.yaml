@@ -17,11 +17,7 @@ inputs:
       title: Bash script
       description: This is a bash script
       type: string
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
     working_dir:
       title: Working directory
       description: The current working directory to execute the bash script from

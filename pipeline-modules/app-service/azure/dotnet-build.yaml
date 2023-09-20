@@ -13,11 +13,7 @@ author: CloudCover
 meta: {}
 inputs:
   properties:
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
     working_dir:
       title: Code Directory Path
       description: Directory Path where the code is located.
