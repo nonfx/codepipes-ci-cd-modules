@@ -49,8 +49,20 @@ inputs:
     pipeline_tags:
       title: Tags
       description: Tags assigned to the pipeline.
-      type: object
-      default: {}
+      type: array
+      default: []
+      items:
+        type: object
+        required: [key, value]
+        properties:
+          key:
+            title: Key Name
+            description: "The ID of the Amazon VPC."
+            type: string    
+          value:
+            title: Key Value
+            description: "The ID of the Amazon VPC."
+            type: string  
     privileged_mode:
       title: Privileged Mode
       description: "When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon"
@@ -174,9 +186,9 @@ template: |
     type: "NO_SOURCE"
   sourceversion: null
   tags:
-  {% for tag_key, tag_value in pipeline_tags %}
-  - key: "{{ tag_key }}"
-    value: "{{ tag_value }}"
+  {% for pipeline_tags in pipeline_tags %}
+  - key: "{{ pipeline_tags.key }}"
+    value: "{{ pipeline_tags.value }}"
   {% endfor %}
   timeoutinminutes: {{ pipeline_run_timeout_min }}
   {% if (not vpc_config) or vpc_config|length == 0 or vpc_config.vpcid == "" %}
