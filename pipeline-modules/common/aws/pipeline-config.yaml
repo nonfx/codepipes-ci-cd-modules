@@ -57,11 +57,11 @@ inputs:
         properties:
           key:
             title: Key Name
-            description: "The ID of the Amazon VPC."
+            description: "Enter key name for tag"
             type: string    
           value:
             title: Key Value
-            description: "The ID of the Amazon VPC."
+            description: "Enter key Value name for tag"
             type: string  
     privileged_mode:
       title: Privileged Mode
