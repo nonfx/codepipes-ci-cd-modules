@@ -99,7 +99,6 @@ inputs:
           description: "The ID of the Amazon VPC."
           type: string
           default: ""
-  
   internal:
     - pipeline_logs_bucket
     - pipeline_env
