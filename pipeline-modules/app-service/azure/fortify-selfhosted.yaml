@@ -64,11 +64,7 @@ inputs:
       description:  Upper limit to number of warning level vulnarabilities allowed  
       type: string
       default:
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
   internal:
     - working_dir
   required:

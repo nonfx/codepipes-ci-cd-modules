@@ -17,11 +17,7 @@ inputs:
       title: SHA Git commit tag
       description: Resolved Commit hash for Input git artifact
       type: string  
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
     applicationName:
       title: Application name
       description: Code Pipes application name

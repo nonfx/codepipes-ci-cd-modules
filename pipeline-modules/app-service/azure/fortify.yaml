@@ -17,11 +17,7 @@ env:
   - CPI__FORTIFY_TOKEN
 inputs:
   properties:
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
     fortify_application_id:
       title: Fortify Application ID
       description: If not provided Code Pipes application name will be used

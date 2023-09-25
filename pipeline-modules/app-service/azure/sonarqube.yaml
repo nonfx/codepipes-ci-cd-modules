@@ -34,11 +34,7 @@ inputs:
       description: If not provided, Code Pipes application name will be used
       type: string
       default: ""
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
-      default: ""
+
   internal:
     - git_local_path
     - working_dir

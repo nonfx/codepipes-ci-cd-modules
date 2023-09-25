@@ -24,10 +24,6 @@ inputs:
       description: Code Pipes application name
       type: string
       default: ""
-    pool_name:
-      title: Pool Name
-      description: Use selfhosted agent by proving agent pool name.
-      type: string
     fortify_application_id:
       title: Fortify application id
       description: Fortify application identifier
@@ -51,8 +47,6 @@ inputs:
     - git_local_path
     - working_dir
     - applicationName
-  required:
-    - pool_name
 template: |
   {% set scancentral = '/home/azureuser/client/bin/scancentral' %}
   {% set pipeline_env_file = workspace|add:'/.env' %}

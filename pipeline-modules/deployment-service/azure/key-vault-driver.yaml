@@ -41,12 +41,7 @@ inputs:
     publicIP:
       title: Public IP
       description: This is Public IP to be alloted to the Load Balancer
-      type: string
-    pool_name:
-      title: Pool Name
-      description: Use  Azure selfhosted agent by proving agent pool name.
-      type: string
-      default: ""      
+      type: string   
 
   required:
     - cluster
