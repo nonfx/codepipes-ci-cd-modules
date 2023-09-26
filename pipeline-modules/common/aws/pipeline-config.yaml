@@ -17,9 +17,14 @@ inputs:
   properties:
     pipeline_compute_type:
       title: Compute Type
-      description: Specifies the compute resources used by this build environment.
+      description: Specifies the compute resources used by this build environment. URL- "https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html"
       type: string
       default: BUILD_GENERAL1_SMALL
+      enum:
+        - BUILD_GENERAL1_SMALL
+        - BUILD_GENERAL1_MEDIUM        
+        - BUILD_GENERAL1_LARGE
+        - BUILD_GENERAL1_2XLARGE
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
