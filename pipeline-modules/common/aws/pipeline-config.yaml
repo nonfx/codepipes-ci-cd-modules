@@ -25,6 +25,22 @@ inputs:
         - BUILD_GENERAL1_MEDIUM        
         - BUILD_GENERAL1_LARGE
         - BUILD_GENERAL1_2XLARGE
+    pipeline_image:
+      title: CodeBuild Image Type
+      description: AWS CodeBuild supports the following Docker images that are available in the CodeBuild. URL- "https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html"
+      type: string
+      default: "aws/codebuild/standard:7.0"
+      enum:
+        - aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        - aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        - aws/codebuild/amazonlinux2-x86_64-standard:corretto8
+        - aws/codebuild/amazonlinux2-x86_64-standard:corretto11
+        - aws/codebuild/amazonlinux2-aarch64-standard:3.0
+        - aws/codebuild/standard:5.0
+        - aws/codebuild/standard:6.0
+        - aws/codebuild/standard:7.0
+        - aws/codebuild/windows-base:2019-1.0
+        - aws/codebuild/windows-base:2019-2.0
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
@@ -149,7 +165,7 @@ template: |
       value: "{{ env_value }}"
       type: "SECRETS_MANAGER"
     {% endfor %}
-    image: "aws/codebuild/standard:7.0"
+    image : {{ pipeline_image }}
     imagepullcredentialstype: "CODEBUILD"
     privilegedmode: {{ privileged_mode }}
     registrycredential: null
