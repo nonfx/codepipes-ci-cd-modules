@@ -63,5 +63,4 @@ template: |
               {% endif %}
           elif [ -n "$warning_values" ]; then
               echo "Severity Warning Vulnerabilities found! Please check Semgrep \n"
-              echo $critical_values
           fi

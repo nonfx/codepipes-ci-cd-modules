@@ -1,0 +1,89 @@
+{
+  "containerDefinitions": [
+      {
+          "name": "racer-api",
+          "image": "public.ecr.aws/nginx/nginx:latest",
+          "cpu": 1024,
+          "memory": 2048,
+          "portMappings": [
+              {
+                  "name": "racer-api-3000-tcp",
+                  "containerPort": 3000,
+                  "hostPort": 3000,
+                  "protocol": "tcp"
+              }
+          ],
+          "essential": true,
+          "environment": [
+              {
+                  "name": "NGINX_PORT",
+                  "value": "3000"
+              }
+          ],
+          "mountPoints": [],
+          "volumesFrom": [],
+          "secrets": [
+              {
+                  "name": "API_AWS_SECRET_ACCESS_KEY",
+                  "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:517787345042:secret:test-secret-1sjxup:test-secret::"
+              }
+          ],
+          "logConfiguration": {
+              "logDriver": "awslogs",
+              "options": {
+                  "awslogs-group": "/fargate/service/test-app",
+                  "awslogs-region": "ap-southeast-1",
+                  "awslogs-stream-prefix": "ecs"
+              }
+          }
+      },
+      {
+          "name": "datadog-agent",
+          "image": "public.ecr.aws/datadog/agent:latest",
+          "cpu": 256,
+          "memory": 512,
+          "portMappings": [
+              {
+                  "name": "datadog-agent-8126-tcp",
+                  "containerPort": 8126,
+                  "hostPort": 8126,
+                  "protocol": "tcp"
+              }
+          ],
+          "essential": true,
+          "environment": [
+              {
+                  "name": "ECS_FARGATE",
+                  "value": "true"
+              },
+              {
+                  "name": "DD_APM_ENABLED",
+                  "value": "true"
+              },
+              {
+                  "name": "DD_API_KEY",
+                  "value": "asdfasdf"
+              },
+              {
+                  "name": "DD_SITE",
+                  "value": "datadoghq.eu"
+              }
+          ],
+          "mountPoints": [],
+          "volumesFrom": []
+      }
+  ],
+  "family": "racer-app-task-definition",
+  "taskRoleArn": "arn:aws:iam::517787345042:role/test-ecs-iam-role-v2",
+  "executionRoleArn": "arn:aws:iam::517787345042:role/test-ecs-iam-role-v2",
+  "networkMode": "awsvpc",
+  "volumes": [],
+  "placementConstraints": [],
+  "requiresCompatibilities": [
+      "EC2",
+      "FARGATE"
+  ],
+  "cpu": "2048",
+  "memory": "4096",
+  "tags": []
+}

@@ -1,0 +1,41 @@
+taskDetails=$(aws ecs describe-task-definition --task-definition racer-app-task-definition)
+echo $taskDetails
+containerName=$(echo $taskDetails | jq -r '.taskDefinition.containerDefinitions[].name')
+logConfiguration=$(echo $taskDetails | jq -r -c '.taskDefinition.containerDefinitions[].logConfiguration')
+echo $logConfiguration
+echo $containerName
+echo "Setting configurations"
+echo '{"family":"racer-app-task-definition","networkMode":"awsvpc","executionRoleArn":"arn:aws:iam::973993367236:role/racer-ecs-iam-role-v2","taskRoleArn":"arn:aws:iam::973993367236:role/racer-ecs-iam-role-v2","containerDefinitions":[{"name":"'$containerName'","image":"887353307671.dkr.ecr.ap-southeast-1.amazonaws.com/racer-staging-ecr:dfc37c6d75e5d3b964891a5aa8843cd54e1be96d","memory":2048,"cpu":1024,"portMappings":[{"containerPort":3000,"hostPort":3000,"protocol":"tcp"}],"environment":['>> containerDef.json
+          cat $CODEBUILD_SRC_DIR/.env | while IFS= read -r line; do
+          value=${line#*=}
+          name=${line%%=*}
+          printf "{\n \"name\" : \"%s\", \"value\": %s \n}," "$name" "$value" >> containerDef.json
+          done
+sed '$ s/,$//' containerDef.json > containerDef.json.tmp && mv containerDef.json.tmp
+          containerDef.json
+echo '],"logConfiguration":'$logConfiguration'}],"requiresCompatibilities":["EC2","FARGATE"],"cpu":"1024","memory":"2048"}'
+          >> containerDef.json
+cat containerDef.json
+echo "before"
+"function update_task_definition_secrets() {\n    task_definition_file=\"$1\"\n
+          \   secret_name=\"$2\"\n    secret_arn=$(get_secret_arn \"$secret_name\")\n
+          \   secret_content=$(get_secret_content \"$secret_name\")\n    secret_content_keys=$(jq
+          --arg secret_arn \"$secret_arn\" -c '[to_entries[] | {name: .key, valueFrom:
+          ($secret_arn + \":\" + .key + \"::\") }]' <<< \"$secret_content\")\n    jq --argjson
+          keys \"$secret_content_keys\" '(.containerDefinitions[] | .secrets) = (.secrets
+          // []) + $keys' \"$task_definition_file\" > \"tmp_task_definition.json\" &&
+          mv \"tmp_task_definition.json\" \"$task_definition_file\"\n}\nchmod +x /assets/scripts/aws-secret-manager.sh\nsource
+          aws-secret-manager.sh\necho \"Loading environment variables...\" \nenv_vars=$(load_env_variables
+          \".secret.env\")\ncreate_or_update_secret secret-production-racer-app \"$env_vars\"\nupdate_task_definition_secrets
+          \"containerDef.json\" secret-production-racer-app\n"
+echo "after"
+cat containerDef.json
+NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json)
+NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision')
+NEW_SERVICE=$(aws ecs update-service --cluster racer-cluster --service racer-app-service
+          --task-definition racer-app-task-definition --force-new-deployment)
+ echo "Waiting for new container to be live"
+ sleep 30
+ aws ecs wait services-stable --cluster racer-cluster --services racer-app-service
+ echo "New container is live now!"
+ echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
