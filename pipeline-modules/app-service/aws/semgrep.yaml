@@ -18,6 +18,11 @@ inputs:
       description: The current working directory to execute the bash script from
       type: string
       default: repo
+    applicationName:
+      title: Application Name
+      description: The name of the application
+      type: string
+      default: ""
     allow_critical:
       title: Allow Critical Vulnerabilities
       description: Allows builds with critical vulnerabilites
@@ -30,6 +35,7 @@ inputs:
       default: false
   internal:
     - working_dir
+    - applicationName
 template: |
   phases:
     build:
@@ -38,6 +44,7 @@ template: |
         - python3 --version
         - python3 -m pip install semgrep
         - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
+        - export SEMGREP_REPO_NAME={{ applicationName }}
         - semgrepPath=$(find ~ -name semgrep | head -n 1)
         - echo $semgrepPath
         - binPath=${semgrepPath%/*}
