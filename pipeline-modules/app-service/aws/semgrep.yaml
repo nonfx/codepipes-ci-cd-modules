@@ -18,6 +18,11 @@ inputs:
       description: The current working directory to execute the bash script from
       type: string
       default: repo
+    applicationName:
+      title: Application Name
+      description: The name of the application
+      type: string
+      default: ""
     allow_critical:
       title: Allow Critical Vulnerabilities
       description: Allows builds with critical vulnerabilites
@@ -30,6 +35,7 @@ inputs:
       default: false
   internal:
     - working_dir
+    - applicationName
 template: |
   phases:
     build:
@@ -38,6 +44,7 @@ template: |
         - python3 --version
         - python3 -m pip install semgrep
         - export SEMGREP_APP_TOKEN=$CPI__SEMGREP_TOKEN
+        - export SEMGREP_REPO_NAME={{ applicationName }}
         - semgrepPath=$(find ~ -name semgrep | head -n 1)
         - echo $semgrepPath
         - binPath=${semgrepPath%/*}
@@ -45,9 +52,10 @@ template: |
         - export PATH=$PATH:$binPath
         - semgrep --config=auto
         - semgrep ci --json -o semgrep.json
-        - error_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "ERROR") |  .results[]')
-        - critical_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "CRITICAL") |  .results[]')
-        - warning_values=$(cat semgrep.json | jq -r 'select(.results[].extra.severity == "WARNING") | .results[]')
+
+        - error_values=$(cat semgrep.json | jq -r '.results[] | select(.extra.severity|test("ERROR"))')
+        - critical_values=$(cat semgrep.json | jq -r '.results[] | select(.extra.severity|test("CRITICAL"))')
+        - warning_values=$(cat semgrep.json | jq -r '.results[] | select(.extra.severity|test("WARNING"))')
         - |
           if [ -n "$error_values" ]; then
               echo "Severity Error Vulnerabilities found! Please check Semgrep. Failing Pipeline \n"
@@ -63,5 +71,5 @@ template: |
               {% endif %}
           elif [ -n "$warning_values" ]; then
               echo "Severity Warning Vulnerabilities found! Please check Semgrep \n"
-              echo $critical_values
+              echo "$warning_values"
           fi
