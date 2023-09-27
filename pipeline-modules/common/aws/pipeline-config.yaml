@@ -122,7 +122,6 @@ inputs:
       title: Pipeline module git repo revision
       description: git revision for cloning the pipeline module repo.
       type: string
-
   internal:
     - pipeline_logs_bucket
     - pipeline_env
