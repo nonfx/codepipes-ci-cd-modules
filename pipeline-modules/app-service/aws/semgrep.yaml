@@ -50,7 +50,6 @@ template: |
         - binPath=${semgrepPath%/*}
         - echo $binPath
         - export PATH=$PATH:$binPath
-        - bash --version
         - semgrep --config=auto
         - semgrep ci --json -o semgrep.json
 
