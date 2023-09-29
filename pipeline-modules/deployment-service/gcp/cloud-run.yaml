@@ -145,21 +145,22 @@ template: |
       kind: Service
       metadata:
         name: {{fmt_app_name}}
+        labels:
+          codepipes-project: {{fmt_proj}}
+          codepipes-environment: {{fmt_env_name}}
+        annotations:
+           run.googleapis.com/launch-stage: BETA
+           {% if useCDN %}run.googleapis.com/ingress: all{% endif %}
       spec:
         template:
           metadata:
-            labels:
-              codepipes-project: {{fmt_proj}}
-              codepipes-environment: {{fmt_env_name}}
             annotations:
-              run.googleapis.com/launch-stage: BETA
-              {% if useCDN %}run.googleapis.com/ingress: all{% endif %}
               {% if minInstances > 0 %}autoscaling.knative.dev/minScale: "{{minInstances}}"{% endif %}
               {% if maxInstances > 0 %}autoscaling.knative.dev/maxScale: "{{maxInstances}}"{% endif %}
-              autoscaling.knative.dev/target: "{{concurrency}}"
               {% if vpcConnector %}run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}{% endif %}
           spec:
             serviceAccountName: $$client_email
+            containerConcurrency: {{concurrency}}
             containers:
             - image: {{repository}}:{{tag}}
               ports:
