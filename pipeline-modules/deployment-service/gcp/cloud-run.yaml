@@ -155,8 +155,12 @@ template: |
         template:
           metadata:
             annotations:
-              {% if minInstances > 0 %}autoscaling.knative.dev/minScale: {{minInstances}}{% endif %}
-              {% if maxInstances > 0 %}autoscaling.knative.dev/maxScale: {{maxInstances}}{% endif %}
+              {% if minInstances > 0 %}
+              autoscaling.knative.dev/minScale: "{{minInstances}}"
+              {% endif %}
+              {% if maxInstances > 0 %}
+              autoscaling.knative.dev/maxScale: "{{maxInstances}}"
+              {% endif %}
               {% if vpcConnector %}run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}{% endif %}
           spec:
             serviceAccountName: $$client_email
