@@ -68,6 +68,27 @@ inputs:
       description: Name of the VPC Connector
       type: string
       default: ""
+    maxInstances:
+      title: Max Instances
+      description: Maximum number of instances for the service.
+      type: integer
+      default: 100
+    concurrency:
+      title: Concurrency
+      description: Number of concurrent requests to be processed per instance.
+      type: integer
+      default: 80
+      maximum: 1000
+    minInstances:
+      title: Min Instances
+      description: Minimum number of instances for the service.
+      type: integer
+      default: 0
+    useCDN:
+      title: Use Cloud CDN
+      description: Use Cloud CDN for the service.
+      type: boolean
+      default: false
   required:
     - region
   internal:
@@ -119,30 +140,40 @@ template: |
     - |
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
       client_email=$$(gcloud config list account --format "value(core.account)")
-      echo "
+      cat <<EOF >> app.yaml
       apiVersion: serving.knative.dev/v1
       kind: Service
       metadata:
         name: {{fmt_app_name}}
+        labels:
+          codepipes-project: {{fmt_proj}}
+          codepipes-environment: {{fmt_env_name}}
+        annotations:
+          run.googleapis.com/launch-stage: BETA
+          {% if useCDN %}run.googleapis.com/ingress: all{% endif %}
       spec:
         template:
           metadata:
-            labels:
-              codepipes-project: {{fmt_proj}}
-              codepipes-environment: {{fmt_env_name}}
-            {%- if vpcConnector %}
             annotations:
-              run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}
-            {%- endif %}
+              {% if minInstances > 0 %}
+              autoscaling.knative.dev/minScale: "{{minInstances}}"
+              {% endif %}
+              {% if maxInstances > 0 %}
+              autoscaling.knative.dev/maxScale: "{{maxInstances}}"
+              {% endif %}
+              {% if vpcConnector %}run.googleapis.com/vpc-access-connector: projects/$$GOOGLE_PROJECT/locations/{{region}}/connectors/{{vpcConnector}}{% endif %}
           spec:
             serviceAccountName: $$client_email
+            containerConcurrency: "{{concurrency}}"
             containers:
             - image: {{repository}}:{{tag}}
               ports:
               - name: http1
                 containerPort: {{containerPort}}
-              env:" >> app.yaml
-
+              env:
+              - name: DEPLOY_TIMESTAMP
+                value: "$(date +%s)"
+      EOF
       env.sh all --non-secrets --quoted --template '        - name: %s\n          value: %s\n' >> app.yaml
       env.sh all --secrets | while IFS= read -r line; do
         name=${line%%=*}
