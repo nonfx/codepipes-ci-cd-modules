@@ -9,7 +9,7 @@ category: code analysis
 keywords:
   - analyze
   - quality gate
-author: CloudCover
+author: Ollion
 meta: {}
 env:
   - CPI__SONARQUBE_SERVICE_CONNECTION

@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
@@ -19,8 +19,8 @@ inputs:
     projectName:
       title: project name
       description: project name
-      type: string   
-      default: "codepipes"  
+      type: string
+      default: "codepipes"
     cluster:
       title: Cluster Name
       description: Cluster name in which deployment will happen
@@ -43,7 +43,7 @@ inputs:
       title: Istio-proxy Access Log
       description: To enable Istio access logging
       type: boolean
-      default: true   
+      default: true
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
@@ -64,15 +64,15 @@ inputs:
           name:
             title: Domain name
             type: string
-            default: ""  
+            default: ""
     ingress:
       title: Ingress
-      description: Detail required to create Ingress on GKE. Avoid this if ,IngressInstall is false 
+      description: Detail required to create Ingress on GKE. Avoid this if ,IngressInstall is false
       type: array
       default: []
       items:
         type: object
-        properties:               
+        properties:
           staticIPName:
             title: staticIPName
             type: string
@@ -80,11 +80,11 @@ inputs:
           IsPrivateIngress:
             title: IsPrivateIngress
             type: boolean
-            default: false  
+            default: false
           ingressTimeoutSec:
             title: IngressTimeoutSecond
             type: string
-            default: "60"          
+            default: "60"
 
   required:
     - cluster
@@ -114,7 +114,7 @@ template: |
       curl -sL https://istio.io/downloadIstioctl | sh -
       export PATH=$$PATH:$$HOME/.istioctl/bin
       istioctl {{istio_args}} -y;
-      
+
       echo "
       apiVersion: telemetry.istio.io/v1alpha1
       kind: Telemetry
@@ -125,7 +125,7 @@ template: |
         accessLogging:
           - providers:
             - name: envoy " >> enable_istio_access_log.yaml
-      {% if enable_istio_access_log %}        
+      {% if enable_istio_access_log %}
       kubectl apply -f enable_istio_access_log.yaml
       {% else %}
       kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml
@@ -152,11 +152,11 @@ template: |
           - '*' "  >> istio_gateway.yaml ;
       {% if job_type == 'deploy' %}
       kubectl apply -f istio_gateway.yaml ;
-      {% endif %}            
+      {% endif %}
 
 
       echo "Creating istio VirtualService for health check....."
-      echo "          
+      echo "
       apiVersion: networking.istio.io/v1alpha3
       kind: VirtualService
       metadata:
@@ -182,7 +182,7 @@ template: |
           - destination:
               host: istio-ingressgateway.istio-system.svc.cluster.local
               port:
-                number: 15021" >> istio_healthcheck_vs.yaml ;          
+                number: 15021" >> istio_healthcheck_vs.yaml ;
       {% if job_type == 'deploy' %}
       kubectl apply -f istio_healthcheck_vs.yaml ;
       {% endif %}
@@ -198,7 +198,7 @@ template: |
       spec:
         domains:
         {% for domain in domains %}
-        - {{  domain.name }} 
+        - {{  domain.name }}
         {% endfor %}
       " >> istio_ingress_manage_certificate.yaml ;
       cat istio_ingress_manage_certificate.yaml ;
@@ -228,13 +228,13 @@ template: |
       {% else %}
       kubectl delete -f istio_ingress_backendconfig.yaml ;
       {% endif %}
-      
-      {% for ing in ingress %}  
-      {% if ing.ingressTimeoutSec != "" %}                  
+
+      {% for ing in ingress %}
+      {% if ing.ingressTimeoutSec != "" %}
       echo 'Add annotatation on istio-ingressgateway SVC to increase Istio Timeout '
       kubectl annotate svc istio-ingressgateway -n istio-system cloud.google.com/backend-config='{"default": "istio-gke-ingress-backendconfig"}'
-      {% endif %} 
-      {% endfor %} 
+      {% endif %}
+      {% endfor %}
 
       echo "Creating GKE Ingress....."
       echo "
@@ -244,11 +244,11 @@ template: |
         name: {{ projectName | lower }}-istio-ingress
         namespace: istio-system
         annotations:
-        {% for ing in ingress %}     
+        {% for ing in ingress %}
           # Enable use of manually pre-defined global static IP
           {% if ing.staticIPName %}
           kubernetes.io/ingress.global-static-ip-name: '{{ ing.staticIPName }}'
-          {% endif %}        
+          {% endif %}
           {% if ing.IsPrivateIngress %}
           #this config create private ingress
           kubernetes.io/ingress.class: 'gce'
@@ -262,7 +262,7 @@ template: |
         rules:
         {% if domains %}
         {% for domain in domains %}
-        - host: {{  domain.name }} 
+        - host: {{  domain.name }}
           http:
             paths:
             - path: /*
@@ -271,22 +271,22 @@ template: |
                 service:
                   name: istio-ingressgateway
                   port:
-                    number: 80 
-        {% endfor %}            
-        {% endif %}    "     >> istio_ingress.yaml ;  
-      
+                    number: 80
+        {% endfor %}
+        {% endif %}    "     >> istio_ingress.yaml ;
+
       cat istio_ingress.yaml
 
       {% if job_type == 'deploy' %}
       kubectl apply -f istio_ingress.yaml;
       {% else %}
       kubectl delete -f istio_ingress.yaml ;
-      {% endif %}         
-     
+      {% endif %}
+
 
   {% endif %}
 
-  
+
   {% else %}
   - id: 'Uninstall Istio'
     name: 'gcr.io/cloud-builders/gcloud'
@@ -299,7 +299,7 @@ template: |
       kubectl delete --ignore-not-found=true ManagedCertificate -n istio-system {{ projectName | lower }}-istio-ingress-certificate ;
       kubectl delete  --ignore-not-found=true ingress {{ projectName | lower }}-istio-ingress -n istio-system
       curl -sL https://istio.io/downloadIstioctl | sh -
-      export PATH=$$PATH:$$HOME/.istioctl/bin     
+      export PATH=$$PATH:$$HOME/.istioctl/bin
       istioctl uninstall --purge -y
       kubectl delete namespace istio-system
   {% endif %}

@@ -6,7 +6,7 @@ displayName: Test Module
 description: Module for the integration test
 target: "test"
 keywords:
-author: CloudCover
+author: Ollion
 inputs:
   properties:
     echo_float:

@@ -9,7 +9,7 @@ category: publish
 keywords:
   - Publish
   - Zip
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -21,10 +21,10 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resolved Commit hash for Input git artifact
-      type: string           
+      type: string
   internal:
     - working_dir
-    - sha_tag       
+    - sha_tag
 template: |
   steps:
   - task: ArchiveFiles@2

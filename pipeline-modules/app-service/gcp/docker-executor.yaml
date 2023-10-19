@@ -11,11 +11,11 @@ keywords:
   - docker
   - bash
 
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
-    step_name: 
+    step_name:
       title: Step name
       description: Define your step name
       type: string
@@ -36,17 +36,17 @@ inputs:
       title: Image Tag
       description: Tag name for the container image
       type: string
-      default: latest    
+      default: latest
     git_checkout_target:
       title: Checkout Target
       description: Git branch, tag or commit hash to checkout.
       type: string
-      default: ""   
+      default: ""
     working_dir:
       title: Working directory
       description: The current working directory to execute command
       type: string
-      default: repo               
+      default: repo
   internal:
     - working_dir
     - git_checkout_target

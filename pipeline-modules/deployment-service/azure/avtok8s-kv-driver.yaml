@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
@@ -38,7 +38,7 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: akv2k8s
-      
+
   required:
     - cluster
     - resourceGroup
@@ -70,7 +70,7 @@ template: |
     - script: |
           helm repo add spv-charts https://charts.spvapi.no
           helm repo update
-          helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace {{namespace}} --create-namespace 
+          helm upgrade --install akv2k8s spv-charts/akv2k8s --namespace {{namespace}} --create-namespace
       displayName: "Helm Deploy {{fmt_app_name}}"
       workingDirectory: {{ workingDir }}
     {% else %}

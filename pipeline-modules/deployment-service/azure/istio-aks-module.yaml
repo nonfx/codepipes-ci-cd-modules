@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
@@ -267,7 +267,7 @@ inputs:
       description: This will deploy acme certificate issuer with letsencrypt as signing authority
       type: boolean
       default: false
-    
+
   required:
     - cluster
     - resourceGroup

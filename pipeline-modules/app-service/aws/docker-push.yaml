@@ -9,7 +9,7 @@ category: push
 keywords:
   - default
   - ContainerImage
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -57,4 +57,3 @@ template: |
         - echo Pushing the Docker image with Commit hash...
         - docker push {{container_repository}}:{{sha_tag}}
         {% endif %}
-        

@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - git
@@ -41,7 +41,7 @@ inputs:
     publicIP:
       title: Public IP
       description: This is Public IP to be alloted to the Load Balancer
-      type: string   
+      type: string
 
   required:
     - cluster

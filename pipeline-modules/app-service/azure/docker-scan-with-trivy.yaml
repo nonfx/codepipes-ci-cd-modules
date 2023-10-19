@@ -12,7 +12,7 @@ keywords:
   - security
   - vulnarabilities
   - trivy
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -38,7 +38,7 @@ inputs:
       title: Severity
       description: The severities (CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN) to include in the scan (comma sperated). Defaults to CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN
       type: string
-      default: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+      default: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
     trivy_args:
       title: Extra Trivy Arguments
       description: Arguments for Trivy command

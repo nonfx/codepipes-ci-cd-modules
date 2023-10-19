@@ -11,7 +11,7 @@ keywords:
   - secret
   - config
   - configuration
-author: CloudCover
+author: Ollion
 meta:
   gcpRoles:
     - roles/cloudkms.cryptoKeyDecrypter

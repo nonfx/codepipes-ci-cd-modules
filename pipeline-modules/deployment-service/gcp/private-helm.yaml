@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - helm
   - private
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - GitCode

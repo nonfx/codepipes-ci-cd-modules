@@ -5,8 +5,8 @@ revision: 1
 displayName: "AWS Lambda deployment with container"
 description: "Deploy Lambda functions with API gateway"
 target: "deployment-template"
-keywords: ["bash", "linux","functions"]
-author: "CloudCover"
+keywords: ["bash", "linux", "functions"]
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -83,7 +83,7 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-  required: ["region","bucket","verb","function","path"]
+  required: ["region", "bucket", "verb", "function", "path"]
   internal:
     - app_env
     - repository
@@ -111,7 +111,7 @@ template: |
         - npm install -g npm
         - npm install serverless -g
         - npm install serverless-deployment-bucket -g
-    build: 
+    build:
       commands:
         - |
           echo "
@@ -122,7 +122,7 @@ template: |
             name: aws
             stage: {{fmt_env_name}}
             ecr:
-              images: 
+              images:
                 {{ function }}:
                   uri: {{repository}}:{{tag}}
             architecture: {{architecture}}
@@ -137,9 +137,9 @@ template: |
               events:
                 - httpApi:
                     path: {{ path }}
-                    method: {{ verb }} 
+                    method: {{ verb }}
           plugins:
-            - serverless-deployment-bucket  
+            - serverless-deployment-bucket
           " >> serverless.yml
       {% if job_type == 'deploy' %}
         - serverless deploy

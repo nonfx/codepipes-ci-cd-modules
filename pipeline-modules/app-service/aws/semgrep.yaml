@@ -9,7 +9,7 @@ category: scan
 keywords:
   - scan
   - sast
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

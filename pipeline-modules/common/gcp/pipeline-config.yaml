@@ -12,7 +12,7 @@ keywords:
   - config
   - configuration
   - cp_internal
-author: CloudCover
+author: Ollion
 meta:
   gcpRoles:
     - roles/cloudkms.cryptoKeyDecrypter
@@ -103,7 +103,7 @@ inputs:
     - tag
     - repo_dir
     - repository
-    - pipeline_logs_bucket    
+    - pipeline_logs_bucket
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}

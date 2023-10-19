@@ -10,7 +10,7 @@ keywords:
   - Docker
   - Push
   - Build
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -43,7 +43,7 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
-      type: string        
+      type: string
   internal:
     - container_repository
     - container_tag
@@ -71,4 +71,3 @@ template: |
         - echo Pushing the Docker image with Commit hash...
         - docker push {{container_repository}}:{{sha_tag}}
         {% endif %}
-        

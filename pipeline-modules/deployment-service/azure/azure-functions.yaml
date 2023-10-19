@@ -5,11 +5,11 @@ revision: 1
 displayName: "Azure functions deployment with code"
 description: "Deploy Azure functions"
 target: "deployment-template"
-keywords: ["serverless","functions"]
-author: CloudCover
+keywords: ["serverless", "functions"]
+author: Ollion
 meta:
   inputArtifactType:
-    - GitCode 
+    - GitCode
 inputs:
   type: object
   properties:
@@ -30,7 +30,7 @@ inputs:
       default: dev
     repo_dir:
       title: Repo Dir
-      description:  Repo Dir
+      description: Repo Dir
       type: string
     function_app_name:
       title: Function App Name
@@ -42,10 +42,10 @@ inputs:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: deploy       
+      default: deploy
     feed_name:
       title: Artifact Feed Name
-      description: Azure devops Artifact Feed name where App artifact will download 
+      description: Azure devops Artifact Feed name where App artifact will download
       type: string
       default: "$(CPI__artifact_feed)"
     service_connection_string:
@@ -54,15 +54,15 @@ inputs:
       type: string
       default: "$(CPI__azure_subscription)"
     deployment_method:
-      title: Deployment method 
+      title: Deployment method
       description: Choose Value from auto (Auto-detect), zipDeploy (Zip Deploy), runFromPackage (Zip Deploy with Run From Package(with this option Files in the wwwroot folder become read-only)).Default value- auto
       type: string
       default: auto
       enum:
         - auto
         - zipDeploy
-        - runFromPackage 
-  required: 
+        - runFromPackage
+  required:
     - function_app_name
   internal:
     - app_env
@@ -88,11 +88,11 @@ template: |
             value=${line#*=}
             name=${line%%=*}
             echo "-$name $value " >> config.txt
-        done;        
+        done;
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
         cd {{source_code_path}}/{{repo_dir}}
-        ls -la        
+        ls -la
         export sha_tag=$(git log --format="%H" -n 1);
         echo "SHA Tag value: $sha_tag"
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
@@ -116,14 +116,14 @@ template: |
       rootFolderOrFile: "$(System.DefaultWorkingDirectory)/azure-functions-code"
       includeRootFolder: false
       archiveFile: "$(System.DefaultWorkingDirectory)/{{fmt_app_name}}-$(sha_tag).zip"
-  
+
   - script: |
         echo 'List the file'
-        cd '$(System.DefaultWorkingDirectory)/azure-functions-code' && ls -la     
+        cd '$(System.DefaultWorkingDirectory)/azure-functions-code' && ls -la
         echo 'list zip file'
         cd $(System.DefaultWorkingDirectory)
         ls -la
-    displayName: "List file" 
+    displayName: "List file"
 
   {% if job_type == 'deploy' %}
   - task: AzureFunctionApp@1
@@ -137,8 +137,5 @@ template: |
       deploymentMethod: '{{deployment_method}}'
   {% else %}
   - script: |
-        echo "Please delete the function from the Class and redeploy" 
+        echo "Please delete the function from the Class and redeploy"
   {% endif %}
-
-
-

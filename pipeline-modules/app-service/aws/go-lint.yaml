@@ -9,7 +9,7 @@ category: Lint
 keywords:
   - Go
   - lint
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

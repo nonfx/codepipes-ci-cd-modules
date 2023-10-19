@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
@@ -143,9 +143,9 @@ template: |
     args:
     - '-c'
     - |
-      export PATH="{{workspace}}/bin:$$PATH";    
+      export PATH="{{workspace}}/bin:$$PATH";
       {{ common_scripts_path }}/install-jq.sh
-      
+
       cd {{helm_chart_path}} ;
 
       touch .helmignore;
@@ -260,7 +260,7 @@ template: |
     args:
     - '-c'
     - |
-      
+
       export PATH={{common_scripts_path}}:{{workspace}}/bin:$$PATH
       summary=$(retry.sh run "kubectl get ingress -n {{fmt_app_name}} -o=jsonpath={.items[*].status.loadBalancer.ingress[*].ip}" 30 2)
       if [ ! -z "$summary" ]; then

@@ -9,7 +9,7 @@ category: security
 keywords:
   - fortify
   - Security
-author: CloudCover
+author: Ollion
 meta: {}
 env:
   - CPI__SCAN_CONTROLLER_URL
@@ -17,7 +17,6 @@ env:
   - CPI__FORTIFY_TOKEN
 inputs:
   properties:
-
     fortify_application_id:
       title: Fortify Application ID
       description: If not provided Code Pipes application name will be used

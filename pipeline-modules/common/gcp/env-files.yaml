@@ -9,7 +9,7 @@ keywords:
   - env
   - environment
   - cp_internal
-author: CloudCover
+author: Ollion
 meta: {}
 template: |
   {% set workspace = '/workspace' %}   {# has to be a persistent volume #}

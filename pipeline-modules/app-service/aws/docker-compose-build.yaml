@@ -11,7 +11,7 @@ keywords:
   - Build
   - Push
   - Docker-compose
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -41,7 +41,7 @@ inputs:
       type: string
       default: repo
   required:
-    - docker_compose_service_name      
+    - docker_compose_service_name
   internal:
     - container_repository
     - container_tag
@@ -56,7 +56,7 @@ template: |
         - DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
         - mkdir -p $DOCKER_CONFIG/cli-plugins
         - curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-        - chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose        
+        - chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
     build:
       commands:
           {% if enable_docker_buildkit == true %}
@@ -64,10 +64,9 @@ template: |
           {% endif %}
         - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
         - ls -la
-        - set -e  
+        - set -e
         - docker compose build {{ docker_compose_service_name }}
         - {% verbatim %}export image_name=$(docker image ls --format "table {{.Repository}}:{{.Tag}}"|head -2 | tail -1){% endverbatim %}
         - echo "Docker compose created the image- $image_name ......"
         - echo "Tagging image with container_tag - {{container_repository}}:{{container_tag}}"
         - docker tag $image_name {{container_repository}}:{{container_tag}}
-

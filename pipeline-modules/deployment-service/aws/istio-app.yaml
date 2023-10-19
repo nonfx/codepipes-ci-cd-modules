@@ -6,7 +6,7 @@ displayName: "EKS Istio Commands"
 description: "Run Istio commands on EKS Clusters"
 target: "deployment-template"
 keywords: ["bash", "linux"]
-author: "CloudCover"
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -25,8 +25,8 @@ inputs:
     projectName:
       title: project name
       description: project name
-      type: string   
-      default: "codepipes"       
+      type: string
+      default: "codepipes"
     istio_version:
       title: Istio Version
       description: Istio version to install
@@ -45,12 +45,12 @@ inputs:
       title: Istio-proxy Access Log
       description: To enable Istio access logging
       type: boolean
-      default: true  
+      default: true
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: deploy 
+      default: deploy
     ingress_install:
       title: IngressInstall
       type: boolean
@@ -66,7 +66,7 @@ inputs:
           name:
             title: Domain name
             type: string
-            default: ""              
+            default: ""
     ingress:
       title: Ingress
       description: Ingress Details
@@ -74,7 +74,7 @@ inputs:
       default: []
       items:
         type: object
-        properties:               
+        properties:
           certificateArn:
             title: CertificateARN
             type: string
@@ -90,13 +90,13 @@ inputs:
           lbFaceType:
             title: AwsLoadBalancerFaceType
             type: string
-            default: "internet-facing"  
+            default: "internet-facing"
   required:
     - cluster
     - region
     - roleArn
   internal:
-    - job_type    
+    - job_type
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
@@ -123,7 +123,7 @@ template: |
         {% else %}
         - istioctl x uninstall --purge --skip-confirmation
         {% endif %}
-      
+
       {% if job_type == 'deploy' %}
         {% if enable_istio_access_log %}
         - |
@@ -138,7 +138,7 @@ template: |
               - providers:
                 - name: envoy " >> enable_istio_access_log.yaml
           kubectl apply -f enable_istio_access_log.yaml
-        {% else %}  
+        {% else %}
         - |
           echo "
           apiVersion: telemetry.istio.io/v1alpha1
@@ -150,9 +150,9 @@ template: |
             accessLogging:
               - providers:
                 - name: envoy " >> enable_istio_access_log.yaml
-          #kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml          
+          #kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml
         {% endif %}
-      {% endif %}  
+      {% endif %}
 
 
       {% if ingress_install %}
@@ -174,12 +174,12 @@ template: |
               - '*' "  >> istio_gateway.yaml ;
           {% if job_type == 'deploy' %}
           kubectl apply -f istio_gateway.yaml ;
-          {% else %} 
+          {% else %}
           #kubectl delete --ignore-not-found=true -f istio_gateway.yaml ;
-          {% endif %}          
+          {% endif %}
 
         - |
-          echo "          
+          echo "
           apiVersion: networking.istio.io/v1alpha3
           kind: VirtualService
           metadata:
@@ -191,22 +191,22 @@ template: |
             - '*'
             http:
             - match:
-              - uri: 
+              - uri:
                   exact: /healthz/ready
               route:
               - destination:
                   host: istio-ingressgateway.istio-system.svc.cluster.local
                   port:
                     number: 15021 " >> istio_healthcheck_vs.yaml ;
-              
+
           {% if job_type == 'deploy' %}
           kubectl apply -f istio_healthcheck_vs.yaml ;
-          {% else %} 
+          {% else %}
           #kubectl delete --ignore-not-found=true -f istio_healthcheck_vs.yaml ;
           {% endif %}
 
           {% if ingress %}
-          {% for ing in ingress %} 
+          {% for ing in ingress %}
 
         - |
           echo "
@@ -235,13 +235,13 @@ template: |
               {% if ing.bucketName %}
               alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true,access_logs.s3.enabled=true,access_logs.s3.bucket="{{ ing.bucketName }}",access_logs.s3.prefix={{ projectName | lower }}-httpbin-gateway
               {% endif %}
-              {% endfor %}                        
+              {% endfor %}
 
           spec:
             rules:
             {% if domains %}
             {% for domain in domains %}
-            - host: {{  domain.name }} 
+            - host: {{  domain.name }}
               http:
                 paths:
                 - path: /*
@@ -250,12 +250,12 @@ template: |
                     service:
                       name: istio-ingressgateway
                       port:
-                        number: 80  
-            {% endfor %}            
-            {% endif %}   " >> ingress.yaml         
+                        number: 80
+            {% endfor %}
+            {% endif %}   " >> ingress.yaml
           {% if job_type == 'deploy' %}
           kubectl apply -f ingress.yaml ;
-          {% else %} 
+          {% else %}
           kubectl delete --ignore-not-found=true -f ingress.yaml ;
           {% endif %}
         {% if ing.externalDNSenabled %}
@@ -318,7 +318,7 @@ template: |
               spec:
                 serviceAccountName: external-dns
                 {% if domains %}
-                {% for domain in domains %}                 
+                {% for domain in domains %}
                 containers:
                 - name: external-dns
                   image: k8s.gcr.io/external-dns/external-dns:v0.10.1
@@ -332,15 +332,15 @@ template: |
                   - --registry=txt
                 securityContext:
                   fsGroup: 65534
-                {% endfor %}            
-                {% endif %}   " >> external-dns.yaml               
+                {% endfor %}
+                {% endif %}   " >> external-dns.yaml
           {% if job_type == 'deploy' %}
           kubectl apply -f external-dns.yaml ;
-          {% else %} 
+          {% else %}
           kubectl delete --ignore-not-found=true -f external-dns.yaml ;
-          {% endif %}                
-          
           {% endif %}
-          {% endfor %}              
-          {% endif %}          
+
+          {% endif %}
+          {% endfor %}
+          {% endif %}
         {% endif %}

@@ -9,7 +9,7 @@ keywords:
   - env
   - environment
   - cp-internal
-author: CloudCover
+author: Ollion
 meta: {}
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}

@@ -9,7 +9,7 @@ category: push
 keywords:
   - default
   - ContainerImage
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -47,7 +47,7 @@ template: |
       docker login -u $(docker_username) -p $(docker_password) $(docker_registry)
       echo Pushing the Docker image...
       docker push {{container_repository}}:{{container_tag}}
-      
+
       {% if use_github_tag == true %}
       echo Pushing the Docker image with Commit hash...
       docker tag {{container_repository}}:{{container_tag}} {{container_repository}}:{{sha_tag}}

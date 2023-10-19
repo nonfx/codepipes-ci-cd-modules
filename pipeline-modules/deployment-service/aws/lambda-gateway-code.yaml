@@ -5,8 +5,8 @@ revision: 1
 displayName: "AWS Lambda deployment with code"
 description: "Deploy Lambda functions with API gateway"
 target: "deployment-template"
-keywords: ["bash", "linux","functions"]
-author: "CloudCover"
+keywords: ["bash", "linux", "functions"]
+author: "Ollion"
 meta:
   inputArtifactType:
     - GitCode
@@ -57,7 +57,7 @@ inputs:
       type: string
     repo_dir:
       title: Repo Dir
-      description:  Repo Dir
+      description: Repo Dir
       type: string
     funcs:
       title: function config
@@ -88,7 +88,7 @@ inputs:
       description: This is to deploy or undeploy application
       type: string
       default: deploy
-  required: ["region","bucket","funcs",runtime]
+  required: ["region", "bucket", "funcs", runtime]
   internal:
     - app_env
     - repository
@@ -117,7 +117,7 @@ template: |
         - npm install -g npm
         - npm install serverless -g
         - npm install serverless-deployment-bucket -g
-    build: 
+    build:
       commands:
         - |
           echo "
@@ -133,16 +133,16 @@ template: |
             deploymentBucket:
               name: {{ bucket }}
           functions:
-          {% for func in funcs %} 
+          {% for func in funcs %}
             {{ func.name }}:
               handler: {{ func.handler }}
               events:
                 - httpApi:
                     path: {{ func.path }}
                     method: {{ func.verb }}
-          {% endfor %}  
+          {% endfor %}
           plugins:
-            - serverless-deployment-bucket  
+            - serverless-deployment-bucket
           " >> serverless.yml
       {% if job_type == 'deploy' %}
         - cd {{source_code_path}}/{{repo_dir}}/

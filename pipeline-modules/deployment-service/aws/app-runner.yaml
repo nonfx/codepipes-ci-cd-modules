@@ -6,7 +6,7 @@ displayName: "App runner deployment"
 description: "AWS App Runner Deployment template"
 target: "deployment-template"
 keywords: ["bash", "linux"]
-author: "CloudCover"
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -122,7 +122,7 @@ template: |
           do
             aws secretsmanager delete-secret --secret-id $secret_arn
           done
-          
+
           secretsJSON='{}'
           while IFS= read -r line; do
             value=${line#*=}

@@ -16,7 +16,7 @@ keywords:
   - csharp
   - html
   - js
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -43,7 +43,7 @@ inputs:
     sha_tag:
       title: SHA Git commit tag
       description: Resloved Commit hash for Input git artifact
-      type: string    
+      type: string
   internal:
     - container_repository
     - container_tag

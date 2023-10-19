@@ -11,7 +11,7 @@ keywords:
   - secret
   - config
   - configuration
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -22,7 +22,7 @@ inputs:
       default: BUILD_GENERAL1_MEDIUM
       enum:
         - BUILD_GENERAL1_SMALL
-        - BUILD_GENERAL1_MEDIUM        
+        - BUILD_GENERAL1_MEDIUM
         - BUILD_GENERAL1_LARGE
         - BUILD_GENERAL1_2XLARGE
     pipeline_image:
@@ -40,7 +40,7 @@ inputs:
         - aws/codebuild/standard:6.0
         - aws/codebuild/standard:7.0
         - aws/codebuild/windows-base:2019-1.0
-        - aws/codebuild/windows-base:2019-2.0        
+        - aws/codebuild/windows-base:2019-2.0
     pipeline_env:
       title: Global Environment
       description: Mapping of globally available variables to values.
@@ -62,14 +62,14 @@ inputs:
       type: integer
       default: 480
       minimum: 5
-      maximum: 480 
+      maximum: 480
     pipeline_queue_timeout_min:
       title: Queue Timeout [min]
       description: Amount of time in minutes the pipeline will be allowed to be queued waiting to run.
       type: integer
       default: 60
       minimum: 5
-      maximum: 480      
+      maximum: 480
     pipeline_secret_env:
       title: Global Secret Environment
       description: Mapping of globally available secret variable id.
@@ -87,11 +87,11 @@ inputs:
           key:
             title: Key Name
             description: "Enter key name for tag"
-            type: string    
+            type: string
           value:
             title: Key Value
             description: "Enter key Value name for tag"
-            type: string  
+            type: string
     privileged_mode:
       title: Privileged Mode
       description: "When using docker, the privileged mode needs to be set to `true`. ref: https://docs.aws.amazon.com/codebuild/latest/userguide/troubleshooting.html#troubleshooting-cannot-connect-to-docker-daemon"

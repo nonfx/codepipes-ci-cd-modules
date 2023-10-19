@@ -9,7 +9,7 @@ category: scan
 keywords:
   - scan
   - sast
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -46,7 +46,7 @@ template: |
       commands:
         - |
           while:
-            do 
+            do
               output=$(aws ecr describe-image-scan-findings --repository-name={{container_repository}}  --image-id imageTag={{container_tag}} --output json)
               status=$(echo $output | jq -r '.imageScanStatus.status')
               if [ "$status" == "COMPLETE" ]; then

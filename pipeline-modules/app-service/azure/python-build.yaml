@@ -10,10 +10,9 @@ keywords:
   - Python
   - Install
   - Build
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
-
   properties:
     working_dir:
       title: Working directory
@@ -24,23 +23,23 @@ inputs:
       title: Python Version
       description: The version of Python use build
       type: string
-      default: '3.8'  
+      default: "3.8"
     sha_tag:
       title: SHA Git commit tag
       description: Resolved Commit hash for Input git artifact
-      type: string           
+      type: string
   internal:
     - working_dir
-    - sha_tag       
+    - sha_tag
 template: |
-  steps: 
+  steps:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: {{python_version}}
     displayName: 'Use Python {{python_version}}'
 
   - script: |
-      python --version 
+      python --version
       python -m venv antenv
       source antenv/bin/activate
       python -m pip install --upgrade pip

@@ -7,7 +7,7 @@ description: Module for the integration test
 target: ""
 keywords:
   - test
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
