@@ -8,7 +8,7 @@ target: ""
 category: code analysis
 keywords:
   - Analyze Code
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -21,7 +21,7 @@ inputs:
       title: Project Folder
       description: Project Base directory where sonar-scanner will run
       type: string
-      default: "." 
+      default: "."
     sonar_cloud_url:
       title: SonarCloud URL
       description: URL for SonarCloud endpoint
@@ -54,11 +54,11 @@ inputs:
       title: Code Coverage file
       description: Unit test coverage file to be analyzed by SonarCloud
       type: string
-      default: "coverage.out"    
+      default: "coverage.out"
     working_dir:
       title: Working directory
       description: The current working directory to execute command
-      type: string                                                   
+      type: string
   internal:
     - git_checkout_target
     - working_dir
@@ -83,7 +83,7 @@ template: |
       echo "PR Base Branch: $$git_pr_base"
       echo "PR Branch: $$git_pr_head"
       sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }} -Dsonar.pullrequest.key=$$git_pr_key -Dsonar.pullrequest.branch=$$git_pr_head -Dsonar.pullrequest.base=$$git_pr_base
-      
+
       else
       echo "Sonar analysis type: Branch"
       sonar-scanner -Dsonar.host.url={{ sonar_cloud_url }} -Dsonar.organization={{ sonar_cloud_org }} {% if sonar_config_file -%} -Dproject.settings={{ sonar_config_file }} {% else -%} -Dsonar.projectKey={{ sonar_cloud_project_key }} {%- endif %} -Dsonar.projectBaseDir={{project_base_directory}} -Dsonar.branch.name={{ git_checkout_target }} -Dsonar.go.coverage.reportPaths={{ coverage_file }} -Dsonar.qualitygate.wait=true -Dsonar.verbose={{ sonar_verbose_log }}

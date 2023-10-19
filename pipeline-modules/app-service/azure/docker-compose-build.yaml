@@ -11,7 +11,7 @@ keywords:
   - Build
   - Push
   - Docker-compose
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -39,7 +39,7 @@ inputs:
       description: The current working directory to execute command
       type: string
   required:
-    - docker_compose_service_name      
+    - docker_compose_service_name
   internal:
     - container_repository
     - container_tag

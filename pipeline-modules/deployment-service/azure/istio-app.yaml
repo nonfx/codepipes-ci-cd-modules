@@ -6,7 +6,7 @@ displayName: "AKS Istio Commands"
 description: "Run Istio commands on AKS Clusters"
 target: "deployment-template"
 keywords: ["bash", "linux"]
-author: "CloudCover"
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -31,7 +31,7 @@ inputs:
       title: Istio-proxy Access Log
       description: To enable Istio accessLogging
       type: boolean
-      default: true         
+      default: true
     resourceGroup:
       title: Azure Resource Group
       description: Azure Resource Group where AKS Cluster is deployed
@@ -73,12 +73,12 @@ inputs:
       title: Pool Name
       description: Use  Azure selfhosted agent by proving agent pool name.
       type: string
-      default: ""      
+      default: ""
     job_type:
       title: Job Type
       description: This is to deploy or undeploy application
       type: string
-      default: deploy      
+      default: deploy
   required:
     - cluster
     - resourceGroup
@@ -162,7 +162,7 @@ template: |
           {% endif %}
       displayName: "Ingress {{job_type}}"
     {% endif %}
-  {% if job_type == 'deploy' %}  
+  {% if job_type == 'deploy' %}
   {% if enable_istio_access_log %}
     - script: |
           #Set kubernetes config
@@ -176,7 +176,7 @@ template: |
             accessLogging:
               - providers:
                 - name: envoy " >> enable_istio_access_log.yaml
-          kubectl apply -f enable_istio_access_log.yaml 
+          kubectl apply -f enable_istio_access_log.yaml
       displayName: "Enabled istio Access Logging"
   {% else %}
     - script: |
@@ -191,9 +191,7 @@ template: |
             accessLogging:
               - providers:
                 - name: envoy " >> enable_istio_access_log.yaml
-          kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml  
-      displayName: "Disabled istio Access Logging"    
+          kubectl delete --ignore-not-found=true -f enable_istio_access_log.yaml
+      displayName: "Disabled istio Access Logging"
   {% endif %}
   {% endif %}
-    
-

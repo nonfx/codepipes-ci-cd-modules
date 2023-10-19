@@ -5,8 +5,8 @@ revision: 1
 displayName: "Azure web app deployment with code or container"
 description: "Deploy web app"
 target: "deployment-template"
-keywords: ["serverless","web-app"]
-author: "CloudCover"
+keywords: ["serverless", "web-app"]
+author: "Ollion"
 meta:
   inputArtifactType:
     - GitCode
@@ -26,10 +26,10 @@ inputs:
       default: Container
       enum:
         - Zip
-        - Container      
+        - Container
     repo_dir:
       title: Repo Dir
-      description:  Repo Dir
+      description: Repo Dir
       type: string
     web_app_name:
       title: Web App Name
@@ -45,15 +45,15 @@ inputs:
       title: Artifact Feed Name
       description: Azure devops Artifact Feed name where App artifact will download as ZIP.Note:This value is required if Artifact Type:Zip
       type: string
-      default: "$(CPI__artifact_feed)"      
+      default: "$(CPI__artifact_feed)"
     repository:
       title: Container Repository
       description: Enter Full container url without tag
       type: string
-      default: ""      
+      default: ""
     tag:
       title: Container tag
-      description: Tagged container will deploy ,this parameter required with deploy artifact type is container 
+      description: Tagged container will deploy ,this parameter required with deploy artifact type is container
       type: string
       default: latest
     service_connection_string:
@@ -68,7 +68,7 @@ inputs:
     - job_type
     - repo_dir
     - tag
-    - repository   
+    - repository
 
 template: |
   {% set workspace = '$(Build.SourcesDirectory)' %}
@@ -92,16 +92,16 @@ template: |
         ls -la
         config_var="$(cat config.txt | tr -d '\n')"
         echo "##vso[task.setvariable variable=config_map]$config_var"
-        
+
         {% if deployment_method == 'Zip' %}
         cd {{source_code_path}}/{{repo_dir}}
         git log --format="%H" -n 1
         sha_tag=$(git log --format="%H" -n 1);
         echo "##vso[task.setvariable variable=sha_tag]$sha_tag"
         {% endif %}
-    displayName: 'Setting up appSettings Env'   
+    displayName: 'Setting up appSettings Env'
 
-  {% if deployment_method == 'Zip' %}   
+  {% if deployment_method == 'Zip' %}
   - task: UniversalPackages@0
     inputs:
       command: 'download'
@@ -111,10 +111,10 @@ template: |
       vstsFeedPackage: '{{fmt_app_name}}.zip'
       vstsPackageVersion: '*'
       publishedPackageVar: 'codepipes'
-  {% endif %}    
+  {% endif %}
 
   {% if job_type == 'deploy' %}
-  {% if deployment_method == 'Zip' %}   
+  {% if deployment_method == 'Zip' %}
   - task: AzureWebApp@1
     displayName: 'Deploy Zip to WebApp'
     inputs:
@@ -126,19 +126,17 @@ template: |
       deploymentMethod: 'auto'
   {% endif %}
 
-  {% if deployment_method == 'Container' %}   
+  {% if deployment_method == 'Container' %}
   - task: AzureWebAppContainer@1
     displayName: 'Deploy Container to WebApp'
     inputs:
       azureSubscription: {{service_connection_string}}
       appName: {{ web_app_name }}
-      imageName: {{repository}}:{{tag}}      
+      imageName: {{repository}}:{{tag}}
       appSettings: '$(CONFIG_MAP)'
-  {% endif %}    
-   
-  {% else %}
-  - script: |
-        echo "Please update the IAC to remove web-app" 
   {% endif %}
 
-
+  {% else %}
+  - script: |
+        echo "Please update the IAC to remove web-app"
+  {% endif %}

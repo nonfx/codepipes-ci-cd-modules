@@ -9,11 +9,10 @@ category: build
 keywords:
   - Pulish
   - Build
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
-
     working_dir:
       title: Code Directory Path
       description: Directory Path where the code is located.

@@ -7,7 +7,7 @@ description: Configure Pipeline summary
 target: internal
 keywords:
   - summary
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

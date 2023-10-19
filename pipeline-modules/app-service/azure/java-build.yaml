@@ -10,7 +10,7 @@ keywords:
   - java
   - build
   - maven
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -21,10 +21,9 @@ inputs:
       default: repo
 
   internal:
-  - working_dir
+    - working_dir
 template: |
   steps:
   - script: mvn clean install
     displayName: 'Maven Build'
     workingDirectory: {{ working_dir }}
-    

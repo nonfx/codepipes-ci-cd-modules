@@ -11,7 +11,7 @@ keywords:
   - java
   - unit-test
   - maven
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -28,7 +28,7 @@ inputs:
       items:
         type: string
   internal:
-  - working_dir
+    - working_dir
 template: |
   version: 0.2
   phases:

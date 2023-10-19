@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
@@ -46,7 +46,7 @@ inputs:
       title: Pool Name
       description: Use  Azure selfhosted agent by proving agent pool name.
       type: string
-      default: ""      
+      default: ""
 
   required:
     - cluster

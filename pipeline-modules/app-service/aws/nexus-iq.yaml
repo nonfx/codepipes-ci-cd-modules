@@ -3,12 +3,12 @@ name: nexusiq
 version: 1
 revision: 1
 displayName: NexusIQ Scan
-description: Security scan for code using self hosted NexusIQ server 
+description: Security scan for code using self hosted NexusIQ server
 target: ""
 category: security analysis
 keywords:
   - Security Scan Code
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

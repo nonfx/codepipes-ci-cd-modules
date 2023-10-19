@@ -6,7 +6,7 @@ displayName: Print pipeline output
 description: Print all the outputs collected within the pipeline
 target: ""
 keywords:
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

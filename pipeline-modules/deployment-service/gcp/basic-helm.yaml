@@ -9,7 +9,7 @@ keywords:
   - helm
   - public
   - charts
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - GitCode
@@ -119,7 +119,7 @@ template: |
       cp {{helm_values_path}} values_presub.yml
       cat values_presub.yml | envsubst > {{helm_values_path}}
       {%- endif %}
-      {%- if helm_chart_name != '' %} 
+      {%- if helm_chart_name != '' %}
       helm repo add {{helm_chart_repo}} {{helm_chart_url}}
       helm upgrade --install {{service_name}} {{helm_chart_repo}}/{{helm_chart_name}} {%- if helm_chart_version != '' %}--version {{helm_chart_version}}{%- endif %} {%- if helm_values_path != '' %} -f {{helm_values_path}} {%- endif %} --namespace {{namespace}} --atomic --timeout {{deployment_timeout}}
       {%- endif %}

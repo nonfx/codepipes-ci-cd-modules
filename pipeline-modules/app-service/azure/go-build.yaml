@@ -10,7 +10,7 @@ keywords:
   - Go
   - Install
   - Build
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -31,7 +31,7 @@ inputs:
       description: The version of Golang to use
       type: string
       default: "1.15.15"
-      
+
   internal:
     - working_dir
 template: |

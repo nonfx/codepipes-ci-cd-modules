@@ -12,7 +12,7 @@ keywords:
   - security
   - vulnarabilities
   - trivy
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -38,21 +38,21 @@ inputs:
       title: Severity
       description: The severities (CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN) to include in the scan (comma sperated). Defaults to CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN
       type: string
-      default: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+      default: "CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN"
     trivy_args:
       title: Extra Trivy Arguments
       description: Arguments for Trivy command
       type: array
       default: []
       items:
-        type: string      
+        type: string
   internal:
     - container_repository
     - container_tag
     - working_dir
 template: |
   steps:
-  - id: 'Docker Scan image with Trivy'  
+  - id: 'Docker Scan image with Trivy'
     name: 'gcr.io/cloud-builders/gcloud'
     entrypoint: 'bash'
     dir: {{ working_dir }}

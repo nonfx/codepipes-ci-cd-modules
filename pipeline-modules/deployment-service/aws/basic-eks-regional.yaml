@@ -6,7 +6,7 @@ displayName: "EKS deployment"
 description: "The bash script to run"
 target: "deployment-template"
 keywords: ["bash", "linux"]
-author: "CloudCover"
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -151,7 +151,7 @@ inputs:
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
   {% set pipeline_env_file = workspace|add:'/.env' %}
-  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}  
+  {% set pipeline_secret_file = workspace|add:'/.secret.env' %}
   {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}
   {% set helm_chart_path = pipeline_modules_path|add:"/helm/aws/basic-eks" %}
   {% set service_name = applicationName|add:"-"|add:environment|cpi_trimlength:47|cpi_replacespecial %}
@@ -296,7 +296,7 @@ template: |
           value=${line#*=}
           name=${line%%=*}
           printf '  %s: %s\n' $name $value >> values.yaml
-          done; 
+          done;
         - helm upgrade --install -f values.yaml {{service_name}} . --atomic --timeout {{deployment_timeout}}
         - kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
         - kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}

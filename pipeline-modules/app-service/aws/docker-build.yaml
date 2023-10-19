@@ -15,7 +15,7 @@ keywords:
   - csharp
   - html
   - js
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -53,4 +53,3 @@ template: |
         - echo Build started on `date`
         - docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
         - echo Build completed on `date`
-

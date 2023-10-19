@@ -7,7 +7,7 @@ description: Include infrastructure component modules imported from a shared lib
 target: ""
 keywords:
     - terraform
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
     type: object

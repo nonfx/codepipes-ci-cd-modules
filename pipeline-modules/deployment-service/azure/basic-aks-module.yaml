@@ -6,7 +6,7 @@ displayName: AKS Deployment
 description: Module for the AKS Deployment
 target: "deployment-template"
 keywords: ["bash", "linux"]
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - git
@@ -46,12 +46,12 @@ inputs:
       title: Kubectl Version
       description: Kubectl Version to be Installed
       type: string
-      default: '1.23'
+      default: "1.23"
     helmVersion:
       title: Helm Version
       description: Helm Version to be Installed
       type: string
-      default: '3.7.1'
+      default: "3.7.1"
     files:
       title: Files
       description: Files mounted in container
@@ -114,7 +114,7 @@ inputs:
       title: Working Directory
       description: Working Directory where the code is to be run
       type: string
-      default: $(Build.SourcesDirectory) 
+      default: $(Build.SourcesDirectory)
   required:
     - cluster
     - resourceGroup

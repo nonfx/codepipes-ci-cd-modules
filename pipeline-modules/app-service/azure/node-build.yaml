@@ -10,10 +10,9 @@ keywords:
   - Node
   - Install
   - Build
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
-
   properties:
     package_manager:
       title: Package manager
@@ -41,7 +40,7 @@ inputs:
       title: Node.js Version
       description: The version of Node.js like 18.x
       type: string
-      default: '18.x'
+      default: "18.x"
     package_manager_version:
       title: Package manager version
       description: The version of package manager being used

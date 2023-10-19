@@ -10,7 +10,7 @@ keywords:
   - Pulish
   - Build
   - Scan
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -38,7 +38,7 @@ inputs:
       title: SonarQube Application ID
       description: SonarQube application identifier
       type: string
-      default: ""   
+      default: ""
     working_dir:
       title: Code Directory Path
       description: Directory Path where the code is located.

@@ -5,8 +5,8 @@ revision: 1
 displayName: "ECS App deployment"
 description: "AWS ECS App Deployment template"
 target: "deployment-template"
-keywords: ["bash", "linux" , "ecs aws container"]
-author: "CloudCover"
+keywords: ["bash", "linux", "ecs aws container"]
+author: "Ollion"
 meta:
   inputArtifactType:
     - ContainerImage
@@ -84,7 +84,8 @@ inputs:
       description: "The Memory to be allotted to Container. Please refer to the link for availaible CPU/Mem combinations for Fargate: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html"
       type: integer
       default: 2048
-  required: ["task_name","ecs_service_name","cluster_name","execution_role_arn"]
+  required:
+    ["task_name", "ecs_service_name", "cluster_name", "execution_role_arn"]
   internal:
     - repository
     - tag
@@ -121,7 +122,7 @@ template: |
         - logConfiguration=$(echo $taskDetails | jq -r -c '.taskDefinition.containerDefinitions[].logConfiguration')
         - echo $logConfiguration
         - echo $containerName
-        - echo "Setting configurations" 
+        - echo "Setting configurations"
         - echo '{"family":"{{task_name}}","networkMode":"awsvpc","executionRoleArn":"{{execution_role_arn}}","taskRoleArn":"{{execution_role_arn}}","containerDefinitions":[{"name":"'$containerName'","image":"{{repository}}:{{tag}}","memory":{{container_mem}},"cpu":{{container_cpu}},"portMappings":[{"containerPort":{{container_port}},"hostPort":{{host_port}},"protocol":"tcp"}],"environment":[' >> containerDef.json
         - |
           cat {{pipeline_env_file}} | while IFS= read -r line; do
@@ -144,19 +145,19 @@ template: |
           }
           chmod +x {{ common_scripts_path }}/aws-secret-manager.sh
           source aws-secret-manager.sh
-          echo "Loading environment variables..." 
+          echo "Loading environment variables..."
           env_vars=$(load_env_variables ".secret.env")
           create_or_update_secret {{secret_name}} "$env_vars"
           update_task_definition_secrets "containerDef.json" {{secret_name}}
         - echo "after"
         - cat containerDef.json
-        - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json) 
-        - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision') 
-        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment) 
+        - NEW_REVISION=$(aws ecs register-task-definition --cli-input-json file://containerDef.json)
+        - NEW_REVISION_DATA=$(echo $NEW_REVISION | jq '.taskDefinition.revision')
+        - NEW_SERVICE=$(aws ecs update-service --cluster {{cluster_name}} --service {{ecs_service_name}} --task-definition {{task_name}} --force-new-deployment)
         - echo "Waiting for new container to be live"
         - sleep 30
         - aws ecs wait services-stable --cluster {{cluster_name}} --services {{ecs_service_name}}
-        - echo "New container is live now!" 
+        - echo "New container is live now!"
         - echo "${TASK_NAME}, Revision:${NEW_REVISION_DATA}"
         {% else %}
         - echo "Undeploying ECS Service"
@@ -195,7 +196,7 @@ template: |
           done
 
           echo "Service is now undeployed"
-        - | 
+        - |
           echo "Deleting Secret from Secret Manager used in the Service"
           # Source the aws-secret-manager.sh script to get the get_secret_arn function
           source aws-secret-manager.sh
@@ -209,4 +210,3 @@ template: |
           # Print a message indicating that the secret has been deleted
           echo "Secrets deleted"
       {% endif %}
-

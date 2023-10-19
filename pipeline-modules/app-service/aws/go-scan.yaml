@@ -9,7 +9,7 @@ category: security
 keywords:
   - Go
   - Scan
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:

@@ -9,7 +9,7 @@ category: code analysis
 keywords:
   - nexusIQ
   - sonatype
-author: CloudCover
+author: Ollion
 meta: {}
 env:
   - CPI__NEXUS_SERVICE_CONNECTION

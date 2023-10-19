@@ -10,7 +10,7 @@ keywords:
   - access
   - credentials
   - auth
-author: CloudCover
+author: Ollion
 meta: {}
 inputs:
   properties:
@@ -49,4 +49,3 @@ template: |
         - export GIT_PASSWORD_ENCODED=$(printf %s $GIT_PASSWORD | jq -sRr @uri)
         - export GIT_URL_WITH_AUTH=$(printf {{ git_remote_path }} | sed -e "s^//^//{{ git_login }}:$GIT_PASSWORD_ENCODED@^")
         - git config --global url."$GIT_URL_WITH_AUTH".insteadOf "{{ git_remote_path }}"
-
