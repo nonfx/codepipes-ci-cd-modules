@@ -8,7 +8,7 @@ target: "deployment-template"
 keywords:
   - bash
   - linux
-author: CloudCover
+author: Ollion
 meta:
   inputArtifactType:
     - ContainerImage
