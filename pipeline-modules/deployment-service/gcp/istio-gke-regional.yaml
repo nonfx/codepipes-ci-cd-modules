@@ -494,7 +494,7 @@ template: |
         # Perform the Helm rollback
         helm  rollback {{service_name}}  0 --wait --timeout {{deployment_timeout}}
         if [ $? -eq 0 ]; then
-          echo "Helm rollback completed..."
+          echo "Helm Rollback completed..."
           echo "Action Required: Check your deployment  on k8s cluster why it Rollbacked"
           kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
           kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}          

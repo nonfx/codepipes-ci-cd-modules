@@ -15,6 +15,11 @@ meta:
 
 inputs:
   properties:
+    rollback_enable:
+      title: Enable Automatic Rollback
+      description: Enabling this option will automatically trigger a rollback of the Helm release in case of deployment failure during the previous deployment.
+      type: boolean
+      default: true
     istioInjection:
       title: Istio Injection Enabled
       description: Enable Istio Injection in namespace
@@ -440,7 +445,34 @@ template: |
           printf '  %s: %s\n' $name $value >> values.yaml
           done;
 
-        - helm upgrade --install -f values.yaml {{service_name}} . #--atomic --timeout {{deployment_timeout}}
+        - |
+          helm upgrade --install -f values.yaml {{service_name}} . --wait --timeout {{deployment_timeout}}
+          {% if rollback_enable %}
+            #Get Status code
+            helm_upgrade_exit_status=$?
+            echo 'Helm release failed with EXIT_CODE: '$helm_upgrade_exit_status''
+            # Check the Helm upgrade/install status
+            if [ $helm_upgrade_exit_status -eq 0 ]; then
+              echo "Helm upgrade/install successful...."
+            else
+              #If helm release failed than rollback
+              echo "Helm upgrade/install failed. Rolling back pervious version..."
+              
+              # Perform the Helm rollback
+              helm  rollback {{service_name}}  0 --wait --timeout {{deployment_timeout}}
+              if [ $? -eq 0 ]; then
+                echo "Helm Rollback completed..."
+                echo "Action Required: Check your deployment  on k8s cluster why it Rollbacked"
+                kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
+                kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}          
+                # Exit with a non-zero status code to indicate pipeline failure
+                exit 1
+              else
+                echo "Helm Rollback also failed ..."
+                exit 1
+              fi
+            fi
+          {% endif %}
         - kubectl rollout restart deployment {{fmt_app_name}}-deployment -n {{fmt_app_name}}
         - kubectl rollout status deployment {{fmt_app_name}}-deployment   -n {{fmt_app_name}}
 
