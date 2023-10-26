@@ -261,7 +261,7 @@ template: |
     {% if rollback_enable %}
       #Get Status code
       helm_upgrade_exit_status=$?
-      echo 'Helm release failed with EXIT_CODE: '$helm_upgrade_exit_status''
+      echo 'Helm release status of EXIT_CODE: '$helm_upgrade_exit_status''
       # Check the Helm upgrade/install status
       if [ $helm_upgrade_exit_status -eq 0 ]; then
         echo "Helm upgrade/install successful...."
