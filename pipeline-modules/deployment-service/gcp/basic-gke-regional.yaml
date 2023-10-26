@@ -266,7 +266,7 @@ template: |
       if [ $helm_upgrade_exit_status -eq 0 ]; then
         echo "Helm upgrade/install successful...."
       else
-        #If helm release failed than rollback
+        # Helm upgrade/install failed
         echo "Helm upgrade/install failed. Rolling back pervious version..."
         
         # Perform the Helm rollback
