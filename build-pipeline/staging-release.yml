@@ -38,6 +38,9 @@ stages:
       name: Azure-Agents
     variables:
       - group: CodePipes-AZStaging-DB
+      - group: CodePipes-Azure-Staging-Deploy
+    # enableAzureStagingDeploy is defined in CodePipes-Azure-Staging-Deploy group
+    condition: eq(variables.enableAzureStagingDeploy, true)
 
     jobs:
       - job: Release_AZ_Staging
