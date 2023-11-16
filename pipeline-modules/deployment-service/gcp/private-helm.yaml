@@ -61,10 +61,20 @@ inputs:
       description: Path to your helm chart values including values file name
       type: string
     helm_values_set_var:
-      title: Helm Set Values
+      title: Helm Set Values [ Optional ]
       description: "Optional : Key1=Value1,Key2=Value , which override the value inside values.yaml"
       type: string
       default: ""
+    helm_release_name:
+      title: Helm Release Name [ Optional ]
+      description: "Optional Parameter: You can specify the Helm release name if desired. If left empty, it will be automatically generated."
+      type: string
+      default: ""
+    rollback_enable:
+      title: Enable Automatic Rollback
+      description: Enabling this option will automatically trigger a rollback of the Helm release in case of deployment failure during the previous deployment.
+      type: boolean
+      default: true            
 
   required:
     - cluster
@@ -110,7 +120,31 @@ template: |
       cat values_presub.yml | envsubst > {{source_code_path}}/{{helm_values_path}}
       rm -f values_presub.yml
       {%- endif %}
-      helm upgrade --install -f {{source_code_path}}/{{helm_values_path}} {{service_name}} . --atomic --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
+      helm upgrade --install -f {{source_code_path}}/{{helm_values_path}}   {% if helm_release_name != "" %} {{ helm_release_name }} {% else %} {{ service_name }} {% endif %} . --wait --timeout {{deployment_timeout}} --namespace {{namespace}} {% if helm_values_set_var != "" %} --set {{helm_values_set_var}}  {% endif %}
+      {% if rollback_enable %}
+      #Get Status code
+      helm_upgrade_exit_status=$?
+      echo 'Helm release status of EXIT_CODE: '$helm_upgrade_exit_status''
+      # Check the Helm upgrade/install status
+      if [ $helm_upgrade_exit_status -eq 0 ]; then
+        echo "Helm upgrade/install successful...."
+      else
+        # Helm upgrade/install failed
+        echo "Helm upgrade/install failed. Rolling back pervious version..."
+        
+        # Perform the Helm rollback
+        helm  rollback  {% if helm_release_name != "" %} {{ helm_release_name }} {% else %} {{ service_name }} {% endif %}  0 --wait --timeout {{deployment_timeout}}
+        if [ $? -eq 0 ]; then
+          echo "Helm Rollback completed..."
+          echo "Action Required: Check your deployment  on k8s cluster why it Rollbacked"
+          # Exit with a non-zero status code to indicate pipeline failure
+          exit 1
+        else
+          echo "Helm Rollback also failed ..."
+          exit 1
+        fi
+      fi
+    {% endif %}
   {% else %}
   - id: 'Uninstall application'
     name: 'cldcvr/cpi-helm'
@@ -119,5 +153,5 @@ template: |
     - '-c'
     - |
       cd {{source_code_path}}/{{helm_chart_path}} ;
-      helm uninstall {{service_name}} --namespace {{namespace}};
+      helm uninstall {% if helm_release_name != "" %} {{ helm_release_name }} {% else %} {{ service_name }} {% endif %} --namespace {{namespace}};
   {% endif %}
