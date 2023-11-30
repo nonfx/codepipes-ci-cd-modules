@@ -28,10 +28,25 @@ inputs:
       title: Repository URL
       description: The repository to clone from.
       type: string
+    working_dir:
+      title: Working directory
+      description: The current working directory to execute command
+      type: string
+      default: repo
   required:
     - git_remote_path
 template: |
   steps:
   - script: |
       git-clone.sh {{ git_remote_path }} {{ git_checkout_target }} {{ git_local_path }}
+      cd {{ working_dir }}
+      if [ -f "terrarium.yaml" ]; then
+        echo "terrarium.yaml exists. Encoding and adding to outputs..."
+        terrarium_yaml_base64=$(base64 -w 0 terrarium.yaml)
+      else
+        echo "terrarium.yaml does not exist. Skipping encoding and adding to outputs."
+        terrarium_yaml_base64=""
+      fi
+      var_prefix="terrarium_yaml_base64"
+      outputs.sh add "$var_prefix" "$terrarium_yaml_base64"
     displayName: 'Git Clone'
