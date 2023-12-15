@@ -69,6 +69,10 @@ inputs:
         - ERROR
         - JSON
       default: DEBUG
+    iac_src_dir:
+      title: IaC Source Directory
+      description: Path to locally generated IaC code (iac_checkout_* options will be ignored).
+      type: string
   required:
     - iac_checkout_src
     - iac_checkout_target
@@ -85,6 +89,7 @@ inputs:
     - tf_state_file
     - tf_plan_file
     - tf_version
+    - iac_src_dir
 template: |
   {% set artifact_root_path = artifact_bucket|add:"/"|add:artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
   {% set artifact_build_path = artifact_root_path|add:"/"|add:"$BUILD_ID" %}  {# <artifact_bucket>/<artifact_dir>/<build_id> #}
@@ -161,6 +166,10 @@ template: |
     args:
       - -c
       - '! gsutil -q ls gs://{{ artifact_root_path }}/{{ tf_state_file }} || gsutil -q cp -n gs://{{ artifact_root_path }}/{{ tf_state_file }} {{ local_artifact_path }};'
+  {% if iac_src_dir %}
+  # use locally generated IaC
+  {% set local_code_path='/workspace/'|add:iac_src_dir %}
+  {% else %}
   - id: 'IaC source clone'
     name: 'gcr.io/cloud-builders/git'
     args:
@@ -174,6 +183,7 @@ template: |
       - checkout
       - '{{ iac_checkout_target }}'
     dir: {{ local_checkout_path }}
+  {% endif %}
   - id: 'prepare terraform input values'
     # get all environment variables with '{{ tf_var_name_prefix }}' name prefix, remove the prefix,
     # replace all '{{ tf_var_name_dash_placeholder }}' placeholders with '-' and quote the value

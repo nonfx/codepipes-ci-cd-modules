@@ -45,7 +45,7 @@ inputs:
       title: Terrarium Version
       description: Version of Terrarium to be used to generate IaC from the platform.
       type: string
-      default: "0.7"
+      default: "0.11.1"
     platform_clone_dir:
       title: Platform Clone Directory
       description: Local path where to clone the platform code.

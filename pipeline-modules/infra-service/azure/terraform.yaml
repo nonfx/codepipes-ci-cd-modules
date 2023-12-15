@@ -82,6 +82,10 @@ inputs:
         - ERROR
         - JSON
       default: DEBUG
+    iac_src_dir:
+      title: IaC Source Directory
+      description: Path to locally generated IaC code (iac_checkout_* options will be ignored).
+      type: string
   required:
     - iac_checkout_src
     - iac_checkout_target
@@ -102,6 +106,7 @@ inputs:
     - pipeline_secret_env
     - pipeline_env
     - storage_account_name
+    - iac_src_dir
 template: |
   {% set artifact_root_path = artifact_dir %}     {# <artifact_bucket>/<artifact_dir> #}
   {% set artifact_build_path = artifact_dir|add:"/$(Build.BuildId)" %}     {# <artifact_dir>/$(Build.BuildId) #}
@@ -169,9 +174,14 @@ template: |
       {% endfor -%}
       mkdir -p "{{ local_artifact_path }}"
       {{ download_artifact(tf_state_file) }}
+      {% if iac_src_dir %}
+      # use locally generated IaC
+      {% set local_code_path='$(System.DefaultWorkingDirectory)/'|add:iac_src_dir %}
+      {% else %}
       git clone --no-checkout "{{ iac_checkout_src }}" "{{ local_checkout_path }}"
       cd "{{ local_checkout_path }}"
       git checkout "{{ iac_checkout_target }}"
+      {% endif %}
       printenv | grep "^{{ tf_var_name_prefix }}*" | sed 's/^{{ tf_var_name_prefix }}//' | awk -F '=' -v OFS='=' '{ gsub("{{ tf_var_name_dash_placeholder }}", "-", $1); st = index($0,"="); val=substr($0,st+1); print $1, val ~ /^{.*?}$/ || val ~ /^\[.*?\]$/ ? val:"\""val"\"" }' > {{ tf_var_file_path }}
       cd "{{ local_code_path }}"
       # copy pre-existing terraform state to the working directory
