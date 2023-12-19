@@ -344,7 +344,7 @@ template: |
         - cd {{workspace}}
         - |
           echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
-          summary=$(retry.sh run "bash ./cmd.sh" 30 2)
+          summary=$(./retry.sh run "bash ./cmd.sh" 30 2)
         - outputs.sh add "Service URL" "{{url_protocol}}://$summary"
           {% endif %}
       {% else %}
