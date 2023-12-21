@@ -341,18 +341,19 @@ template: |
               {% set kube_out_path="{.items[*].status.loadBalancer.ingress[*].hostname}" %}
               {% set url_protocol= "http" %}
             {% endif %}
-      - |
-        cd $CODEBUILD_SRC_DIR/pipeline_modules/assets/scripts
-        echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
-        summary=$(retry.sh run "bash ./cmd.sh" 30 2)
-        if [ $? -ne 0 ]; then
-          echo "Ingress not found"
-          Error=$(kubectl describe ingress -n {{ fmt_app_name | cpi_quote }} | awk '/Events:/,/^\s*$/' | grep -v 'Events:')
-          echo "Error: $Error"
-          else
-            outputs.sh add "Service URL" "{{url_protocol}}://$summary"
-          fi
-        {% endif %}
-    {% else %}
-      - helm uninstall {{service_name}}
-    {% endif %}
+        - |
+          cd $CODEBUILD_SRC_DIR/pipeline_modules/assets/scripts
+          echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
+          summary=$(retry.sh run "bash ./cmd.sh" 30 2)
+          if [ $? -ne 0 ]; then
+            echo "Ingress not found"
+            Error=$(kubectl describe ingress -n {{ fmt_app_name | cpi_quote }} | awk '/Events:/,/^\s*$/' | grep -v 'Events:')
+            echo "Error: $Error"
+            else
+              outputs.sh add "Service URL" "{{url_protocol}}://$summary"
+            fi
+          {% endif %}
+      {% else %}
+        - helm uninstall {{service_name}}
+      {% endif %}
+
