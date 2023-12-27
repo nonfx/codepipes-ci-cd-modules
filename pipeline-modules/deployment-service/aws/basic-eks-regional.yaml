@@ -152,6 +152,8 @@ inputs:
     - project
     - customer_bucket
     - job_type
+    - working_dir
+
 
 template: |
   {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
@@ -163,6 +165,7 @@ template: |
   {% set fmt_app_name = applicationName | cpi_replacespecial %}
   {% set fmt_env_name = environment | cpi_replacespecial %}
   {% set fmt_proj = project | cpi_replacespecial %}
+  
 
   version: 0.2
   phases:
@@ -342,7 +345,7 @@ template: |
               {% set url_protocol= "http" %}
             {% endif %}
         - |
-          cd $CODEBUILD_SRC_DIR/pipeline_modules/assets/scripts
+          cd $CODEBUILD_SRC_DIR/{{ working_dir }}
           echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
           summary=$(retry.sh run "bash ./cmd.sh" 30 2)
           if [ $? -ne 0 ]; then
