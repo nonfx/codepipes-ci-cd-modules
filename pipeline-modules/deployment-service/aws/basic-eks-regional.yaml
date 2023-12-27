@@ -348,7 +348,7 @@ template: |
             {% endif %}
         - |
           export PATH={{ common_scripts_path }}:$PATH
-          cd {{ workspace }}
+          cd $CODEBUILD_SRC_DIR/{{ working_dir }}
           echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
           summary=$(retry.sh run "bash ./cmd.sh" 30 2)
           if [ $? -ne 0 ]; then
