@@ -165,8 +165,6 @@ template: |
   {% set fmt_app_name = applicationName | cpi_replacespecial %}
   {% set fmt_env_name = environment | cpi_replacespecial %}
   {% set fmt_proj = project | cpi_replacespecial %}
-  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
-
   
 
   version: 0.2
