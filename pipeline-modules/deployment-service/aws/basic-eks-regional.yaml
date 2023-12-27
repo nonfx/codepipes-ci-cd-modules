@@ -163,6 +163,9 @@ template: |
   {% set fmt_app_name = applicationName | cpi_replacespecial %}
   {% set fmt_env_name = environment | cpi_replacespecial %}
   {% set fmt_proj = project | cpi_replacespecial %}
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+
+  
 
   version: 0.2
   phases:
@@ -342,7 +345,7 @@ template: |
               {% set url_protocol= "http" %}
             {% endif %}
         - |
-          cd $CODEBUILD_SRC_DIR/pipeline_modules/assets/scripts
+          export PATH={{ common_scripts_path }}:$PATH
           echo 'kubectl get ingress -n {{ fmt_app_name | cpi_quote }} -o=jsonpath={{ kube_out_path| cpi_quote }} | tr -d \"' > cmd.sh
           summary=$(retry.sh run "bash ./cmd.sh" 30 2)
           if [ $? -ne 0 ]; then
@@ -350,7 +353,7 @@ template: |
             Error=$(kubectl describe ingress -n {{ fmt_app_name | cpi_quote }} | awk '/Events:/,/^\s*$/' | grep -v 'Events:')
             echo "Error: $Error"
             else
-              outputs.sh add "Service URL" "{{url_protocol}}://$summary"
+              outputs.sh add "Service URL" "{{url_protocol}}://$summary" 
             fi
           {% endif %}
       {% else %}

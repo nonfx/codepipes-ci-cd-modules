@@ -40,10 +40,13 @@ inputs:
     - pipeline_summary_var
     - job_type
 template: |
+  {% set common_scripts_path = pipeline_modules_path|add:'/assets/scripts' %}
+  {% set workspace = '$CODEBUILD_SRC_DIR' %}   {# has to be a persistent volume #}
+  {% set pipeline_modules_path = workspace|add:'/pipeline_modules' %}  
   version: 0.2
   phases:
     post_build:
       commands:
-        - cd $CODEBUILD_SRC_DIR/{{ working_dir }}
+        - export PATH={{ common_scripts_path }}:$PATH
         {% if job_type == 'deploy' -%}- outputs.sh run {{ pipeline_summary_var | cpi_json | cpi_quote }} {% endif %}
         - outputs.sh print
