@@ -353,7 +353,7 @@ template: |
             Error=$(kubectl describe ingress -n {{ fmt_app_name | cpi_quote }} | awk '/Events:/,/^\s*$/' | grep -v 'Events:')
             echo "Error: $Error"
             else
-              outputs.sh add "Service URL" "{{url_protocol}}://$summary" 
+              outputs.sh add "Service URL" "{{url_protocol}}://$summary"
             fi
           {% endif %}
       {% else %}
