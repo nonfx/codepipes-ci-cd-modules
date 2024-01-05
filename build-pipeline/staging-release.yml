@@ -10,7 +10,7 @@ resources:
   repositories:
     - repository: templates
       type: github
-      name: cldcvr/product-build-tools
+      name: ollionorg/product-build-tools
       endpoint: Github-CldCvr
 
 variables:
@@ -68,7 +68,7 @@ stages:
             displayName: "Force exit on error (bash)"
           - script: |
               go env -w GO111MODULE=on
-              go env -w GOPRIVATE=github.com/cldcvr/*
+              go env -w GOPRIVATE=github.com/ollionorg/*
               skip_dev=1 make init
               make help-seed
             env:
