@@ -47,20 +47,20 @@ resources:
   - repository: templates
     type: github
     name: ollionorg/product-build-tools
-    endpoint: Github-CldCvr
+    endpoint: Github-OllionOrg
     trigger: none
   - repository: vanguard-iac
     type: github
-    endpoint: Github-CldCvr
+    endpoint: Github-OllionOrg
     name: ollionorg/vanguard-iac
   - repository: vanguardApi
     type: github
-    endpoint: Github-CldCvr
+    endpoint: Github-OllionOrg
     name: ollionorg/vanguard-api
     ref: $(devbranch)
   - repository: vanguardAutomation
     type: github
-    endpoint: Github-CldCvr
+    endpoint: Github-OllionOrg
     name: ollionorg/vanguard-api-automation
     ref: $(testbranch)
 
