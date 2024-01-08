@@ -46,22 +46,22 @@ resources:
   repositories:
   - repository: templates
     type: github
-    name: cldcvr/product-build-tools
-    endpoint: Github-CldCvr
+    name: ollionorg/product-build-tools
+    endpoint: Github-OllionOrg
     trigger: none
   - repository: vanguard-iac
     type: github
-    endpoint: Github-CldCvr
-    name: cldcvr/vanguard-iac
+    endpoint: Github-OllionOrg
+    name: ollionorg/vanguard-iac
   - repository: vanguardApi
     type: github
-    endpoint: Github-CldCvr
-    name: cldcvr/vanguard-api
+    endpoint: Github-OllionOrg
+    name: ollionorg/vanguard-api
     ref: $(devbranch)
   - repository: vanguardAutomation
     type: github
-    endpoint: Github-CldCvr
-    name: cldcvr/vanguard-api-automation
+    endpoint: Github-OllionOrg
+    name: ollionorg/vanguard-api-automation
     ref: $(testbranch)
 
 pool:
@@ -177,7 +177,7 @@ stages:
             cat .env
             echo pull request branch name $(System.PullRequest.SourceBranch)
             go env -w GO111MODULE=on
-            go env -w GOPRIVATE=github.com/cldcvr/*
+            go env -w GOPRIVATE=github.com/ollionorg/*
             skip_dev=1 make init
             git status
             make docker-pull
@@ -191,7 +191,7 @@ stages:
         - script: |
             cd codepipes-ci-cd-modules
             go env -w GO111MODULE=on
-            go env -w GOPRIVATE=github.com/cldcvr/*
+            go env -w GOPRIVATE=github.com/ollionorg/*
             make db-update
             cd ..
           displayName: Execute DB update

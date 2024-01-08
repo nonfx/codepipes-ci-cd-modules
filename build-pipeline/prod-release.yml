@@ -10,8 +10,8 @@ resources:
   repositories:
     - repository: templates
       type: github
-      name: cldcvr/product-build-tools
-      endpoint: Github-CldCvr
+      name: ollionorg/product-build-tools
+      endpoint: Github-OllionOrg
 
 pool:
   vmImage: ubuntu-latest
