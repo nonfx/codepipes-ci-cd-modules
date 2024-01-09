@@ -61,9 +61,14 @@ inputs:
       type: string
     sonar_scanner_version:
       title: Sonar scanner version
-      description: Define the version of sonar scanner cli want to use. If you will left empty than it will pick latest version . Refer version from refrence- https://hub.docker.com/r/sonarsource/sonar-scanner-cli/tags
+      description: Choose the version of sonar scanner cli want to use. If you will left empty than it will pick latest version . Refer version from refrence- https://hub.docker.com/r/sonarsource/sonar-scanner-cli/tags
       type: string
-      default: "5.0"
+      default: "latest"
+      enum:
+        - "latest"
+        - "4"
+        - "4.8"
+        - "5.0"
   internal:
     - git_checkout_target
     - working_dir
@@ -73,7 +78,7 @@ inputs:
 template: |
   steps:
   - id: 'Run scan on SonarCloud'
-    name: sonarsource/sonar-scanner-cli:{% if sonar_scanner_version -%} {{ sonar_scanner_version }} {% else -%} latest {%- endif %}
+    name: us-docker.pkg.dev/codepipes-staging/ci-cd/sonar-scanner-cli:{% if sonar_scanner_version -%} {{ sonar_scanner_version }} {% else -%} latest {%- endif %}
     entrypoint: 'bash'
     dir: {{ working_dir }}
     args:
