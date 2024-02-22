@@ -66,7 +66,7 @@ template: |
     - '-c'
     - |
       {% if use_github_tag == true %}
-      docker build -t {{container_repository}}:{{sha_tag}} .
+      docker build -t {{container_repository}}:{{sha_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
       docker push {{container_repository}}:{{sha_tag}}
       {% endif %}
       docker build -t {{container_repository}}:{{container_tag}} {% for arg in docker_build_args %} {{ arg }} {% endfor %} .
